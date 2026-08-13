@@ -167,7 +167,8 @@ class DemandAwareControllerTests(unittest.TestCase):
     def test_waiting_io_stays_in_real_qos_queue(self):
         """功能：经过真实QoS运行30+20 GB/s的两个IO。
 
-        目的：断言第二个IO在第一个离队后才获得速率并下发。
+        目的：断言第二个IO在第一个离队后才获得速率，
+        且DPU能把项目默认的有限PIR切换为uncapped。
         输入：无。输出：通过unittest断言报告结果。
         """
         qos = build_qos()
@@ -197,11 +198,15 @@ class DemandAwareControllerTests(unittest.TestCase):
         self.assertFalse(submitted[1]["qos_admitted"])
 
         result = qos.end()
-        dispatch_times = {
-            request["request_id"]: request["dispatch_time_us"]
-            for request in result["dispatched_requests"]
-        }
-        self.assertLess(dispatch_times["r0"], dispatch_times["r1"])
+        # uncapped Queue可在同一仿真时刻连续下发，因此用
+        # 出队顺序而不是必须递增的微秒时间戳验证先到准入。
+        self.assertEqual(
+            [request["request_id"] for request in result["dispatched_requests"]],
+            ["r0", "r1"],
+        )
+        for request in submitted:
+            queue_id = request["queue_id"]
+            self.assertIsNone(qos.token_stage.controllers[queue_id].pir_bucket)
         self.assertFalse(any(result["queue_io_counts"].values()))
         self.assertEqual(result["group_weight_bitmap"], [0] * 8)
 

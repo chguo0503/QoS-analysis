@@ -231,9 +231,9 @@ class QueueTokenController:
 
         输入：
             cir_fill: CIR每周期补充Byte数。
-            pir_fill: PIR每周期补充Byte数。
+            pir_fill: PIR每周期补充Byte数；None表示uncapped。
             cbs_bytes: CIR桶容量。
-            pbs_bytes: PIR桶容量。
+            pbs_bytes: PIR桶容量；uncapped时为None。
 
         输出：
             None: 原地更新本Queue速率控制状态，FIFO内容保持不变。
@@ -243,7 +243,11 @@ class QueueTokenController:
             capacity=cbs_bytes,
         )
 
-        if self.pir_bucket is None:
+        # DPU可以在运行时在“有限PIR”和“uncapped”之间切换。
+        # uncapped不需要PIR状态，直接移除原有令牌桶。
+        if pir_fill is None:
+            self.pir_bucket = None
+        elif self.pir_bucket is None:
             self.pir_bucket = TokenBucket(
                 fill_per_tick=pir_fill,
                 capacity=pbs_bytes,
@@ -393,7 +397,8 @@ class PerQueueTokenBucketStage:
         输入：
             queue_id: 当前QoS实例中的合法Queue ID。
             cir_fill_bytes_per_tick: 新CIR的整数周期补充Byte数。
-            pir_fill_bytes_per_tick: 新PIR的整数周期补充Byte数。
+            pir_fill_bytes_per_tick: 新PIR的整数周期补充Byte数；
+                None表示uncapped。
 
         输出：
             None: 原地更新目标Queue令牌桶。
@@ -406,10 +411,14 @@ class PerQueueTokenBucketStage:
                 cir_fill_bytes_per_tick,
                 self.max_io_size_bytes,
             ),
-            pbs_bytes=_capacity_for_rate(
-                self.minimum_pbs_bytes,
-                pir_fill_bytes_per_tick,
-                self.max_io_size_bytes,
+            pbs_bytes=(
+                None
+                if pir_fill_bytes_per_tick is None
+                else _capacity_for_rate(
+                    self.minimum_pbs_bytes,
+                    pir_fill_bytes_per_tick,
+                    self.max_io_size_bytes,
+                )
             ),
         )
 

@@ -64,7 +64,9 @@ def run_policy(policy, arguments):
     """功能：运行一次单SSD合成需求满足率实验。
 
     目的：Baseline使用CIR=0、PIR=uncapped和全1 WRR；需求感知
-    策略在相同互斥Queue上设置每路径CIR=PIR，并动态设置Group WRR。
+    策略在相同互斥Queue上设置每路径CIR，PIR同样保持
+    uncapped，并动态设置Group WRR。这样差异只来自需求保证
+    和调度机会，不会把PIR封顶混入对照。
 
     输入：策略名和命令行实验参数。
     输出：需求满足数/比例、每需求完成时刻和绑定分布。

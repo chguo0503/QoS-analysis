@@ -4,7 +4,7 @@ from collections import deque
 
 
 class DemandAwareRateController:
-    """Queue CIR/PIR约束速率，Group WRR权重分配调度机会。"""
+    """Queue CIR表示需求保证，Group WRR权重分配调度机会。"""
 
     strategy_name = "demand_aware"
 
@@ -16,7 +16,7 @@ class DemandAwareRateController:
         """功能：为每块SSD建立独立的需求和带宽状态。
 
         目的：容量足够时完整满足先到需求；容量不足时不缩放
-        已配置CIR/PIR，后到需求保留在自己的QoS Queue中等待。
+        已配置CIR，后到需求保留在自己的QoS Queue中等待。
 
         输入：每SSD的整数Byte/s容量，以及每SSD的Queue到Group映射。
         输出：无；初始化等待、活跃、Queue速率和Group权重。
@@ -142,7 +142,7 @@ class DemandAwareRateController:
     def update(self, storage_target_id):
         """功能：准入可满足需求并重算Queue速率与Group权重。
 
-        目的：Queue CIR/PIR承担速率约束；Group权重等于组内活跃
+        目的：Queue CIR承担需求保证；Group权重等于组内活跃
         Queue速率之和，只影响WRR机会，完全不涉及Group CIR/PIR。
 
         输入：要更新的SSD ID。

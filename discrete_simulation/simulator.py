@@ -115,7 +115,8 @@ class DiscreteEventSimulator:
         输入：
             queue_id: 当前QoS实例中的合法Queue ID。
             cir_fill_bytes_per_tick: 新CIR的整数周期补充Byte数。
-            pir_fill_bytes_per_tick: 新PIR的整数周期补充Byte数。
+            pir_fill_bytes_per_tick: 新PIR的整数周期补充Byte数；
+                None表示uncapped。
             effective_time_us: 设置开始生效的仿真微秒时刻。
 
         输出：

@@ -1,7 +1,7 @@
 # baseline与带宽感知策略共用这份初始Queue配置。
 # baseline不创建DPU速率控制器，因此始终是CIR=0、PIR=uncapped。
-# 需求感知策略会在IO到达后设置已准入Queue的有限CIR=PIR，
-# 并另外根据组内活跃需求设置Group WRR权重。
+# 需求感知策略会在IO到达后设置已准入Queue的CIR，
+# PIR仍为uncapped，并另外根据组内活跃需求设置Group WRR权重。
 token_bucket:
   update_period_us: 80
   initial_state: empty

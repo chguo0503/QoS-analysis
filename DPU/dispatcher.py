@@ -49,7 +49,11 @@ class DPURequestGateway:
     ):
         """功能：用整数Byte/s设置目标Queue的CIR/PIR。
 
-        输入：SSD、Queue、整数CIR/PIR和生效时刻。输出：无。
+        目的：CIR表示需求保证；PIR传入None时表示uncapped，
+        允许Queue借用SSD的空闲带宽。
+
+        输入：SSD、Queue、整数CIR、整数PIR或None和生效时刻。
+        输出：无。
         """
         qos = self.qos[storage_target_id]
         period_us = qos.token_stage.update_period_us
@@ -57,9 +61,11 @@ class DPURequestGateway:
         cir_fill = (
             cir_bytes_per_second * period_us + 999_999
         ) // 1_000_000
-        pir_fill = (
-            pir_bytes_per_second * period_us + 999_999
-        ) // 1_000_000
+        pir_fill = None
+        if pir_bytes_per_second is not None:
+            pir_fill = (
+                pir_bytes_per_second * period_us + 999_999
+            ) // 1_000_000
         qos.schedule_queue_rate_update(
             queue_id,
             cir_fill,
@@ -102,19 +108,20 @@ class DPURequestGateway:
     ):
         """功能：把需求感知控制器输出写入目标QoS。
 
-        目的：在同一个仿真时刻更新Queue CIR/PIR与Group WRR，
-        但始终保持两类参数各自的硬件职责。
+        目的：在同一个仿真时刻更新Queue CIR与Group WRR。
+        Queue PIR保持uncapped，由SSD后端保证整盘物理上限。
 
         输入：SSD ID、Queue/Group控制变化和仿真时刻。
         输出：无；将变化写入QoS的待生效控制事件。
         """
         for queue_id, rate in updates["queue_rates"].items():
-            # 需求感知策略令PIR=CIR，Queue不会超用自己的诉求。
+            # CIR表示该路径的带宽保证；PIR不封顶，让活跃
+            # Queue在其他路径未用满时继续向SSD下发。
             self.set_queue_rate(
                 storage_target_id,
                 queue_id,
                 rate,
-                rate,
+                None,
                 event_time_us,
             )
         if updates["group_weights"] is not None:

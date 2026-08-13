@@ -14,5 +14,6 @@ dpu:
   # 该状态传递只观察IO进入/离开QoS Queue，不使用SSD完成通知。
   rate_control:
     enabled: true
-    # Queue CIR/PIR限制每条路径速率；Group WRR权重等于组内活跃需求之和。
+    # Queue CIR保证每条路径的需求，PIR保持uncapped以借用空闲带宽；
+    # Group WRR权重等于组内活跃需求之和。
     # Group不设置CIR/PIR。SSD过载时不缩放已配置速率，后到IO留队等待。
