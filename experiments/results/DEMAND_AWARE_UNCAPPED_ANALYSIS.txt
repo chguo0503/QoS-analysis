@@ -1,0 +1,112 @@
+Demand-aware CIR + uncapped PIR 对照实验结果与分析
+生成日期：2026-08-13
+
+1. 本次修改
+
+- Baseline保持：Queue CIR=0，Queue PIR=uncapped，Group WRR权重全为1。
+- Demand-aware改为：Queue CIR=已准入demand的带宽诉求，Queue PIR=uncapped。
+- Demand-aware的Group WRR权重=该Group内活跃Queue的带宽诉求之和。
+- Group不设置CIR/PIR。
+- QoS增加运行时从有限PIR切换为uncapped的能力。
+
+这样两种策略的PIR语义完全相同，对照只保留CIR保证和
+Group调度权重的差异。之前Demand-aware使用PIR=CIR，而Baseline使用
+PIR=uncapped，会把“能否借用空闲带宽”这个额外变量混入结果。
+
+2. 测试与实验配置
+
+回归测试：
+
+  python -m unittest discover -s tests -p 'test_dpu_qos_rate_control.py' -v
+
+结果：7个测试全部通过，包括1 GPU/1 SSD、3 GPU/2 SSD和
+10 GPU/5 SSD拓扑、互斥Queue绑定、过载等待、动态Group WRR以及
+有限PIR到uncapped的运行时切换。
+
+合成对照实验：
+
+- 10个demand同时到达1块SSD。
+- 每demand包125个144 KiB IO，共18,432,000 Byte。
+- 每demand声明4 GB/s，总诉求为40 GB/s。
+- SSD物理读带宽为40 GB/s。
+- 严格GPU窗口：18,432,000 Byte / 4 GB/s = 4608 us。
+- 两策略使用同一random_unique_sticky绑定及同一随机种子5102。
+
+3. 结果
+
+指标                                      Baseline          Demand-aware
+-------------------------------------------------------------------------------
+严格4608 us窗口满足数                  7/10 (70%)        2/10 (20%)
+增加200 us余量后的满足数              10/10 (100%)      10/10 (100%)
+平均SSD demand完成时间                  3880.533 us       4632.559 us
+最早SSD demand完成时间                  3266.379 us       4541.874 us
+最晚SSD demand完成时间                  4670.898 us       4670.898 us
+完成时间标准差                            623.179 us         38.565 us
+完成时间跨度                           1404.518 us        129.024 us
+平均单demand有效带宽                     4.872490 GB/s      3.979073 GB/s
+最低单demand有效带宽                     3.946137 GB/s      3.946137 GB/s
+最高单demand有效带宽                     5.642946 GB/s      4.058237 GB/s
+相对4 GB/s的平均绝对偏差                  0.902937 GB/s      0.035747 GB/s
+有效带宽Jain公平指数                      0.975939           0.999929
+QoS最后下发时刻                            4495.914 us       4495.914 us
+SSD全部IO完成时刻                        4670.898 us       4670.898 us
+CIR/EXCESS下发IO数                         0 / 1250          1188 / 62
+
+“单demand有效带宽”按 18,432,000 Byte / 该demand最后一个IO的
+SSD完成时间计算。它用于表示该demand感受到的平均服务速率，
+不是把10个数相加得到SSD物理带宽。
+
+4. 原因分析
+
+4.1 Demand-aware已经消除PIR硬封顶的偏差
+
+两种策略的首个QoS下发时刻现在都是0 us。Demand-aware不再需要
+等待有限PIR的第一次80 us令牌补充，也可以在其他路径暂时空闲时
+借用SSD带宽。
+
+4.2 Demand-aware的收益是带宽分配更接近诉求，不是提高总带宽
+
+两种策略的QoS最后下发时刻和SSD全部完成时刻完全一样，说明
+本实验中SSD总体利用率和总工作量完成时间没有改变。
+
+Demand-aware将每条路径的带宽压缩到3.946至4.058 GB/s，平均值
+3.979 GB/s，非常接近4 GB/s诉求。其带宽Jain公平指数从
+0.975939提高到0.999929，完成时间标准差从623.179 us降到
+38.565 us，降低约93.8%。
+
+4.3 Baseline的平均完成时间更短，来自不均匀服务
+
+Baseline下不同Group内的活跃Queue数不同，但Group WRR权重全为1。
+因此一部分demand获得了5.6 GB/s左右的短期带宽，在3266 us左右
+提前完成；另一部分则接近SSD总完成时刻才完成。“先集中完成一些
+demand”会降低算术平均完成时间，但并没有缩短全部IO的完成时间，
+也不代表它更好地满足了每条4 GB/s诉求。
+
+4.4 严格满足率不能单独评价这两种策略
+
+10 x 4 GB/s刚好等于SSD的40 GB/s物理带宽，4608 us窗口又只包含
+纯数据传输时间。SSD固定流水线延迟、IO粒度和仲裁时间量化没有任何
+余量。Demand-aware让各demand同时接近完成，所以大多数都集中在
+4608 us附近；Baseline则牺牲公平性，让7个demand更早跨过二值门槛。
+
+给固定流水线增加200 us显式余量后，两策略都是10/10。因此
+7/10对2/10不能解读为Baseline的SSD吞吐更高。
+
+5. 结论
+
+- 修改后的对照已经公平：两者都可借用空闲SSD带宽。
+- Demand-aware不会提高SSD物理总带宽，但能把带宽更准确地分给
+  声明了4 GB/s的各条路径，显著改善公平性和可预测性。
+- Baseline的平均完成时间较短，但本质是让部分demand超额服务并
+  提前完成，其他demand留到尾部。
+- 若研究目标是“尽可能减少平均flow completion time”，Baseline式的
+  集中服务可能占优；若目标是“按每条路径的带宽诉求稳定分配”，
+  Demand-aware明显更好。
+- 后续评价建议同时保留：SSD makespan、单demand有效带宽偏差、
+  Jain公平指数、P95/P99完成时间和带明确固定余量的需求满足率。
+
+6. 原始结果
+
+- experiments/results/demand_satisfaction_10x4/results.json
+- experiments/results/demand_satisfaction_10x4_slack200/results.json
+
