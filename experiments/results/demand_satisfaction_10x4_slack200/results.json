@@ -115,7 +115,7 @@
           "satisfied": true
         }
       ],
-      "wall_time_s": 1.8825582760036923
+      "wall_time_s": 1.9210412940010428
     },
     {
       "policy": "demand_aware",
@@ -143,88 +143,88 @@
         "group_weight_write_count": 160
       },
       "qos": {
-        "cir_dispatched_request_count": 1250,
-        "excess_dispatched_request_count": 0,
-        "first_dispatch_time_us": 80.0,
-        "last_dispatch_time_us": 4697.0
+        "cir_dispatched_request_count": 1188,
+        "excess_dispatched_request_count": 62,
+        "first_dispatch_time_us": 0.0,
+        "last_dispatch_time_us": 4495.9136
       },
       "ssd": {
-        "first_submit_time_us": 80.0,
-        "last_completion_time_us": 4787.6336
+        "first_submit_time_us": 0.0,
+        "last_completion_time_us": 4670.8976
       },
       "demand_results": [
         {
           "demand_id": "demand_00",
           "queue_id": "q172",
           "compute_done_time_us": 4808.0,
-          "io_completion_time_us": 4761.8288,
+          "io_completion_time_us": 4626.6608,
           "satisfied": true
         },
         {
           "demand_id": "demand_01",
           "queue_id": "q119",
           "compute_done_time_us": 4808.0,
-          "io_completion_time_us": 4772.888,
+          "io_completion_time_us": 4541.8736,
           "satisfied": true
         },
         {
           "demand_id": "demand_02",
           "queue_id": "q165",
           "compute_done_time_us": 4808.0,
-          "io_completion_time_us": 4758.1424,
+          "io_completion_time_us": 4619.288,
           "satisfied": true
         },
         {
           "demand_id": "demand_03",
           "queue_id": "q203",
           "compute_done_time_us": 4808.0,
-          "io_completion_time_us": 4783.9472,
+          "io_completion_time_us": 4670.8976,
           "satisfied": true
         },
         {
           "demand_id": "demand_04",
           "queue_id": "q147",
           "compute_done_time_us": 4808.0,
-          "io_completion_time_us": 4776.5744,
+          "io_completion_time_us": 4589.7968,
           "satisfied": true
         },
         {
           "demand_id": "demand_05",
           "queue_id": "q224",
           "compute_done_time_us": 4808.0,
-          "io_completion_time_us": 4787.6336,
+          "io_completion_time_us": 4652.4656,
           "satisfied": true
         },
         {
           "demand_id": "demand_06",
           "queue_id": "q084",
           "compute_done_time_us": 4808.0,
-          "io_completion_time_us": 4754.456,
+          "io_completion_time_us": 4656.152,
           "satisfied": true
         },
         {
           "demand_id": "demand_07",
           "queue_id": "q095",
           "compute_done_time_us": 4808.0,
-          "io_completion_time_us": 4769.2016,
+          "io_completion_time_us": 4663.5248,
           "satisfied": true
         },
         {
           "demand_id": "demand_08",
           "queue_id": "q027",
           "compute_done_time_us": 4808.0,
-          "io_completion_time_us": 4765.5152,
+          "io_completion_time_us": 4667.2112,
           "satisfied": true
         },
         {
           "demand_id": "demand_09",
           "queue_id": "q173",
           "compute_done_time_us": 4808.0,
-          "io_completion_time_us": 4780.2608,
+          "io_completion_time_us": 4637.72,
           "satisfied": true
         }
       ],
-      "wall_time_s": 3.7559979769866914
+      "wall_time_s": 1.9434804850025102
     }
   ]
 }
