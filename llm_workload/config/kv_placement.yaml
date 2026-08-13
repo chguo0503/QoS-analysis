@@ -1,0 +1,3 @@
+kv_placement:  # 本文件只保存独立演示参数；联合仿真的SSD列表来自simulation YAML。
+  demo_random_seed: 5102  # 直接运行示例时使用的可复现随机种子。
+  demo_ssd_counts: [1, 5, 10]  # 直接运行kv_placement_manager.py时展示的SSD数量。

@@ -1,0 +1,30 @@
+# baseline与带宽感知策略共用这份初始Queue配置。
+# baseline不创建DPU速率控制器，因此始终是CIR=0、PIR=uncapped。
+# 需求感知策略会在IO到达后设置已准入Queue的有限CIR=PIR，
+# 并另外根据组内活跃需求设置Group WRR权重。
+token_bucket:
+  update_period_us: 80
+  initial_state: empty
+  queue_max_io_size_bytes: 147456
+  queue_cbs_bytes: 589824
+  queue_pbs_bytes: 589824
+
+  # Group不参与运行时令牌检查；全部置0可使每个Queue的初始CIR为0。
+  group_rates:
+    - {group_id: g0, cir_gb_s: 0}
+    - {group_id: g1, cir_gb_s: 0}
+    - {group_id: g2, cir_gb_s: 0}
+    - {group_id: g3, cir_gb_s: 0}
+    - {group_id: g4, cir_gb_s: 0}
+    - {group_id: g5, cir_gb_s: 0}
+    - {group_id: g6, cir_gb_s: 0}
+    - {group_id: g7, cir_gb_s: 0}
+
+  queue_cir_weight_bitmap:
+    [1, 1, 1, 1, 1, 1, 1, 1,
+     1, 1, 1, 1, 1, 1, 1, 1,
+     1, 1, 1, 1, 1, 1, 1, 1,
+     1, 1, 1, 1, 1, 1, 1, 1]
+
+  queue_default_pir_gb_s: uncapped
+  queue_overrides: {}

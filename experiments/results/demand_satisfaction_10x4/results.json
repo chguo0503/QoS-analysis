@@ -1,0 +1,230 @@
+{
+  "configuration": {
+    "demand_count": 10,
+    "rate_bytes_per_second_per_demand": 4000000000,
+    "io_count_per_demand": 125,
+    "io_size_bytes": 147456,
+    "deadline_slack_us": 0,
+    "binding_seed": 5102
+  },
+  "results": [
+    {
+      "policy": "baseline",
+      "satisfied_demand_count": 7,
+      "total_demand_count": 10,
+      "satisfaction_ratio": 0.7,
+      "configured_rate_gb_s_per_demand": 4.0,
+      "aggregate_configured_rate_gb_s": 40.0,
+      "nominal_transfer_window_us": 4608.0,
+      "deadline_slack_us": 0,
+      "compute_done_time_us": 4608.0,
+      "group_distribution": {
+        "g0": 1,
+        "g2": 2,
+        "g3": 1,
+        "g4": 1,
+        "g5": 3,
+        "g6": 1,
+        "g7": 1
+      },
+      "dpu": {
+        "binding_strategy": "random_unique_sticky",
+        "rate_control_strategy": null,
+        "rate_control_write_count": 0,
+        "group_weight_write_count": 0
+      },
+      "qos": {
+        "cir_dispatched_request_count": 0,
+        "excess_dispatched_request_count": 1250,
+        "first_dispatch_time_us": 0.0,
+        "last_dispatch_time_us": 4495.9136
+      },
+      "ssd": {
+        "first_submit_time_us": 0.0,
+        "last_completion_time_us": 4670.8976
+      },
+      "demand_results": [
+        {
+          "demand_id": "demand_00",
+          "queue_id": "q172",
+          "compute_done_time_us": 4608.0,
+          "io_completion_time_us": 4667.2112,
+          "satisfied": false
+        },
+        {
+          "demand_id": "demand_01",
+          "queue_id": "q119",
+          "compute_done_time_us": 4608.0,
+          "io_completion_time_us": 3273.752,
+          "satisfied": true
+        },
+        {
+          "demand_id": "demand_02",
+          "queue_id": "q165",
+          "compute_done_time_us": 4608.0,
+          "io_completion_time_us": 4663.5248,
+          "satisfied": false
+        },
+        {
+          "demand_id": "demand_03",
+          "queue_id": "q203",
+          "compute_done_time_us": 4608.0,
+          "io_completion_time_us": 3284.8112,
+          "satisfied": true
+        },
+        {
+          "demand_id": "demand_04",
+          "queue_id": "q147",
+          "compute_done_time_us": 4608.0,
+          "io_completion_time_us": 3277.4384,
+          "satisfied": true
+        },
+        {
+          "demand_id": "demand_05",
+          "queue_id": "q224",
+          "compute_done_time_us": 4608.0,
+          "io_completion_time_us": 3288.4976,
+          "satisfied": true
+        },
+        {
+          "demand_id": "demand_06",
+          "queue_id": "q084",
+          "compute_done_time_us": 4608.0,
+          "io_completion_time_us": 4202.7248,
+          "satisfied": true
+        },
+        {
+          "demand_id": "demand_07",
+          "queue_id": "q095",
+          "compute_done_time_us": 4608.0,
+          "io_completion_time_us": 4210.0976,
+          "satisfied": true
+        },
+        {
+          "demand_id": "demand_08",
+          "queue_id": "q027",
+          "compute_done_time_us": 4608.0,
+          "io_completion_time_us": 3266.3792,
+          "satisfied": true
+        },
+        {
+          "demand_id": "demand_09",
+          "queue_id": "q173",
+          "compute_done_time_us": 4608.0,
+          "io_completion_time_us": 4670.8976,
+          "satisfied": false
+        }
+      ],
+      "wall_time_s": 1.8734987410134636
+    },
+    {
+      "policy": "demand_aware",
+      "satisfied_demand_count": 0,
+      "total_demand_count": 10,
+      "satisfaction_ratio": 0.0,
+      "configured_rate_gb_s_per_demand": 4.0,
+      "aggregate_configured_rate_gb_s": 40.0,
+      "nominal_transfer_window_us": 4608.0,
+      "deadline_slack_us": 0,
+      "compute_done_time_us": 4608.0,
+      "group_distribution": {
+        "g0": 1,
+        "g2": 2,
+        "g3": 1,
+        "g4": 1,
+        "g5": 3,
+        "g6": 1,
+        "g7": 1
+      },
+      "dpu": {
+        "binding_strategy": "random_unique_sticky",
+        "rate_control_strategy": "demand_aware",
+        "rate_control_write_count": 20,
+        "group_weight_write_count": 160
+      },
+      "qos": {
+        "cir_dispatched_request_count": 1250,
+        "excess_dispatched_request_count": 0,
+        "first_dispatch_time_us": 80.0,
+        "last_dispatch_time_us": 4697.0
+      },
+      "ssd": {
+        "first_submit_time_us": 80.0,
+        "last_completion_time_us": 4787.6336
+      },
+      "demand_results": [
+        {
+          "demand_id": "demand_00",
+          "queue_id": "q172",
+          "compute_done_time_us": 4608.0,
+          "io_completion_time_us": 4761.8288,
+          "satisfied": false
+        },
+        {
+          "demand_id": "demand_01",
+          "queue_id": "q119",
+          "compute_done_time_us": 4608.0,
+          "io_completion_time_us": 4772.888,
+          "satisfied": false
+        },
+        {
+          "demand_id": "demand_02",
+          "queue_id": "q165",
+          "compute_done_time_us": 4608.0,
+          "io_completion_time_us": 4758.1424,
+          "satisfied": false
+        },
+        {
+          "demand_id": "demand_03",
+          "queue_id": "q203",
+          "compute_done_time_us": 4608.0,
+          "io_completion_time_us": 4783.9472,
+          "satisfied": false
+        },
+        {
+          "demand_id": "demand_04",
+          "queue_id": "q147",
+          "compute_done_time_us": 4608.0,
+          "io_completion_time_us": 4776.5744,
+          "satisfied": false
+        },
+        {
+          "demand_id": "demand_05",
+          "queue_id": "q224",
+          "compute_done_time_us": 4608.0,
+          "io_completion_time_us": 4787.6336,
+          "satisfied": false
+        },
+        {
+          "demand_id": "demand_06",
+          "queue_id": "q084",
+          "compute_done_time_us": 4608.0,
+          "io_completion_time_us": 4754.456,
+          "satisfied": false
+        },
+        {
+          "demand_id": "demand_07",
+          "queue_id": "q095",
+          "compute_done_time_us": 4608.0,
+          "io_completion_time_us": 4769.2016,
+          "satisfied": false
+        },
+        {
+          "demand_id": "demand_08",
+          "queue_id": "q027",
+          "compute_done_time_us": 4608.0,
+          "io_completion_time_us": 4765.5152,
+          "satisfied": false
+        },
+        {
+          "demand_id": "demand_09",
+          "queue_id": "q173",
+          "compute_done_time_us": 4608.0,
+          "io_completion_time_us": 4780.2608,
+          "satisfied": false
+        }
+      ],
+      "wall_time_s": 3.9346917450020555
+    }
+  ]
+}

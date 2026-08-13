@@ -1,0 +1,3 @@
+policy,gpu_count,ssd_count,inference_count,request_count,mean_ttft_us,p50_ttft_us,p95_ttft_us,max_ttft_us,mean_ssd_stall_us,mean_ssd_bandwidth_gb_s,cir_dispatched_requests,excess_dispatched_requests,peak_waiting_demands_per_ssd,rate_control_write_count,event_count,wall_time_s
+baseline,4,1,4,15,4820.51282051282,3487.1794871794873,7528.205128205129,7528.205128205129,0.0,18.713703618470035,0,15,0,0,2699,0.028877281001769006
+demand_aware_fifo,4,1,4,15,4946.584,3586.584,7666.584,7666.584,126.07117948717917,0.3259135965899781,15,0,0,8,6403,0.20119632000569254

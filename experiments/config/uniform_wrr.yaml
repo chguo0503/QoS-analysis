@@ -1,0 +1,18 @@
+# Baseline始终使用全1 WRR；需求感知策略以此为初值，
+# IO到达后只动态改Group权重，Queue WRR仍保持全1。
+scheduler:
+  algorithm: HIERARCHICAL_WRR
+  final_arbitration: RR
+  group_weight_bitmap: [1, 1, 1, 1, 1, 1, 1, 1]
+  queue_weight_bitmaps:
+    g0: &uniform_queue_weights [1, 1, 1, 1, 1, 1, 1, 1,
+                                1, 1, 1, 1, 1, 1, 1, 1,
+                                1, 1, 1, 1, 1, 1, 1, 1,
+                                1, 1, 1, 1, 1, 1, 1, 1]
+    g1: *uniform_queue_weights
+    g2: *uniform_queue_weights
+    g3: *uniform_queue_weights
+    g4: *uniform_queue_weights
+    g5: *uniform_queue_weights
+    g6: *uniform_queue_weights
+    g7: *uniform_queue_weights

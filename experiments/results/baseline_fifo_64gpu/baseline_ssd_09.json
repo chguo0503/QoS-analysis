@@ -1,0 +1,728 @@
+{
+  "policy": "baseline",
+  "gpu_count": 64,
+  "ssd_count": 9,
+  "inference_count": 64,
+  "request_count": 52819,
+  "mean_ttft_us": 700253.8461538462,
+  "p50_ttft_us": 664902.5641025641,
+  "p95_ttft_us": 1455528.2051282052,
+  "max_ttft_us": 1880184.6153846153,
+  "mean_ssd_stall_us": 0.0,
+  "mean_ssd_bandwidth_gb_s": 39.88402801493063,
+  "total_completed_bytes": 7788478464,
+  "cir_dispatched_requests": 0,
+  "excess_dispatched_requests": 52819,
+  "peak_waiting_demands_per_ssd": 0,
+  "peak_reserved_bytes_per_second": 0,
+  "rate_control_write_count": 0,
+  "event_count": 8688703,
+  "wall_time_s": 94.65246937499614,
+  "paths": [
+    {
+      "storage_target_id": "SSD0",
+      "request_count": 5847,
+      "completed_bytes": 862175232,
+      "effective_bandwidth_gb_s": 39.88361606149274,
+      "input_wait_us": 0.0
+    },
+    {
+      "storage_target_id": "SSD1",
+      "request_count": 5914,
+      "completed_bytes": 872054784,
+      "effective_bandwidth_gb_s": 39.88493078789304,
+      "input_wait_us": 0.0
+    },
+    {
+      "storage_target_id": "SSD2",
+      "request_count": 5917,
+      "completed_bytes": 872497152,
+      "effective_bandwidth_gb_s": 39.884988961810414,
+      "input_wait_us": 0.0
+    },
+    {
+      "storage_target_id": "SSD3",
+      "request_count": 5765,
+      "completed_bytes": 850083840,
+      "effective_bandwidth_gb_s": 39.881965528715895,
+      "input_wait_us": 0.0
+    },
+    {
+      "storage_target_id": "SSD4",
+      "request_count": 5887,
+      "completed_bytes": 868073472,
+      "effective_bandwidth_gb_s": 39.884404562272074,
+      "input_wait_us": 0.0
+    },
+    {
+      "storage_target_id": "SSD5",
+      "request_count": 5744,
+      "completed_bytes": 846987264,
+      "effective_bandwidth_gb_s": 39.881535274039145,
+      "input_wait_us": 0.0
+    },
+    {
+      "storage_target_id": "SSD6",
+      "request_count": 5927,
+      "completed_bytes": 873971712,
+      "effective_bandwidth_gb_s": 39.885182450769506,
+      "input_wait_us": 0.0
+    },
+    {
+      "storage_target_id": "SSD7",
+      "request_count": 5986,
+      "completed_bytes": 882671616,
+      "effective_bandwidth_gb_s": 39.88631091409874,
+      "input_wait_us": 0.0
+    },
+    {
+      "storage_target_id": "SSD8",
+      "request_count": 5832,
+      "completed_bytes": 859963392,
+      "effective_bandwidth_gb_s": 39.883317593284,
+      "input_wait_us": 0.0
+    }
+  ],
+  "inferences": [
+    {
+      "gpu_id": "GPU0",
+      "inference_index": 0,
+      "input_tokens": 161580,
+      "hit_ratio": 0.7993928474716313,
+      "request_count": 1010,
+      "compute_only_ttft_us": 664902.5641025641,
+      "ssd_stall_us": 0,
+      "ttft_us": 664902.5641025641
+    },
+    {
+      "gpu_id": "GPU1",
+      "inference_index": 0,
+      "input_tokens": 139632,
+      "hit_ratio": 0.9115747013474915,
+      "request_count": 995,
+      "compute_only_ttft_us": 253271.7948717949,
+      "ssd_stall_us": 0,
+      "ttft_us": 253271.7948717949
+    },
+    {
+      "gpu_id": "GPU2",
+      "inference_index": 0,
+      "input_tokens": 109593,
+      "hit_ratio": 0.8116744223196247,
+      "request_count": 695,
+      "compute_only_ttft_us": 423364.10256410256,
+      "ssd_stall_us": 0,
+      "ttft_us": 423364.10256410256
+    },
+    {
+      "gpu_id": "GPU3",
+      "inference_index": 0,
+      "input_tokens": 192652,
+      "hit_ratio": 0.7272578190800563,
+      "request_count": 1095,
+      "compute_only_ttft_us": 1077825.641025641,
+      "ssd_stall_us": 0,
+      "ttft_us": 1077825.641025641
+    },
+    {
+      "gpu_id": "GPU4",
+      "inference_index": 0,
+      "input_tokens": 116936,
+      "hit_ratio": 0.6331275314210567,
+      "request_count": 579,
+      "compute_only_ttft_us": 880020.5128205129,
+      "ssd_stall_us": 0,
+      "ttft_us": 880020.5128205129
+    },
+    {
+      "gpu_id": "GPU5",
+      "inference_index": 0,
+      "input_tokens": 122217,
+      "hit_ratio": 0.7932364175262385,
+      "request_count": 758,
+      "compute_only_ttft_us": 518358.9743589744,
+      "ssd_stall_us": 0,
+      "ttft_us": 518358.9743589744
+    },
+    {
+      "gpu_id": "GPU6",
+      "inference_index": 0,
+      "input_tokens": 131013,
+      "hit_ratio": 0.8304900776651192,
+      "request_count": 851,
+      "compute_only_ttft_us": 455548.717948718,
+      "ssd_stall_us": 0,
+      "ttft_us": 455548.717948718
+    },
+    {
+      "gpu_id": "GPU7",
+      "inference_index": 0,
+      "input_tokens": 102820,
+      "hit_ratio": 0.6400117627950954,
+      "request_count": 515,
+      "compute_only_ttft_us": 759261.5384615384,
+      "ssd_stall_us": 0,
+      "ttft_us": 759261.5384615384
+    },
+    {
+      "gpu_id": "GPU8",
+      "inference_index": 0,
+      "input_tokens": 152230,
+      "hit_ratio": 0.9793884728594765,
+      "request_count": 1165,
+      "compute_only_ttft_us": 64369.23076923077,
+      "ssd_stall_us": 0,
+      "ttft_us": 64369.23076923077
+    },
+    {
+      "gpu_id": "GPU9",
+      "inference_index": 0,
+      "input_tokens": 138408,
+      "hit_ratio": 0.8203875806233614,
+      "request_count": 888,
+      "compute_only_ttft_us": 509948.717948718,
+      "ssd_stall_us": 0,
+      "ttft_us": 509948.717948718
+    },
+    {
+      "gpu_id": "GPU10",
+      "inference_index": 0,
+      "input_tokens": 109069,
+      "hit_ratio": 0.7951550283395217,
+      "request_count": 678,
+      "compute_only_ttft_us": 458297.43589743593,
+      "ssd_stall_us": 0,
+      "ttft_us": 458297.43589743593
+    },
+    {
+      "gpu_id": "GPU11",
+      "inference_index": 0,
+      "input_tokens": 189059,
+      "hit_ratio": 0.5151857170693928,
+      "request_count": 761,
+      "compute_only_ttft_us": 1880184.6153846153,
+      "ssd_stall_us": 0,
+      "ttft_us": 1880184.6153846153
+    },
+    {
+      "gpu_id": "GPU12",
+      "inference_index": 0,
+      "input_tokens": 146041,
+      "hit_ratio": 0.7826273552708738,
+      "request_count": 893,
+      "compute_only_ttft_us": 651179.4871794871,
+      "ssd_stall_us": 0,
+      "ttft_us": 651179.4871794871
+    },
+    {
+      "gpu_id": "GPU13",
+      "inference_index": 0,
+      "input_tokens": 170197,
+      "hit_ratio": 0.5225264513243426,
+      "request_count": 695,
+      "compute_only_ttft_us": 1666974.358974359,
+      "ssd_stall_us": 0,
+      "ttft_us": 1666974.358974359
+    },
+    {
+      "gpu_id": "GPU14",
+      "inference_index": 0,
+      "input_tokens": 104667,
+      "hit_ratio": 0.7063813802715351,
+      "request_count": 578,
+      "compute_only_ttft_us": 630400.0,
+      "ssd_stall_us": 0,
+      "ttft_us": 630400.0
+    },
+    {
+      "gpu_id": "GPU15",
+      "inference_index": 0,
+      "input_tokens": 157628,
+      "hit_ratio": 0.761731391084425,
+      "request_count": 939,
+      "compute_only_ttft_us": 770420.5128205129,
+      "ssd_stall_us": 0,
+      "ttft_us": 770420.5128205129
+    },
+    {
+      "gpu_id": "GPU16",
+      "inference_index": 0,
+      "input_tokens": 109770,
+      "hit_ratio": 0.9524548904463231,
+      "request_count": 817,
+      "compute_only_ttft_us": 107056.41025641026,
+      "ssd_stall_us": 0,
+      "ttft_us": 107056.41025641026
+    },
+    {
+      "gpu_id": "GPU17",
+      "inference_index": 0,
+      "input_tokens": 157912,
+      "hit_ratio": 0.6537426667603177,
+      "request_count": 807,
+      "compute_only_ttft_us": 1121600.0,
+      "ssd_stall_us": 0,
+      "ttft_us": 1121600.0
+    },
+    {
+      "gpu_id": "GPU18",
+      "inference_index": 0,
+      "input_tokens": 122428,
+      "hit_ratio": 0.6789407767673687,
+      "request_count": 650,
+      "compute_only_ttft_us": 806297.435897436,
+      "ssd_stall_us": 0,
+      "ttft_us": 806297.435897436
+    },
+    {
+      "gpu_id": "GPU19",
+      "inference_index": 0,
+      "input_tokens": 149058,
+      "hit_ratio": 0.5239619424419633,
+      "request_count": 611,
+      "compute_only_ttft_us": 1455528.2051282052,
+      "ssd_stall_us": 0,
+      "ttft_us": 1455528.2051282052
+    },
+    {
+      "gpu_id": "GPU20",
+      "inference_index": 0,
+      "input_tokens": 170210,
+      "hit_ratio": 0.901983414290163,
+      "request_count": 1200,
+      "compute_only_ttft_us": 342215.38461538457,
+      "ssd_stall_us": 0,
+      "ttft_us": 342215.38461538457
+    },
+    {
+      "gpu_id": "GPU21",
+      "inference_index": 0,
+      "input_tokens": 186989,
+      "hit_ratio": 0.9560214516478498,
+      "request_count": 1397,
+      "compute_only_ttft_us": 168697.4358974359,
+      "ssd_stall_us": 0,
+      "ttft_us": 168697.4358974359
+    },
+    {
+      "gpu_id": "GPU22",
+      "inference_index": 0,
+      "input_tokens": 124990,
+      "hit_ratio": 0.5063621606572223,
+      "request_count": 495,
+      "compute_only_ttft_us": 1265641.0256410255,
+      "ssd_stall_us": 0,
+      "ttft_us": 1265641.0256410255
+    },
+    {
+      "gpu_id": "GPU23",
+      "inference_index": 0,
+      "input_tokens": 106093,
+      "hit_ratio": 0.6373150628917285,
+      "request_count": 529,
+      "compute_only_ttft_us": 789292.3076923076,
+      "ssd_stall_us": 0,
+      "ttft_us": 789292.3076923076
+    },
+    {
+      "gpu_id": "GPU24",
+      "inference_index": 0,
+      "input_tokens": 154953,
+      "hit_ratio": 0.808605165775481,
+      "request_count": 979,
+      "compute_only_ttft_us": 608348.7179487179,
+      "ssd_stall_us": 0,
+      "ttft_us": 608348.7179487179
+    },
+    {
+      "gpu_id": "GPU25",
+      "inference_index": 0,
+      "input_tokens": 135246,
+      "hit_ratio": 0.9440953963441197,
+      "request_count": 998,
+      "compute_only_ttft_us": 155097.4358974359,
+      "ssd_stall_us": 0,
+      "ttft_us": 155097.4358974359
+    },
+    {
+      "gpu_id": "GPU26",
+      "inference_index": 0,
+      "input_tokens": 163919,
+      "hit_ratio": 0.9676966366350388,
+      "request_count": 1240,
+      "compute_only_ttft_us": 108615.38461538461,
+      "ssd_stall_us": 0,
+      "ttft_us": 108615.38461538461
+    },
+    {
+      "gpu_id": "GPU27",
+      "inference_index": 0,
+      "input_tokens": 120076,
+      "hit_ratio": 0.7822178556713762,
+      "request_count": 734,
+      "compute_only_ttft_us": 536410.2564102564,
+      "ssd_stall_us": 0,
+      "ttft_us": 536410.2564102564
+    },
+    {
+      "gpu_id": "GPU28",
+      "inference_index": 0,
+      "input_tokens": 120310,
+      "hit_ratio": 0.5915651901375444,
+      "request_count": 557,
+      "compute_only_ttft_us": 1007979.4871794871,
+      "ssd_stall_us": 0,
+      "ttft_us": 1007979.4871794871
+    },
+    {
+      "gpu_id": "GPU29",
+      "inference_index": 0,
+      "input_tokens": 190598,
+      "hit_ratio": 0.8088779975430558,
+      "request_count": 1205,
+      "compute_only_ttft_us": 747220.5128205129,
+      "ssd_stall_us": 0,
+      "ttft_us": 747220.5128205129
+    },
+    {
+      "gpu_id": "GPU30",
+      "inference_index": 0,
+      "input_tokens": 145522,
+      "hit_ratio": 0.627589322802718,
+      "request_count": 714,
+      "compute_only_ttft_us": 1111671.794871795,
+      "ssd_stall_us": 0,
+      "ttft_us": 1111671.794871795
+    },
+    {
+      "gpu_id": "GPU31",
+      "inference_index": 0,
+      "input_tokens": 112032,
+      "hit_ratio": 0.5798408260747763,
+      "request_count": 508,
+      "compute_only_ttft_us": 965558.9743589744,
+      "ssd_stall_us": 0,
+      "ttft_us": 965558.9743589744
+    },
+    {
+      "gpu_id": "GPU32",
+      "inference_index": 0,
+      "input_tokens": 124586,
+      "hit_ratio": 0.6446381761564672,
+      "request_count": 628,
+      "compute_only_ttft_us": 908164.1025641026,
+      "ssd_stall_us": 0,
+      "ttft_us": 908164.1025641026
+    },
+    {
+      "gpu_id": "GPU33",
+      "inference_index": 0,
+      "input_tokens": 195679,
+      "hit_ratio": 0.8511390834099704,
+      "request_count": 1302,
+      "compute_only_ttft_us": 597517.9487179487,
+      "ssd_stall_us": 0,
+      "ttft_us": 597517.9487179487
+    },
+    {
+      "gpu_id": "GPU34",
+      "inference_index": 0,
+      "input_tokens": 125055,
+      "hit_ratio": 0.6145672552005641,
+      "request_count": 601,
+      "compute_only_ttft_us": 988717.9487179487,
+      "ssd_stall_us": 0,
+      "ttft_us": 988717.9487179487
+    },
+    {
+      "gpu_id": "GPU35",
+      "inference_index": 0,
+      "input_tokens": 116845,
+      "hit_ratio": 0.6875193113840388,
+      "request_count": 628,
+      "compute_only_ttft_us": 748964.1025641026,
+      "ssd_stall_us": 0,
+      "ttft_us": 748964.1025641026
+    },
+    {
+      "gpu_id": "GPU36",
+      "inference_index": 0,
+      "input_tokens": 139890,
+      "hit_ratio": 0.9056465697379912,
+      "request_count": 990,
+      "compute_only_ttft_us": 270748.71794871794,
+      "ssd_stall_us": 0,
+      "ttft_us": 270748.71794871794
+    },
+    {
+      "gpu_id": "GPU37",
+      "inference_index": 0,
+      "input_tokens": 128992,
+      "hit_ratio": 0.8489264051734683,
+      "request_count": 856,
+      "compute_only_ttft_us": 399733.3333333334,
+      "ssd_stall_us": 0,
+      "ttft_us": 399733.3333333334
+    },
+    {
+      "gpu_id": "GPU38",
+      "inference_index": 0,
+      "input_tokens": 163949,
+      "hit_ratio": 0.9084848308297915,
+      "request_count": 1164,
+      "compute_only_ttft_us": 307774.358974359,
+      "ssd_stall_us": 0,
+      "ttft_us": 307774.358974359
+    },
+    {
+      "gpu_id": "GPU39",
+      "inference_index": 0,
+      "input_tokens": 164190,
+      "hit_ratio": 0.6104239681511533,
+      "request_count": 784,
+      "compute_only_ttft_us": 1312082.0512820513,
+      "ssd_stall_us": 0,
+      "ttft_us": 1312082.0512820513
+    },
+    {
+      "gpu_id": "GPU40",
+      "inference_index": 0,
+      "input_tokens": 137578,
+      "hit_ratio": 0.8907662445235893,
+      "request_count": 958,
+      "compute_only_ttft_us": 308266.6666666667,
+      "ssd_stall_us": 0,
+      "ttft_us": 308266.6666666667
+    },
+    {
+      "gpu_id": "GPU41",
+      "inference_index": 0,
+      "input_tokens": 103196,
+      "hit_ratio": 0.5515125613292068,
+      "request_count": 445,
+      "compute_only_ttft_us": 949374.3589743591,
+      "ssd_stall_us": 0,
+      "ttft_us": 949374.3589743591
+    },
+    {
+      "gpu_id": "GPU42",
+      "inference_index": 0,
+      "input_tokens": 125868,
+      "hit_ratio": 0.857528157655332,
+      "request_count": 844,
+      "compute_only_ttft_us": 367856.41025641025,
+      "ssd_stall_us": 0,
+      "ttft_us": 367856.41025641025
+    },
+    {
+      "gpu_id": "GPU43",
+      "inference_index": 0,
+      "input_tokens": 177967,
+      "hit_ratio": 0.8980224654054059,
+      "request_count": 1249,
+      "compute_only_ttft_us": 372287.17948717956,
+      "ssd_stall_us": 0,
+      "ttft_us": 372287.17948717956
+    },
+    {
+      "gpu_id": "GPU44",
+      "inference_index": 0,
+      "input_tokens": 118699,
+      "hit_ratio": 0.8829918308444629,
+      "request_count": 819,
+      "compute_only_ttft_us": 284902.56410256407,
+      "ssd_stall_us": 0,
+      "ttft_us": 284902.56410256407
+    },
+    {
+      "gpu_id": "GPU45",
+      "inference_index": 0,
+      "input_tokens": 109477,
+      "hit_ratio": 0.5768111769152309,
+      "request_count": 494,
+      "compute_only_ttft_us": 950338.4615384616,
+      "ssd_stall_us": 0,
+      "ttft_us": 950338.4615384616
+    },
+    {
+      "gpu_id": "GPU46",
+      "inference_index": 0,
+      "input_tokens": 122600,
+      "hit_ratio": 0.7273667993544901,
+      "request_count": 697,
+      "compute_only_ttft_us": 685641.0256410256,
+      "ssd_stall_us": 0,
+      "ttft_us": 685641.0256410256
+    },
+    {
+      "gpu_id": "GPU47",
+      "inference_index": 0,
+      "input_tokens": 111927,
+      "hit_ratio": 0.934615428924042,
+      "request_count": 818,
+      "compute_only_ttft_us": 150112.82051282053,
+      "ssd_stall_us": 0,
+      "ttft_us": 150112.82051282053
+    },
+    {
+      "gpu_id": "GPU48",
+      "inference_index": 0,
+      "input_tokens": 110803,
+      "hit_ratio": 0.8338351161942543,
+      "request_count": 722,
+      "compute_only_ttft_us": 377682.05128205137,
+      "ssd_stall_us": 0,
+      "ttft_us": 377682.05128205137
+    },
+    {
+      "gpu_id": "GPU49",
+      "inference_index": 0,
+      "input_tokens": 131221,
+      "hit_ratio": 0.8654478243647606,
+      "request_count": 888,
+      "compute_only_ttft_us": 362174.358974359,
+      "ssd_stall_us": 0,
+      "ttft_us": 362174.358974359
+    },
+    {
+      "gpu_id": "GPU50",
+      "inference_index": 0,
+      "input_tokens": 100987,
+      "hit_ratio": 0.9612017048991487,
+      "request_count": 759,
+      "compute_only_ttft_us": 80369.23076923078,
+      "ssd_stall_us": 0,
+      "ttft_us": 80369.23076923078
+    },
+    {
+      "gpu_id": "GPU51",
+      "inference_index": 0,
+      "input_tokens": 142518,
+      "hit_ratio": 0.6781699767914551,
+      "request_count": 756,
+      "compute_only_ttft_us": 940861.5384615384,
+      "ssd_stall_us": 0,
+      "ttft_us": 940861.5384615384
+    },
+    {
+      "gpu_id": "GPU52",
+      "inference_index": 0,
+      "input_tokens": 166232,
+      "hit_ratio": 0.635610205734942,
+      "request_count": 826,
+      "compute_only_ttft_us": 1242523.0769230768,
+      "ssd_stall_us": 0,
+      "ttft_us": 1242523.0769230768
+    },
+    {
+      "gpu_id": "GPU53",
+      "inference_index": 0,
+      "input_tokens": 119360,
+      "hit_ratio": 0.5862652335764719,
+      "request_count": 547,
+      "compute_only_ttft_us": 1012984.6153846154,
+      "ssd_stall_us": 0,
+      "ttft_us": 1012984.6153846154
+    },
+    {
+      "gpu_id": "GPU54",
+      "inference_index": 0,
+      "input_tokens": 159638,
+      "hit_ratio": 0.7400605496540776,
+      "request_count": 923,
+      "compute_only_ttft_us": 851200.0,
+      "ssd_stall_us": 0,
+      "ttft_us": 851200.0
+    },
+    {
+      "gpu_id": "GPU55",
+      "inference_index": 0,
+      "input_tokens": 104581,
+      "hit_ratio": 0.5477894285694493,
+      "request_count": 448,
+      "compute_only_ttft_us": 970112.8205128204,
+      "ssd_stall_us": 0,
+      "ttft_us": 970112.8205128204
+    },
+    {
+      "gpu_id": "GPU56",
+      "inference_index": 0,
+      "input_tokens": 133276,
+      "hit_ratio": 0.6904772271802524,
+      "request_count": 719,
+      "compute_only_ttft_us": 846194.8717948719,
+      "ssd_stall_us": 0,
+      "ttft_us": 846194.8717948719
+    },
+    {
+      "gpu_id": "GPU57",
+      "inference_index": 0,
+      "input_tokens": 165524,
+      "hit_ratio": 0.6728563365764907,
+      "request_count": 871,
+      "compute_only_ttft_us": 1110769.2307692308,
+      "ssd_stall_us": 0,
+      "ttft_us": 1110769.2307692308
+    },
+    {
+      "gpu_id": "GPU58",
+      "inference_index": 0,
+      "input_tokens": 151543,
+      "hit_ratio": 0.8897399588322223,
+      "request_count": 1054,
+      "compute_only_ttft_us": 342748.717948718,
+      "ssd_stall_us": 0,
+      "ttft_us": 342748.717948718
+    },
+    {
+      "gpu_id": "GPU59",
+      "inference_index": 0,
+      "input_tokens": 191273,
+      "hit_ratio": 0.6124285324384151,
+      "request_count": 916,
+      "compute_only_ttft_us": 1520656.4102564105,
+      "ssd_stall_us": 0,
+      "ttft_us": 1520656.4102564105
+    },
+    {
+      "gpu_id": "GPU60",
+      "inference_index": 0,
+      "input_tokens": 103793,
+      "hit_ratio": 0.6218601513710376,
+      "request_count": 505,
+      "compute_only_ttft_us": 805087.1794871796,
+      "ssd_stall_us": 0,
+      "ttft_us": 805087.1794871796
+    },
+    {
+      "gpu_id": "GPU61",
+      "inference_index": 0,
+      "input_tokens": 184337,
+      "hit_ratio": 0.9523394270132248,
+      "request_count": 1372,
+      "compute_only_ttft_us": 180225.641025641,
+      "ssd_stall_us": 0,
+      "ttft_us": 180225.641025641
+    },
+    {
+      "gpu_id": "GPU62",
+      "inference_index": 0,
+      "input_tokens": 184935,
+      "hit_ratio": 0.8252491719339002,
+      "request_count": 1193,
+      "compute_only_ttft_us": 662933.3333333334,
+      "ssd_stall_us": 0,
+      "ttft_us": 662933.3333333334
+    },
+    {
+      "gpu_id": "GPU63",
+      "inference_index": 0,
+      "input_tokens": 110983,
+      "hit_ratio": 0.584602968810885,
+      "request_count": 507,
+      "compute_only_ttft_us": 945682.0512820513,
+      "ssd_stall_us": 0,
+      "ttft_us": 945682.0512820513
+    }
+  ]
+}

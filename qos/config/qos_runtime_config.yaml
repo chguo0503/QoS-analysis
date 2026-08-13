@@ -1,0 +1,7 @@
+qos_runtime:
+  # 单个QoS实例内多个事件发生在同一时刻时，严格按下列顺序处理。
+  same_timestamp_event_order:
+    - token_refill  # 先用旧CIR/PIR结算已经到达的令牌补充周期。
+    - rate_update  # 再应用DPU的Queue速率与Group WRR权重，禁止新参数回填过去周期。
+    - io_arrival  # 然后把此时到达的新IO放入相应Queue。
+    - scheduler_dispatch  # 最后按原有CIR优先、EXCESS借用和分层WRR调度。

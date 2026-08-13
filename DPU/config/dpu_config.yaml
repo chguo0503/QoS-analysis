@@ -1,0 +1,18 @@
+dpu:
+  queue_binding:
+    # 实验开始前为每个GPU/SSD路径随机选择一个互斥Queue，后续固定复用。
+    strategy: random_unique_sticky
+    random_seed: 5102  # 固定种子保证相同请求在重复实验中得到相同Queue选择。
+
+    # 比较入口会用完全相同的工作负载分别运行以下策略。
+    comparison_strategies:
+      - random_unique_sticky
+      - random_sticky
+      - random_per_request
+
+  # DPU直接读取每个SSD前独立QoS的Queue IO数量，并向同一QoS写入CIR/PIR。
+  # 该状态传递只观察IO进入/离开QoS Queue，不使用SSD完成通知。
+  rate_control:
+    enabled: true
+    # Queue CIR/PIR限制每条路径速率；Group WRR权重等于组内活跃需求之和。
+    # Group不设置CIR/PIR。SSD过载时不缩放已配置速率，后到IO留队等待。

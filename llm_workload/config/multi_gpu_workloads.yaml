@@ -1,0 +1,9 @@
+multi_gpu:
+  # GPU数量由项目级config/simulation_config.yaml决定；这里仅覆盖默认工作负载。
+  defaults:
+    arrival_time_us: 0.0                     # 未单独配置的GPU默认同时在0 us到达。
+
+  # 仅在需要让某张GPU延迟到达或限定可访问SSD时才添加覆盖。
+  # 默认留空，因此只修改simulation YAML的gpu_count就可以生成任意数量GPU。
+  # 示例：GPU1: {arrival_time_us: 500.0}
+  gpu_overrides: {}

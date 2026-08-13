@@ -1,0 +1,18 @@
+simulation:
+  start_time_us: 0  # 所有GPU、QoS和SSD共享的全局仿真起始时刻。
+
+  # 项目级拓扑：一个StoragePath代表一套独立QoS + 一块ASU SSD。
+  topology:
+    gpu_count: 10  # 自动生成GPU0到GPU9以及对应P节点。
+    storage_path_count: 5  # 自动生成SSD0到SSD4五套独立QoS + ASU SSD。
+    gpu_id_prefix: GPU
+    p_node_id_prefix: P
+    storage_target_id_prefix: SSD
+
+  # 每张GPU顺序执行多次推理；不同GPU仍在同一事件时间线上并行。
+  workload_generation:
+    inference_count_per_gpu: 2  # 每张GPU重复执行的推理次数。
+    random_seed: 6103  # 只用于输入长度和命中率，与Placement/DPU种子独立。
+    input_tokens_range: [100_000, 200_000]  # 两个端点都包含的均匀整数采样区间。
+    prefill_layer_hit_ratio_range: [0.50, 0.99]  # 每次推理独立均匀采样。
+    inter_inference_gap_us: 0  # 同一GPU前一次完成后启动下一次的等待时间。
