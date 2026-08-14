@@ -456,8 +456,6 @@ class PerQueueTokenBucketStage:
             return False
 
         request = queue_controller.head_request()
-        if not request.get("qos_admitted", True):
-            return False
         request_size = request["size_bytes"]
         return (
             queue_controller.has_cir_tokens(request_size)
@@ -476,8 +474,6 @@ class PerQueueTokenBucketStage:
             return False
 
         request = queue_controller.head_request()
-        if not request.get("qos_admitted", True):
-            return False
         request_size = request["size_bytes"]
         return queue_controller.has_pir_tokens(request_size)
 

@@ -1,5 +1,5 @@
-# Baseline始终使用全1 WRR；需求感知策略以此为初值，
-# IO到达后只动态改Group权重，Queue WRR仍保持全1。
+# Baseline和demand_aware_fcfs_cir都始终使用全1 WRR。
+# QoS仍保留动态Group权重接口，但本对照实验不调用它。
 scheduler:
   algorithm: HIERARCHICAL_WRR
   final_arbitration: RR

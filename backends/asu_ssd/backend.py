@@ -139,6 +139,18 @@ class ASUBackend:
         """返回FCP拆分器是否能开始接收新的可变大小描述符。"""
         return self.fcp.can_accept_request()  # 只需一个空原子槽，其余命令后续流式进入。
 
+    def synchronize_time(self, current_time):
+        """功能：将详细后端的可见时钟同步到全局时刻。
+
+        目的：与精确批量后端使用同一时钟接口；详细模式仍然只在
+        ``process_events_at`` 中改变硬件状态。
+
+        输入：ASU内部整数时间单位表示的 ``current_time``。
+
+        输出：无；仅更新后端可见时钟。
+        """
+        self.current_time = current_time
+
     def submit_request(self, request, current_time):
         """复制请求的SSD必要信息，并让FCP逐步切成4 KiB分片。
 

@@ -26,6 +26,7 @@ class UniformRandomInferenceSampler:
             config["prefill_layer_hit_ratio_range"]
         )
         self.inter_inference_gap_us = config.get("inter_inference_gap_us", 0)
+        self.unique_across_gpus = config.get("unique_across_gpus", False)
 
     def sample(self, base_workload, gpu_id, inference_index):
         """功能：为一张GPU的一次推理生成完整工作负载。
@@ -72,3 +73,68 @@ class UniformRandomInferenceSampler:
             self.sample(base_workload, gpu_id, inference_index)
             for inference_index in range(self.inference_count_per_gpu)
         ]
+
+    def build_sequences(self, base_workloads_by_gpu):
+        """功能：为全部GPU一次性生成可复现的推理序列。
+
+        目的：普通模式保留每GPU独立采样；实验模式开启
+        ``unique_across_gpus`` 后，在每个推理序号上为GPU不放回
+        采样input_tokens，并保证hit ratio不重复。完整序列在
+        事件循环启动前固定，因此QoS策略不会改变工作负载。
+
+        输入：
+            base_workloads_by_gpu: ``gpu_id -> 完整工作负载模板`` 映射。
+
+        输出：
+            dict: ``gpu_id -> 按推理序号排列的工作负载列表``。
+        """
+        if not self.unique_across_gpus:
+            return {
+                gpu_id: self.build_sequence(base_workload, gpu_id)
+                for gpu_id, base_workload in base_workloads_by_gpu.items()
+            }
+
+        gpu_ids = list(base_workloads_by_gpu)
+        sequences = {gpu_id: [] for gpu_id in gpu_ids}
+        token_low, token_high = self.input_tokens_range
+        hit_low, hit_high = self.hit_ratio_range
+
+        for inference_index in range(self.inference_count_per_gpu):
+            # 唯一采样使用独立的全局随机源，不依赖GPU完成顺序。
+            identity = (
+                f"{self.random_seed}\x1funique-across-gpus\x1f"
+                f"{inference_index}"
+            )
+            digest = hashlib.blake2b(
+                identity.encode("utf-8"),
+                digest_size=8,
+            ).digest()
+            rng = random.Random(int.from_bytes(digest, byteorder="big"))
+            input_tokens = rng.sample(
+                range(token_low, token_high + 1),
+                len(gpu_ids),
+            )
+
+            hit_ratios = []
+            used_hit_ratios = set()
+            while len(hit_ratios) < len(gpu_ids):
+                hit_ratio = rng.uniform(hit_low, hit_high)
+                if hit_ratio not in used_hit_ratios:
+                    used_hit_ratios.add(hit_ratio)
+                    hit_ratios.append(hit_ratio)
+
+            for gpu_id, token_count, hit_ratio in zip(
+                gpu_ids,
+                input_tokens,
+                hit_ratios,
+            ):
+                workload = deepcopy(base_workloads_by_gpu[gpu_id])
+                workload["workload_id"] = (
+                    f"{workload['workload_id']}_inference_"
+                    f"{inference_index:05d}"
+                )
+                workload["input_tokens"] = token_count
+                workload["prefill_layer_hit_ratio"] = hit_ratio
+                sequences[gpu_id].append(workload)
+
+        return sequences

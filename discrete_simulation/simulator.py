@@ -49,8 +49,9 @@ class DiscreteEventSimulator:
         self.pending_group_weight_update_keys = []
         self.pending_group_weight_updates = {}
 
-        # observer把Queue出队事件传给DPU，不表示SSD完成通知。
-        self.dispatch_observer = None
+        # observer只在Queue depth变化后唤醒DPU读取快照，
+        # 事件本身不携带请求、Demand或SSD完成信息。
+        self.queue_state_observer = None
         self.total_request_count = 0
         self.dispatched_requests = []
         self.end_result = None
@@ -70,20 +71,21 @@ class DiscreteEventSimulator:
         self.backend = backend
         return self
 
-    def set_dispatch_observer(self, observer):
-        """功能：连接QoS下发事件到DPU的Queue状态观察接口。
+    def set_queue_state_observer(self, observer):
+        """功能：连接QoS Queue状态变化到DPU唤醒接口。
 
-        目的：让DPU在一个IO成功离开QoS时同步更新每Queue积压数量和需求状态，
-        不借用SSD完成回调，也不让DPU读取SSD内部流水线。
+        目的：QoS在一轮下发改变Queue depth后只发送无负载
+        唤醒。DPU若关心状态，必须另行读取 ``queue_io_counts``；
+        这避免QoS向DPU泄露逐IO dispatch或Demand信息。
 
         输入：
-            observer: 可调用对象，接收本轮 ``requests`` 和
-                ``event_time_us``；None表示关闭状态传递。
+            observer: 可调用对象，只接收 ``event_time_us``；
+                None表示关闭状态唤醒。
 
         输出：
             DiscreteEventSimulator: 返回自身，便于顶层完成DPU与QoS直连装配。
         """
-        self.dispatch_observer = observer
+        self.queue_state_observer = observer
         return self
 
     def queue_io_counts(self):
@@ -328,7 +330,6 @@ class DiscreteEventSimulator:
             int: 本次调用成功下发的完整IO数量。
         """
         dispatched_count = 0
-        dispatched_in_this_call = []
         while True:
             # 后端检查必须发生在select_next_queue之前；否则SSD已满时一次失败
             # 尝试也会移动WRR游标，从而改变下一次真正成功仲裁的公平顺序。
@@ -362,15 +363,10 @@ class DiscreteEventSimulator:
 
             self.registered_queue_io_counts[queue_id] -= 1
 
-            dispatched_in_this_call.append(request)
-
-        if dispatched_in_this_call and self.dispatch_observer is not None:
-            # 一次非阻塞下发循环结束后批量传递Queue状态，避免每个IO都让DPU
-            # 重复扫描同一SSD的256个Queue；这里仍不表示任何SSD完成事件。
-            self.dispatch_observer(
-                requests=dispatched_in_this_call,
-                event_time_us=self.current_time_us,
-            )
+        if dispatched_count and self.queue_state_observer is not None:
+            # 一次非阻塞下发循环结束后只唤醒一次DPU，
+            # 不携带刚下发的IO列表；DPU必须主动读取256条Queue状态。
+            self.queue_state_observer(event_time_us=self.current_time_us)
 
         return dispatched_count
 
@@ -661,7 +657,8 @@ class DiscreteEventSimulator:
             # 输出Queue状态和动态设置摘要，方便验证DPU确实连接到了每个SSD
             # 自己的QoS实例，而不是把相同queue_id跨SSD混在一起。
             "queue_io_counts": self.queue_io_counts(),
-            # 输出最终Group WRR权重，用于验证需求释放后权重已归零。
+            # 输出最终Group WRR权重：本次Baseline和FCFS-CIR
+            # 始终保持为1，但动态权重接口仍保留给未来策略。
             "group_weight_bitmap": [
                 self.scheduler.group_scheduler.weights[group_id]
                 for group_id in self.queue_layout.group_order

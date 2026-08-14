@@ -251,6 +251,9 @@ class LLMWorkload:
             ),
             "pending_request_ids": set(),
             "io_completion_time_us": None,
+            # 每块SSD分别保存当前GPU层的最晚Block完成时刻；
+            # 层级读取完成时间取这些值的最大值，不求和或平均。
+            "ssd_completion_times_us": {},
         }
 
         blocks = []
@@ -260,6 +263,9 @@ class LLMWorkload:
             self.request_to_layer[request_id] = layer_state
             blocks.append({
                 "request_id": request_id,
+                # 显式层内下标供确定性平衡Placement使用；
+                # 即使调用方改变Block遍历顺序，映射也不变。
+                "block_index": block_index,
                 "size_bytes": self.layer_plan["block_size_bytes"],
             })
 
@@ -304,6 +310,9 @@ class LLMWorkload:
             "layer_start_time_us": layer_state["layer_start_time_us"],
             "compute_done_time_us": layer_state["compute_done_time_us"],
             "io_completion_time_us": io_completion_time_us,
+            "ssd_completion_times_us": dict(
+                layer_state["ssd_completion_times_us"]
+            ),
             "layer_end_time_us": layer_end_time_us,
             "ssd_stall_us": ssd_stall_us,
             "block_count": self.layer_plan["block_count"],
@@ -334,6 +343,15 @@ class LLMWorkload:
         layer_state["pending_request_ids"].remove(request_id)
         self.completed_request_count += 1
         completion_time_us = completion["completion_time_us"]
+        storage_target_id = completion["storage_target_id"]
+        previous_storage_time = layer_state["ssd_completion_times_us"].get(
+            storage_target_id
+        )
+        layer_state["ssd_completion_times_us"][storage_target_id] = (
+            completion_time_us
+            if previous_storage_time is None
+            else max(previous_storage_time, completion_time_us)
+        )
         previous_time = layer_state["io_completion_time_us"]
         layer_state["io_completion_time_us"] = (
             completion_time_us

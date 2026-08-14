@@ -1,0 +1,31 @@
+fcfs_cir_comparison:
+  output_file: ../results/fcfs_cir_comparison/summary.json
+  policies: [baseline, demand_aware_fcfs_cir]
+
+  simulation:
+    start_time_us: 0
+    topology:
+      gpu_count: 64
+      storage_path_count: 2
+    workload_generation:
+      inference_count_per_gpu: 1
+      random_seed: 6103
+      input_tokens_range: [100_000, 200_000]
+      unique_across_gpus: true
+      inter_inference_gap_us: 0
+
+  workload:
+    first_layer_index: 0
+    last_layer_index: 2
+    arrival_time_us: 0
+    batch_size: 1
+    placement:
+      strategy: balanced_round_robin
+      allowed_storage_targets: all
+      random_seed: 6103  # 平衡轮询不使用随机数；保留字段以维持Placement统一构造接口。
+
+  loads:
+    normal_load:
+      prefill_layer_hit_ratio_range: [0.50, 0.99]
+    overload_load:
+      prefill_layer_hit_ratio_range: [0.90, 0.99]

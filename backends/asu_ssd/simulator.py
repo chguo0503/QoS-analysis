@@ -6,6 +6,7 @@ from pathlib import Path
 from simulation_common.config_utils import load_yaml
 
 from .backend import ASUBackend
+from .batched_backend import BatchedExactASUBackend
 from .time_utils import time_to_us, us_to_time
 
 
@@ -49,7 +50,14 @@ class SSDSimulator:
         输出：
             None: 初始化空SSD、非阻塞输入统计和完成状态。
         """
-        self.backend = ASUBackend(backend_config)
+        # 执行模式在SSD封装层切换，保证QoS和上层仿真器
+        # 看到的始终是同一个非阻塞后端接口。
+        self.execution_mode = backend_config.get("execution_mode", "detailed")
+        backend_class = {
+            "detailed": ASUBackend,
+            "batched_exact": BatchedExactASUBackend,
+        }[self.execution_mode]
+        self.backend = backend_class(backend_config)
         self.completion_sink = completion_sink
         self.storage_target_id = storage_target_id
         self.current_time = 0
@@ -131,6 +139,9 @@ class SSDSimulator:
                 f"{time_to_us(requested_time)} us"
             )
         self.current_time = requested_time
+        # 精确批量后端通过解析时刻判断FCP是否可接收，
+        # 因此它必须与封装层的全局时钟保持一致。
+        self.backend.synchronize_time(requested_time)
 
     def next_event_time(self):
         """功能：返回SSD内部最近事件的精确整数时刻。
@@ -235,6 +246,7 @@ class SSDSimulator:
         self.end_result = {
             "stopped": True,
             "storage_target_id": self.storage_target_id,
+            "execution_mode": self.execution_mode,
             "completion_time_us": time_to_us(self.current_time),
             "first_submit_time_us": first_submit_time_us,
             "last_completion_time_us": last_completion_time_us,

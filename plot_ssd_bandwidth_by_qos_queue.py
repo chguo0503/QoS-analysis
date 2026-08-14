@@ -52,7 +52,7 @@ def parse_arguments():
     )
     parser.add_argument(
         "--binding-strategy",
-        choices=("random_sticky", "random_per_request"),
+        choices=("balanced_exclusive",),
         default=None,
         help="override the DPU queue binding strategy from YAML",
     )
@@ -436,8 +436,8 @@ def plot_storage_bandwidth(
         axis.set_ylim(0, capacity_gb_s * 1.05)
         axis.grid(True, linewidth=0.6, alpha=0.3)
 
-        # Queue数较少时显示完整图例；逐请求随机可能激活数百个Queue，
-        # 此时隐藏不可读的巨型图例，改为显示活跃Queue数。
+        # Queue数较少时显示完整图例；GPU较多时互斥绑定
+        # 也可能激活数百个Queue，此时改为显示活跃Queue数。
         if 0 < len(bandwidth_by_queue) <= 12:
             axis.legend(loc="upper right")
         elif len(bandwidth_by_queue) > 12:

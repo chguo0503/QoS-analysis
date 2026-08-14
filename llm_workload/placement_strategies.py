@@ -42,6 +42,7 @@ class PlacementStrategy:
         """
         self.random_seed = random_seed
 
+
 class RandomPlacementStrategy(PlacementStrategy):
     """使用稳定伪随机方式把每个Block放到一个允许访问的SSD。"""
 
@@ -67,8 +68,34 @@ class RandomPlacementStrategy(PlacementStrategy):
         return storage_target_ids[target_index]
 
 
+class BalancedRoundRobinPlacementStrategy(PlacementStrategy):
+    """使用Block稳定下标将每层读取均匀轮询放置到SSD。"""
+
+    strategy_name = "balanced_round_robin"
+
+    def select_target(self, block, storage_target_ids):
+        """功能：根据Block的显式层内下标选择SSD。
+
+        目的：让一层N个Block在M块SSD上的数量差不超过1，
+        并使映射只由 ``block_index`` 和稳定SSD列表决定，
+        不依赖Block实际遍历顺序或共享随机数状态。
+
+        输入：
+            block: 包含层内唯一 ``block_index`` 的Block字典。
+            storage_target_ids: 当前GPU允许访问的稳定SSD ID列表。
+
+        输出：
+            str: 该Block唯一对应的SSD ID。
+        """
+        target_index = block["block_index"] % len(storage_target_ids)
+        return storage_target_ids[target_index]
+
+
 PLACEMENT_STRATEGIES = {
     RandomPlacementStrategy.strategy_name: RandomPlacementStrategy,
+    BalancedRoundRobinPlacementStrategy.strategy_name: (
+        BalancedRoundRobinPlacementStrategy
+    ),
 }
 
 

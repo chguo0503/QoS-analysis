@@ -14,7 +14,7 @@ layer_request:  # layer_request.py的全部可配置原始信息，运行时派�
     device: "NVIDIA GeForce RTX 4090"  # GPU显示名称，当前只作为结果元数据。
     count: 1  # 参与当前Batch计算的GPU数量。
     memory_gb: 24  # 单卡标称显存容量，单位GB，当前不参与带宽公式。
-    effective_compute_tflops: 50.0  # 单卡建模有效算力，单位TFLOPS，不是实机测量值。
+    effective_compute_tflops: 100.0  # 本轮实验将原50 TFLOPS翻倍；单位TFLOPS，不是实机测量值。
     operation_factor_per_parameter_token: 2.0  # 每参数、每Token估算的浮点操作数。
 
   # KV Cache：只描述元素精度和逻辑block布局。

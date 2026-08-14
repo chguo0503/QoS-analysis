@@ -1,232 +1,166 @@
-"""DPU根据活跃带宽需求设置Queue速率和Group调度权重。"""
-
-from collections import deque
+"""DPU内部的先到先服务Queue CIR分配器。"""
 
 
-class DemandAwareRateController:
-    """Queue CIR表示需求保证，Group WRR权重分配调度机会。"""
+class DemandAwareFCFSCIRController:
+    """按每块SSD的Demand到达顺序分配有限CIR容量。"""
 
-    strategy_name = "demand_aware"
+    strategy_name = "demand_aware_fcfs_cir"
 
-    def __init__(
-        self,
-        capacity_bytes_per_second_by_storage_target,
-        queue_to_group_by_storage_target,
-    ):
-        """功能：为每块SSD建立独立的需求和带宽状态。
+    def __init__(self, capacity_bytes_per_second_by_storage_target):
+        """功能：为每块SSD创建独立的FCFS CIR状态。
 
-        目的：容量足够时完整满足先到需求；容量不足时不缩放
-        已配置CIR，后到需求保留在自己的QoS Queue中等待。
+        目的：DPU只使用整数Byte/s做减法、比较和取最小值，
+        不使用浮点比例缩放。每条 ``(SSD, queue_id)`` 只保存
+        当前层的requested CIR、assigned CIR和到达顺序。
 
-        输入：每SSD的整数Byte/s容量，以及每SSD的Queue到Group映射。
-        输出：无；初始化等待、活跃、Queue速率和Group权重。
+        输入：
+            capacity_bytes_per_second_by_storage_target:
+                ``SSD ID -> 整数物理带宽Byte/s`` 映射。
+
+        输出：
+            None: 初始化空Demand表和速率镜像。
         """
         self.capacity = dict(capacity_bytes_per_second_by_storage_target)
-        self.queue_to_group = {
-            target: dict(mapping)
-            for target, mapping in queue_to_group_by_storage_target.items()
-        }
-        self.demands = {}
-        self.request_to_demand = {}
-        self.waiting = {target: deque() for target in self.capacity}
-        self.active = {target: {} for target in self.capacity}
-        self.reserved = {target: 0 for target in self.capacity}
+        self.demands = {target: {} for target in self.capacity}
         self.queue_rates = {target: {} for target in self.capacity}
-        self.group_weights = {
-            target: {
-                group_id: 0
-                for group_id in dict.fromkeys(self.queue_to_group[target].values())
-            }
-            for target in self.capacity
+        self.arrival_sequence = {target: 0 for target in self.capacity}
+        self.completed_demand_count = {target: 0 for target in self.capacity}
+        self.peak_assigned_cir = {target: 0 for target in self.capacity}
+
+    def register_demand(
+        self,
+        storage_target_id,
+        queue_id,
+        requested_cir_bytes_per_second,
+        arrival_time_us,
+    ):
+        """功能：登记一条已经完整批量入队的Queue Demand。
+
+        目的：每个GPU在一块SSD上独占Queue，且层与层串行，
+        因此 ``(SSD, queue_id)`` 足以唯一标识当前Demand。
+        该函数只在整层所有IO都已向QoS登记后调用，避免把
+        批量入队前的空Queue误判为Demand完成。
+
+        输入：
+            storage_target_id: Demand对应的SSD ID。
+            queue_id: 当前GPU→SSD路径独占的Queue ID。
+            requested_cir_bytes_per_second: KV Placement生成的整数Byte/s诉求。
+            arrival_time_us: 该层IO批量到达DPU的仿真时刻。
+
+        输出：
+            None: 在DPU内部保存新Demand，尚不写QoS。
+        """
+        self.arrival_sequence[storage_target_id] += 1
+        self.demands[storage_target_id][queue_id] = {
+            "requested_cir": requested_cir_bytes_per_second,
+            "assigned_cir": 0,
+            "arrival_time_us": arrival_time_us,
+            "arrival_order": self.arrival_sequence[storage_target_id],
         }
-        self.peak_reserved = dict(self.reserved)
-        self.peak_waiting = {target: 0 for target in self.capacity}
 
-    @staticmethod
-    def _demand_key(request):
-        """功能：生成一份SSD带宽需求的唯一标识。
+    def recalculate(self, storage_target_id):
+        """功能：按Demand到达顺序重新分配一块SSD的CIR。
 
-        目的：同一GPU、同一层、同一SSD上的所有Block只登记一次
-        ``aggregate_required_bytes_per_second``，不按IO重复累加。
+        目的：对每个活跃Demand执行
+        ``assigned=min(requested, remaining_capacity)``。后到Demand
+        可以获得部分CIR或0 CIR，但不会被禁止通过EXCESS下发。
 
-        输入：DPU展平后的IO请求。
-        输出：``(P节点, demand_group, SSD)`` 元组。
+        输入：
+            storage_target_id: 需要重算的SSD ID。
+
+        输出：
+            dict: 只包含发生变化的 ``queue_id -> CIR Byte/s``，
+            以及固定为None的 ``group_weights``。
         """
-        return (
-            request["p_node_id"],
-            request["demand_group_id"],
-            request["storage_target_id"],
+        remaining_capacity = self.capacity[storage_target_id]
+        new_queue_rates = {}
+        ordered_demands = sorted(
+            self.demands[storage_target_id].items(),
+            key=lambda item: (
+                item[1]["arrival_time_us"],
+                item[1]["arrival_order"],
+            ),
         )
 
-    def register(self, request):
-        """功能：登记一个已经进入QoS Queue的IO。
+        for queue_id, demand in ordered_demands:
+            assigned_cir = min(
+                demand["requested_cir"],
+                remaining_capacity,
+            )
+            demand["assigned_cir"] = assigned_cir
+            new_queue_rates[queue_id] = assigned_cir
+            remaining_capacity -= assigned_cir
 
-        目的：为新需求保存一份聚合速率，同时按Queue记录尚未
-        离开QoS的Byte数，供后续速率分配和需求释放使用。
-
-        输入：带Queue、需求ID和整数Byte/s诉求的请求。
-        输出：无；更新需求、IO到需求的映射和准入标记。
-        """
-        key = self._demand_key(request)
-        target = request["storage_target_id"]
-        demand = self.demands.get(key)
-        if demand is None:
-            demand = {
-                "rate": min(
-                    request["aggregate_required_bytes_per_second"],
-                    self.capacity[target],
-                ),
-                "requests": [],
-                "remaining_bytes_by_queue": {},
-            }
-            self.demands[key] = demand
-            self.waiting[target].append(key)
-
-        queue_id = request["queue_id"]
-        demand["requests"].append(request)
-        demand["remaining_bytes_by_queue"][queue_id] = (
-            demand["remaining_bytes_by_queue"].get(queue_id, 0)
-            + request["size_bytes"]
-        )
-        request["qos_admitted"] = key in self.active[target]
-        self.request_to_demand[request["request_id"]] = key
-
-    def _admit_waiting_demands(self, storage_target_id):
-        """功能：按到达顺序准入SSD剩余容量能完整满足的需求。
-
-        目的：不使用浮点比例缩放；队首需求放不下时，后续
-        需求不插队，对应硬件中简单的整数加减和比较。
-
-        输入：要重算容量的SSD ID。
-        输出：无；原地更新等待队列、活跃集合和预留带宽。
-        """
-        waiting = self.waiting[storage_target_id]
-        free = self.capacity[storage_target_id] - self.reserved[storage_target_id]
-        while waiting:
-            key = waiting[0]
-            demand = self.demands[key]
-            if demand["rate"] > free:
-                break
-            waiting.popleft()
-            self.active[storage_target_id][key] = None
-            self.reserved[storage_target_id] += demand["rate"]
-            free -= demand["rate"]
-            for request in demand["requests"]:
-                request["qos_admitted"] = True
-
-    def _active_queue_rates(self, storage_target_id):
-        """功能：把每份活跃需求的速率分配到它当前使用的Queue。
-
-        目的：互斥固定绑定时一份需求直接对应一个Queue；
-        其他绑定策略将IO分散到多Queue时，则按剩余Byte数用整数分配。
-
-        输入：要计算的SSD ID。
-        输出：``queue_id -> Byte/s`` 聚合速率映射。
-        """
-        queue_rates = {}
-        for key in self.active[storage_target_id]:
-            demand = self.demands[key]
-            remaining = demand["remaining_bytes_by_queue"]
-            total_bytes = sum(remaining.values())
-            queue_ids = sorted(remaining)
-            unassigned_rate = demand["rate"]
-            for index, queue_id in enumerate(queue_ids):
-                if index == len(queue_ids) - 1:
-                    rate = unassigned_rate
-                else:
-                    rate = demand["rate"] * remaining[queue_id] // total_bytes
-                    unassigned_rate -= rate
-                queue_rates[queue_id] = queue_rates.get(queue_id, 0) + rate
-        return queue_rates
-
-    def update(self, storage_target_id):
-        """功能：准入可满足需求并重算Queue速率与Group权重。
-
-        目的：Queue CIR承担需求保证；Group权重等于组内活跃
-        Queue速率之和，只影响WRR机会，完全不涉及Group CIR/PIR。
-
-        输入：要更新的SSD ID。
-        输出：发生变化的Queue速率和可选的整张Group权重。
-        """
-        self._admit_waiting_demands(storage_target_id)
-        new_queue_rates = self._active_queue_rates(storage_target_id)
         old_queue_rates = self.queue_rates[storage_target_id]
         queue_updates = {
             queue_id: new_queue_rates.get(queue_id, 0)
             for queue_id in sorted(old_queue_rates.keys() | new_queue_rates.keys())
-            if old_queue_rates.get(queue_id, 0)
-            != new_queue_rates.get(queue_id, 0)
+            if (
+                queue_id not in old_queue_rates
+                or queue_id not in new_queue_rates
+                or old_queue_rates[queue_id] != new_queue_rates[queue_id]
+            )
         }
-
-        new_group_weights = {
-            group_id: 0
-            for group_id in self.group_weights[storage_target_id]
-        }
-        for queue_id, rate in new_queue_rates.items():
-            group_id = self.queue_to_group[storage_target_id][queue_id]
-            new_group_weights[group_id] += rate
-        group_update = (
-            new_group_weights
-            if new_group_weights != self.group_weights[storage_target_id]
-            else None
-        )
-
         self.queue_rates[storage_target_id] = new_queue_rates
-        self.group_weights[storage_target_id] = new_group_weights
-        self.peak_reserved[storage_target_id] = max(
-            self.peak_reserved[storage_target_id],
-            self.reserved[storage_target_id],
-        )
-        self.peak_waiting[storage_target_id] = max(
-            self.peak_waiting[storage_target_id],
-            len(self.waiting[storage_target_id]),
+        assigned_total = sum(new_queue_rates.values())
+        self.peak_assigned_cir[storage_target_id] = max(
+            self.peak_assigned_cir[storage_target_id],
+            assigned_total,
         )
         return {
             "queue_rates": queue_updates,
-            "group_weights": group_update,
+            # 本策略严格隔离Queue CIR变量，不写Group WRR。
+            # QoS的动态Group权重接口仍保留给未来策略。
+            "group_weights": None,
         }
 
-    def dispatched(self, requests):
-        """功能：根据QoS下发的IO更新每份需求的剩余量。
+    def release_empty_demands(self, storage_target_id, queue_depths):
+        """功能：仅根据Queue depth快照释放已经排空的Demand。
 
-        目的：DPU只使用可见的Queue occupancy判断需求是否释放，
-        不依赖SSD完成回调或NAND内部状态；Queue排空后可准入后续需求。
+        目的：QoS到DPU的状态接口不携带IO、request_id或
+        demand_id。DPU只查看自己正在跟踪的 ``(SSD, Queue)``；
+        Queue从已登记的非空状态变为0，即表示该Demand的IO
+        已全部离开QoS，可以释放CIR并重新分配。
 
-        输入：同一块SSD在本轮成功离开QoS Queue的IO列表。
-        输出：需要写回QoS的Queue速率和Group权重变化。
+        输入：
+            storage_target_id: 发生Queue状态变化的SSD ID。
+            queue_depths: QoS读出的 ``queue_id -> 尚未下发IO数`` 快照。
+
+        输出：
+            dict: 释放后需要写回QoS的Queue CIR变化。
         """
-        storage_target_id = requests[0]["storage_target_id"]
-        for request in requests:
-            key = self.request_to_demand.pop(request["request_id"])
-            demand = self.demands[key]
-            queue_id = request["queue_id"]
-            remaining = demand["remaining_bytes_by_queue"]
-            remaining[queue_id] -= request["size_bytes"]
-            if remaining[queue_id] == 0:
-                del remaining[queue_id]
-            if not remaining:
-                self.reserved[storage_target_id] -= demand["rate"]
-                del self.active[storage_target_id][key]
-                del self.demands[key]
-        return self.update(storage_target_id)
+        demands = self.demands[storage_target_id]
+        empty_queue_ids = [
+            queue_id
+            for queue_id in demands
+            if queue_depths[queue_id] == 0
+        ]
+        for queue_id in empty_queue_ids:
+            del demands[queue_id]
+            self.completed_demand_count[storage_target_id] += 1
+        return self.recalculate(storage_target_id)
 
     def statistics(self):
-        """功能：返回需求感知控制器的实验统计。
+        """功能：返回不暴露单Demand速率的DPU控制面统计。
 
-        目的：验证最终无遗留需求，并观察每SSD的峰值预留和等待。
+        目的：供回归测试确认仿真结束时没有残留Demand，并检查
+        峰值CIR总和从未超过SSD容量。不输出requested CIR或
+        assigned CIR的逐Demand明细。
 
         输入：无。
-        输出：策略名、需求数、预留带宽和Group权重字典。
+
+        输出：
+            dict: 策略名、活跃/完成Demand数和每SSD峰值CIR总和。
         """
         return {
             "strategy": self.strategy_name,
-            "active_demand_count": sum(len(items) for items in self.active.values()),
-            "waiting_demand_count": sum(len(items) for items in self.waiting.values()),
-            "reserved_bytes_per_second": dict(self.reserved),
-            "peak_reserved_bytes_per_second": dict(self.peak_reserved),
-            "peak_waiting_demand_count": dict(self.peak_waiting),
-            "group_weights_bytes_per_second": {
-                target: dict(weights)
-                for target, weights in self.group_weights.items()
-            },
+            "active_demand_count": sum(
+                len(demands) for demands in self.demands.values()
+            ),
+            "completed_demand_count_by_storage_target": dict(
+                self.completed_demand_count
+            ),
+            "peak_assigned_cir_bytes_per_second": dict(
+                self.peak_assigned_cir
+            ),
         }

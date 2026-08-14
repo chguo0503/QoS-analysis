@@ -1,341 +1,427 @@
-"""需求感知Queue速率、Group WRR权重和多GPU/SSD联合仿真测试。"""
+"""DPU FCFS-CIR控制面与QoS两轮调度的回归测试。"""
 
-from copy import deepcopy
 from pathlib import Path
 import unittest
-from unittest.mock import patch
 
 from DPU import (
     DPURequestGateway,
-    DemandAwareRateController,
+    DemandAwareFCFSCIRController,
     build_queue_binding_strategy,
 )
 from qos import build_qos_simulator
-from qos.schedulers import SmoothWeightedRoundRobinScheduler
-import qos_ssd_simulator
 
 
 PROJECT_DIR = Path(__file__).resolve().parents[1]
 QOS_CONFIG_DIR = PROJECT_DIR / "qos" / "config"
+EXPERIMENT_CONFIG_DIR = PROJECT_DIR / "experiments" / "config"
+SSD_CAPACITY_BYTES_PER_SECOND = 40_000_000_000
 
 
-def build_qos():
-    """功能：使用项目YAML创建一套纯QoS。
+def build_uniform_qos():
+    """功能：创建CIR=0、PIR=uncapped、全部WRR=1的纯QoS实例。
 
-    目的：在不启动SSD流水线的情况下验证DPU状态传递和设置。
-    输入：无。输出：未连接SSD的QoS仿真器。
+    目的：隔离SSD后端，直接验证DPU控制写入、Queue状态回传
+    以及CIR-first/EXCESS调度语义。
+
+    输入：无。
+
+    输出：未连接SSD的QoS离散事件仿真器。
     """
     return build_qos_simulator(
         QOS_CONFIG_DIR / "queue_layout_config.yaml",
-        QOS_CONFIG_DIR / "token_bucket_config.yaml",
-        QOS_CONFIG_DIR / "wrr_config.yaml",
+        EXPERIMENT_CONFIG_DIR / "uniform_baseline_token_bucket.yaml",
+        EXPERIMENT_CONFIG_DIR / "uniform_wrr.yaml",
         QOS_CONFIG_DIR / "qos_runtime_config.yaml",
         0,
     )
 
 
-def flat_request(request_id, node, group, queue, rate):
-    """功能：构造需求控制器使用的展平请求。
+def make_dpu_request(request_id, gpu_index, requested_cir):
+    """功能：构造一个最小KV Placement输出请求。
 
-    目的：用最小字段集独立测试速率和权重计算。
-    输入：请求ID、P节点、需求组、Queue和整数Byte/s。
-    输出：DPU展平请求字典。
-    """
-    return {
-        "request_id": request_id,
-        "p_node_id": node,
-        "storage_target_id": "SSD0",
-        "size_bytes": 147_456,
-        "demand_group_id": group,
-        "aggregate_required_bytes_per_second": rate,
-        "queue_id": queue,
-        "arrival_time_us": 0,
-        "qos_admitted": False,
-    }
+    目的：测试DPU只在内部保存聚合带宽诉求，向QoS只传递
+    普通IO数据面字段和最终CIR/PIR控制。
 
+    输入：请求ID、GPU索引和KV Placement生成的整数Byte/s诉求。
 
-def dpu_request(request_id, node, group, rate):
-    """功能：构造DPU入口使用的KV请求。
-
-    目的：验证互斥绑定、Queue登记和控制事件的完整链路。
-    输入：请求ID、P节点、需求组和整数Byte/s。
-    输出：带 ``basic`` 和 ``demand_bw`` 的DPU请求。
+    输出：包含 ``basic`` 和 ``demand_bw`` 的DPU入口字典。
     """
     return {
         "basic": {
             "request_id": request_id,
-            "p_node_id": node,
+            "p_node_id": f"P{gpu_index}",
             "storage_target_id": "SSD0",
             "size_bytes": 147_456,
         },
         "demand_bw": {
-            "demand_group_id": group,
-            "aggregate_required_bytes_per_second": rate,
+            "demand_group_id": f"demand_{gpu_index}",
+            "aggregate_required_bytes_per_second": requested_cir,
         },
     }
 
 
-class QueueBindingTests(unittest.TestCase):
-    """验证随机互斥绑定在实验前完成且可复现。"""
+def build_gateway(gpu_count, controller=None):
+    """功能：装配一套单SSD的DPU↔QoS测试链路。
 
-    def test_unique_sticky_binding_has_no_collisions(self):
-        """功能：为10个P节点在两块SSD上预绑定Queue。
+    目的：复用真实Queue布局和互斥绑定，避免单元测试自行
+    伪造调度器行为。
 
-        目的：断言每SSD的10个Queue互不重复，且重建策略结果相同。
-        输入：无。输出：通过unittest断言报告结果。
+    输入：GPU数量和可选FCFS-CIR控制器。
+
+    输出： ``(qos, dpu)`` 二元组。
+    """
+    qos = build_uniform_qos()
+    queues_by_target = {"SSD0": qos.token_stage.queue_order}
+    p_node_ids = [f"P{index}" for index in range(gpu_count)]
+    binding = build_queue_binding_strategy(
+        "balanced_exclusive",
+        p_node_ids,
+        queues_by_target,
+    )
+    dpu = DPURequestGateway(
+        queues_by_target,
+        binding,
+        qos.input,
+        {"SSD0": qos},
+        controller,
+    )
+    return qos, dpu
+
+
+class BalancedExclusiveBindingTests(unittest.TestCase):
+    """验证64 GPU在每块SSD上的固定互斥Queue绑定。"""
+
+    def test_exact_formula_and_group_distribution(self):
+        """功能：在两个SSD namespace中预绑定64张GPU。
+
+        目的：验证每盘64条Queue互不冲突、8个Group各8条，
+        且Queue下标严格符合实验公式。
+
+        输入：无。
+
+        输出：通过unittest断言报告绑定结果。
         """
-        p_nodes = [f"P{index}" for index in range(10)]
-        queues = {
-            target: [f"q{index:03d}" for index in range(256)]
-            for target in ("SSD0", "SSD1")
-        }
-        first = build_queue_binding_strategy(
-            "random_unique_sticky",
-            5102,
-            p_nodes,
-            queues,
+        p_node_ids = [f"P{index}" for index in range(64)]
+        queues = [f"q{index:03d}" for index in range(256)]
+        strategy = build_queue_binding_strategy(
+            "balanced_exclusive",
+            p_node_ids,
+            {"SSD0": queues, "SSD1": queues},
         )
-        second = build_queue_binding_strategy(
-            "random_unique_sticky",
-            5102,
-            p_nodes,
-            queues,
-        )
-        self.assertEqual(first.bindings, second.bindings)
-        for target in queues:
-            selected = [first.bindings[(node, target)] for node in p_nodes]
-            self.assertEqual(len(selected), len(set(selected)))
+
+        for storage_target_id in ("SSD0", "SSD1"):
+            selected = [
+                strategy.bindings[(p_node_id, storage_target_id)]
+                for p_node_id in p_node_ids
+            ]
+            self.assertEqual(len(set(selected)), 64)
+            group_counts = {group_index: 0 for group_index in range(8)}
+            for gpu_index, queue_id in enumerate(selected):
+                expected_index = 32 * (gpu_index % 8) + gpu_index // 8
+                self.assertEqual(queue_id, f"q{expected_index:03d}")
+                group_counts[expected_index // 32] += 1
+            self.assertEqual(set(group_counts.values()), {8})
 
 
-class DemandAwareControllerTests(unittest.TestCase):
-    """验证Queue速率、Group权重和过载等待规则。"""
+class FCFSCIRControllerTests(unittest.TestCase):
+    """验证仅使用整数运算的先到先服务CIR分配。"""
 
-    def build_controller(self, capacity=40):
-        """功能：创建只含三个Queue的需求感知控制器。
+    def build_controller(self):
+        """功能：创建一块40 GB/s SSD的空FCFS-CIR控制器。
 
-        目的：用q000所在g0和q032/q033所在g1验证组级聚合。
-        输入：SSD容量。输出：空的DemandAwareRateController。
+        目的：让各个分配规则测试共用相同物理容量。
+
+        输入：无。
+
+        输出：新的 ``DemandAwareFCFSCIRController``。
         """
-        return DemandAwareRateController(
-            {"SSD0": capacity},
-            {"SSD0": {"q000": "g0", "q032": "g1", "q033": "g1"}},
+        return DemandAwareFCFSCIRController({
+            "SSD0": SSD_CAPACITY_BYTES_PER_SECOND,
+        })
+
+    def register(self, controller, queue_id, requested_gb_s, arrival_order):
+        """功能：按测试顺序登记一个Queue Demand。
+
+        目的：将易读的GB/s用例转换成控制器真实整数Byte/s输入。
+
+        输入：控制器、Queue ID、GB/s诉求和到达序号。
+
+        输出：无；原地登记Demand。
+        """
+        controller.register_demand(
+            "SSD0",
+            queue_id,
+            requested_gb_s * 1_000_000_000,
+            arrival_order,
         )
 
-    def test_queue_rates_and_group_weights_have_separate_roles(self):
-        """功能：登记三份4 Byte/s需求并计算控制量。
+    def test_fcfs_partial_assignment_for_30_plus_20(self):
+        """功能：将先到30 GB/s和后到20 GB/s放入40 GB/s SSD。
 
-        目的：断言每Queue速率为4，g0/g1调度权重分别为4/8。
-        输入：无。输出：通过unittest断言报告结果。
+        目的：断言FCFS部分分配是30+10，而不是比例缩放或整项拒绝。
+
+        输入：无。
+
+        输出：通过unittest断言报告分配结果。
         """
         controller = self.build_controller()
-        requests = [
-            flat_request("r0", "P0", "d0", "q000", 4),
-            flat_request("r1", "P1", "d1", "q032", 4),
-            flat_request("r2", "P2", "d2", "q033", 4),
-        ]
-        for request in requests:
-            controller.register(request)
-        updates = controller.update("SSD0")
+        self.register(controller, "q000", 30, 0)
+        self.register(controller, "q032", 20, 1)
+        updates = controller.recalculate("SSD0")
+
         self.assertEqual(
             updates["queue_rates"],
-            {"q000": 4, "q032": 4, "q033": 4},
+            {"q000": 30_000_000_000, "q032": 10_000_000_000},
         )
-        self.assertEqual(updates["group_weights"], {"g0": 4, "g1": 8})
+        self.assertIsNone(updates["group_weights"])
+        self.assertEqual(
+            sum(controller.queue_rates["SSD0"].values()),
+            SSD_CAPACITY_BYTES_PER_SECOND,
+        )
 
-    def test_later_demand_waits_without_scaling_active_rates(self):
-        """功能：用30+20需求测试40容量的整项准入。
+    def test_zero_assignment_does_not_remove_demand(self):
+        """功能：登记一个用完容量的Demand和一个后到Demand。
 
-        目的：断言先到需求保持30，后到需求等待释放后获得20。
-        输入：无。输出：通过unittest断言报告结果。
+        目的：验证assigned CIR=0只是没有保障，Demand仍保留为活跃状态。
+
+        输入：无。
+
+        输出：通过unittest断言报告Demand状态。
         """
         controller = self.build_controller()
-        first = flat_request("r0", "P0", "d0", "q000", 30)
-        second = flat_request("r1", "P1", "d1", "q032", 20)
-        controller.register(first)
-        controller.register(second)
+        self.register(controller, "q000", 40, 0)
+        self.register(controller, "q032", 20, 1)
+        controller.recalculate("SSD0")
 
-        updates = controller.update("SSD0")
-        self.assertEqual(updates["queue_rates"], {"q000": 30})
-        self.assertTrue(first["qos_admitted"])
-        self.assertFalse(second["qos_admitted"])
+        self.assertEqual(controller.demands["SSD0"]["q032"]["assigned_cir"], 0)
+        self.assertIn("q032", controller.demands["SSD0"])
 
-        updates = controller.dispatched([first])
-        self.assertEqual(updates["queue_rates"], {"q000": 0, "q032": 20})
-        self.assertTrue(second["qos_admitted"])
-        self.assertEqual(controller.reserved["SSD0"], 20)
+    def test_releasing_first_queue_restores_second_cir(self):
+        """功能：模拟30+20分配后先到Queue变空。
 
-    def test_waiting_io_stays_in_real_qos_queue(self):
-        """功能：经过真实QoS运行30+20 GB/s的两个IO。
+        目的：断言DPU只依据Queue depth释放A，并将B从10恢复到20 GB/s。
 
-        目的：断言第二个IO在第一个离队后才获得速率，
-        且DPU能把项目默认的有限PIR切换为uncapped。
-        输入：无。输出：通过unittest断言报告结果。
+        输入：无。
+
+        输出：通过unittest断言报告重分配结果。
         """
-        qos = build_qos()
-        queues_by_target = {"SSD0": qos.token_stage.queue_order}
-        controller = DemandAwareRateController(
-            {"SSD0": 40_000_000_000},
-            {"SSD0": qos.queue_layout.queue_to_group},
+        controller = self.build_controller()
+        self.register(controller, "q000", 30, 0)
+        self.register(controller, "q032", 20, 1)
+        controller.recalculate("SSD0")
+        updates = controller.release_empty_demands(
+            "SSD0",
+            {"q000": 0, "q032": 1},
         )
-        binding = build_queue_binding_strategy(
-            "random_unique_sticky",
-            7,
-            ["P0", "P1"],
-            queues_by_target,
+
+        self.assertNotIn("q000", controller.demands["SSD0"])
+        self.assertEqual(controller.demands["SSD0"]["q032"]["assigned_cir"], 20_000_000_000)
+        self.assertEqual(
+            updates["queue_rates"],
+            {"q000": 0, "q032": 20_000_000_000},
         )
-        dpu = DPURequestGateway(
-            queues_by_target,
-            binding,
-            qos.input,
-            {"SSD0": qos},
-            controller,
-        )
-        submitted = dpu.submit_batch([
-            dpu_request("r0", "P0", "d0", 30_000_000_000),
-            dpu_request("r1", "P1", "d1", 20_000_000_000),
+
+    def test_total_assignment_never_exceeds_capacity(self):
+        """功能：按到达顺序登记多个过载Demand。
+
+        目的：对每次重算断言assigned CIR总和不超过40 GB/s。
+
+        输入：无。
+
+        输出：通过unittest断言报告容量上限。
+        """
+        controller = self.build_controller()
+        for index, requested_gb_s in enumerate((17, 19, 23, 29)):
+            self.register(
+                controller,
+                f"q{index * 32:03d}",
+                requested_gb_s,
+                index,
+            )
+            controller.recalculate("SSD0")
+            self.assertLessEqual(
+                sum(controller.queue_rates["SSD0"].values()),
+                SSD_CAPACITY_BYTES_PER_SECOND,
+            )
+
+
+class DPUQoSInterfaceTests(unittest.TestCase):
+    """验证DPU↔QoS接口限制和两轮调度语义。"""
+
+    def test_baseline_dispatches_only_through_excess(self):
+        """功能：在Baseline配置下下发两条IO。
+
+        目的：断言CIR=0、PIR=uncapped时没有CIR dispatch，
+        非空Queue仍能全部通过EXCESS完成。
+
+        输入：无。
+
+        输出：通过unittest断言报告两轮计数。
+        """
+        qos, dpu = build_gateway(gpu_count=2)
+        dpu.submit_batch([
+            make_dpu_request("r0", 0, 10_000_000_000),
+            make_dpu_request("r1", 1, 10_000_000_000),
         ], 0)
-        self.assertTrue(submitted[0]["qos_admitted"])
-        self.assertFalse(submitted[1]["qos_admitted"])
+        result = qos.end()
+
+        self.assertEqual(result["cir_dispatched_request_count"], 0)
+        self.assertEqual(result["excess_dispatched_request_count"], 2)
+        self.assertEqual(len(result["dispatched_requests"]), 2)
+
+    def test_zero_assigned_queue_still_dispatches_through_excess(self):
+        """功能：使先到Demand占用40 GB/s，后到Demand获得0 CIR。
+
+        目的：断言两条Queue都能下发，assigned CIR=0不构成Admission Gate。
+
+        输入：无。
+
+        输出：通过unittest断言报告请求完成情况。
+        """
+        controller = DemandAwareFCFSCIRController({
+            "SSD0": SSD_CAPACITY_BYTES_PER_SECOND,
+        })
+        qos, dpu = build_gateway(gpu_count=2, controller=controller)
+        submitted = dpu.submit_batch([
+            make_dpu_request("r0", 0, 40_000_000_000),
+            make_dpu_request("r1", 1, 20_000_000_000),
+        ], 0)
+        second_queue = submitted[1]["queue_id"]
+        self.assertEqual(
+            controller.demands["SSD0"][second_queue]["assigned_cir"],
+            0,
+        )
 
         result = qos.end()
-        # uncapped Queue可在同一仿真时刻连续下发，因此用
-        # 出队顺序而不是必须递增的微秒时间戳验证先到准入。
         self.assertEqual(
-            [request["request_id"] for request in result["dispatched_requests"]],
-            ["r0", "r1"],
+            {request["request_id"] for request in result["dispatched_requests"]},
+            {"r0", "r1"},
         )
-        for request in submitted:
-            queue_id = request["queue_id"]
-            self.assertIsNone(qos.token_stage.controllers[queue_id].pir_bucket)
-        self.assertFalse(any(result["queue_io_counts"].values()))
-        self.assertEqual(result["group_weight_bitmap"], [0] * 8)
+        self.assertGreaterEqual(result["excess_dispatched_request_count"], 1)
+        self.assertEqual(controller.statistics()["active_demand_count"], 0)
 
+    def test_qos_request_contains_only_data_plane_fields(self):
+        """功能：检查DPU完成Queue绑定后的QoS请求格式。
 
-class WeightedRoundRobinTests(unittest.TestCase):
-    """验证动态整数平滑WRR的比例和更新能力。"""
+        目的：断言KV Placement的Demand ID和requested/assigned CIR
+        只留在DPU内部，不通过每IO接口写入QoS。
 
-    def test_dynamic_three_to_one_ratio(self):
-        """功能：用3:1权重执行40次仲裁。
+        输入：无。
 
-        目的：断言调度器不展开权重仍精确给出30:10次机会。
-        输入：无。输出：通过unittest断言报告结果。
+        输出：通过unittest断言报告字段集合。
         """
-        scheduler = SmoothWeightedRoundRobinScheduler(["g0", "g1"], [1, 1])
-        scheduler.set_weights({"g0": 3, "g1": 1})
-        selected = [scheduler.select_next(lambda _: True) for _ in range(40)]
-        self.assertEqual(selected.count("g0"), 30)
-        self.assertEqual(selected.count("g1"), 10)
+        qos, dpu = build_gateway(gpu_count=1)
+        submitted = dpu.submit_batch([
+            make_dpu_request("r0", 0, 4_000_000_000),
+        ], 0)
 
-
-class DemandSatisfactionMetricTests(unittest.TestCase):
-    """验证需求满足率使用SSD最后完成时刻和GPU计算截止时刻。"""
-
-    def test_only_nonempty_layers_completed_by_deadline_are_satisfied(self):
-        """功能：构造一份按时、一份超时和一份空层结果。
-
-        目的：断言分子为1、分母为2，且空层不是SSD读取demand。
-        输入：无。输出：通过unittest断言报告结果。
-        """
-        inference_results = [{
-            "gpu_id": "GPU0",
-            "inference_index": 0,
-            "layers": [
-                {
-                    "layer_request_id": "d0",
-                    "block_count": 1,
-                    "compute_done_time_us": 100,
-                    "io_completion_time_us": 100,
-                },
-                {
-                    "layer_request_id": "d1",
-                    "block_count": 1,
-                    "compute_done_time_us": 200,
-                    "io_completion_time_us": 201,
-                },
-                {
-                    "layer_request_id": "d2",
-                    "block_count": 0,
-                    "compute_done_time_us": 300,
-                    "io_completion_time_us": 0,
-                },
-            ],
-        }]
-        result = (
-            qos_ssd_simulator.JointSimulation
-            ._demand_satisfaction_statistics(inference_results)
+        self.assertEqual(
+            set(submitted[0]),
+            {
+                "request_id",
+                "p_node_id",
+                "storage_target_id",
+                "size_bytes",
+                "queue_id",
+                "arrival_time_us",
+            },
         )
-        self.assertEqual(result["satisfied_demand_count"], 1)
-        self.assertEqual(result["total_demand_count"], 2)
-        self.assertEqual(result["satisfaction_ratio"], 0.5)
+        qos.end()
 
+    def test_queue_depth_observer_releases_demand(self):
+        """功能：运行一条由DPU登记的Queue Demand至Queue排空。
 
-class TopologyTests(unittest.TestCase):
-    """使用缩短负载验证不同GPU/SSD数量和需求满足率输出。"""
+        目的：断言QoS只用无请求载荷的状态唤醒通知DPU，
+        DPU主动读depth=0后释放Demand和CIR。
 
-    def run_topology(self, gpu_count, ssd_count):
-        """功能：在内存中覆盖拓扑并运行一层仿真。
+        输入：无。
 
-        目的：快速验证任意多GPU/多SSD组件装配与请求守恒。
-        输入：GPU和SSD数量。输出：联合仿真结果。
+        输出：通过unittest断言报告控制器终态。
         """
-        original_load = qos_ssd_simulator.load_yaml
-        simulation_file = (
-            PROJECT_DIR / "config" / "simulation_config.yaml"
-        ).resolve()
+        controller = DemandAwareFCFSCIRController({
+            "SSD0": SSD_CAPACITY_BYTES_PER_SECOND,
+        })
+        qos, dpu = build_gateway(gpu_count=1, controller=controller)
+        dpu.submit_batch([
+            make_dpu_request("r0", 0, 4_000_000_000),
+        ], 0)
+        self.assertEqual(controller.statistics()["active_demand_count"], 1)
 
-        def test_load(path):
-            """功能：为本次测试缩短顶层工作负载。
+        qos.end()
+        self.assertEqual(controller.statistics()["active_demand_count"], 0)
+        self.assertEqual(
+            controller.statistics()["completed_demand_count_by_storage_target"],
+            {"SSD0": 1},
+        )
 
-            目的：不修改项目YAML即可完成多种拓扑的快速回归。
-            输入：YAML路径。输出：可能包含内存覆盖的配置。
-            """
-            data = deepcopy(original_load(path))
-            resolved = Path(path).resolve()
-            if resolved == simulation_file:
-                simulation = data["simulation"]
-                simulation["topology"]["gpu_count"] = gpu_count
-                simulation["topology"]["storage_path_count"] = ssd_count
-                generation = simulation["workload_generation"]
-                generation["inference_count_per_gpu"] = 1
-                generation["input_tokens_range"] = [512, 768]
-                generation["prefill_layer_hit_ratio_range"] = [0.5, 0.8]
-            elif resolved == qos_ssd_simulator.MULTI_GPU_CONFIG_FILE.resolve():
-                data["multi_gpu"]["defaults"].update({
-                    "first_layer_index": 0,
-                    "last_layer_index": 0,
-                })
-            return data
+    def test_repeated_blocks_register_one_aggregate_demand(self):
+        """功能：将同一GPU/层/SSD的两个Block批量交给DPU。
 
-        with patch.object(qos_ssd_simulator, "load_yaml", side_effect=test_load):
-            return qos_ssd_simulator.run_joint_simulation()
+        目的：断言每个Block重复携带的KV Placement聚合带宽只登记
+        一次，不会被DPU按IO数量再次累加。
 
-    def test_multiple_topologies_complete(self):
-        """功能：运行1x1、3x2和10x5拓扑。
+        输入：无。
 
-        目的：断言请求守恒、控制状态归零且需求满足率字段完整。
-        输入：无。输出：通过unittest断言报告结果。
+        输出：通过unittest断言报告DPU内部Demand数量和requested CIR。
         """
-        for gpu_count, ssd_count in ((1, 1), (3, 2), (10, 5)):
-            with self.subTest(gpu_count=gpu_count, ssd_count=ssd_count):
-                result = self.run_topology(gpu_count, ssd_count)
-                self.assertEqual(result["gpu_count"], gpu_count)
-                self.assertEqual(result["ssd_count"], ssd_count)
-                self.assertEqual(
-                    result["dpu"]["rate_control"]["active_demand_count"],
-                    0,
-                )
-                self.assertEqual(
-                    result["dpu"]["rate_control"]["waiting_demand_count"],
-                    0,
-                )
-                self.assertEqual(
-                    result["demand_satisfaction"]["total_demand_count"],
-                    gpu_count,
-                )
-                self.assertTrue(all(
-                    path["qos"]["completed"]
-                    for path in result["storage_paths"].values()
-                ))
+        controller = DemandAwareFCFSCIRController({
+            "SSD0": SSD_CAPACITY_BYTES_PER_SECOND,
+        })
+        qos, dpu = build_gateway(gpu_count=1, controller=controller)
+        requested_cir = 4_000_000_000
+        dpu.submit_batch([
+            make_dpu_request("r0", 0, requested_cir),
+            make_dpu_request("r1", 0, requested_cir),
+        ], 0)
+
+        self.assertEqual(len(controller.demands["SSD0"]), 1)
+        demand = next(iter(controller.demands["SSD0"].values()))
+        self.assertEqual(demand["requested_cir"], requested_cir)
+        self.assertEqual(sum(qos.queue_io_counts().values()), 2)
+        qos.end()
+
+    def test_all_pir_is_uncapped_and_weights_stay_one(self):
+        """功能：检查实验QoS的256条Queue和两级WRR初值。
+
+        目的：断言两策略的PIR全部uncapped，Group和Queue权重全为1。
+
+        输入：无。
+
+        输出：通过unittest断言报告静态QoS配置。
+        """
+        qos = build_uniform_qos()
+        controllers = qos.token_stage.controllers
+        self.assertTrue(all(
+            controller.pir_bucket is None
+            for controller in controllers.values()
+        ))
+        self.assertEqual(
+            set(qos.scheduler.group_scheduler.weights.values()),
+            {1},
+        )
+        for queue_scheduler in qos.scheduler.queue_schedulers.values():
+            slots = queue_scheduler.rr_scheduler.item_order
+            self.assertEqual(len(slots), 32)
+            self.assertEqual(len(set(slots)), 32)
+
+    def test_dynamic_group_weight_interface_is_preserved(self):
+        """功能：向QoS独立提交一次动态Group WRR更新。
+
+        目的：确认未来策略仍可使用该硬件接口，而本次
+        Baseline和FCFS-CIR只是默认不调用它。
+
+        输入：无。
+
+        输出：通过unittest断言报告更新后的权重。
+        """
+        qos = build_uniform_qos()
+        weights = {
+            group_id: index + 1
+            for index, group_id in enumerate(qos.queue_layout.group_order)
+        }
+        qos.schedule_group_weight_update(weights, 0)
+        qos.process_at(0)
+        self.assertEqual(qos.scheduler.group_scheduler.weights, weights)
 
 
 if __name__ == "__main__":

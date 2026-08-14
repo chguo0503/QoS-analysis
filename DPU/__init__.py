@@ -5,12 +5,12 @@ from DPU.queue_binding_strategies import (
     QUEUE_BINDING_STRATEGIES,
     build_queue_binding_strategy,
 )
-from DPU.rate_controller import DemandAwareRateController
+from DPU.rate_controller import DemandAwareFCFSCIRController
 
 
 __all__ = [
     "DPURequestGateway",
     "QUEUE_BINDING_STRATEGIES",
-    "DemandAwareRateController",
+    "DemandAwareFCFSCIRController",
     "build_queue_binding_strategy",
 ]

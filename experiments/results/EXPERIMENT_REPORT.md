@@ -73,6 +73,7 @@ SSD=1 时，初始准入前 26 个需求，预留约 36.94 GB/s，后 38 个需�
 
 1. 每个活跃 demand 优先租用一个空 Queue，结束后释放；本实验每盘只有 64 个 GPU、256 个 Queue，完全有条件避免碰撞。
 2. 只在无空 Queue 时退化为最小 Queue depth 或 FIFO 等待；该决策只需要整数计数和比较。
-3. 保留 `CIR=需求`，但可将已准入 Queue 的有限 PIR 设为 SSD 物理上限，使空闲容量可被借用；后到过载 demand 仍由 `qos_admitted=false` 阻止，不需要浮点运算或比例缩放。
+3. 该旧建议依赖每IO准入门控，与后续确定的硬件接口不符，已由
+   “Queue CIR仅提供保障、PIR始终uncapped、0 CIR Queue仍可走EXCESS”的方案替代。
 
 这样才能把“带宽诉求感知”转化为可测量的收益，而不是先被 Queue 绑定碰撞消耗掉。

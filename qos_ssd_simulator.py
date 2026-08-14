@@ -9,7 +9,7 @@ from pathlib import Path
 
 from DPU import (
     DPURequestGateway,
-    DemandAwareRateController,
+    DemandAwareFCFSCIRController,
     build_queue_binding_strategy,
 )
 from backends.asu_ssd import SSDSimulator, load_ssd_config
@@ -156,7 +156,17 @@ def _build_gpu_workloads(
 class JointSimulation:
     """装配并运行多GPU通过DPU访问多条独立QoS+SSD路径的仿真。"""
 
-    def __init__(self, binding_strategy_name=None, workload=None):
+    def __init__(
+        self,
+        binding_strategy_name=None,
+        workload=None,
+        rate_control_strategy_name=None,
+        simulation_config_override=None,
+        workload_defaults_override=None,
+        backend_config_override=None,
+        token_config_file=None,
+        scheduler_config_file=None,
+    ):
         """功能：根据全部YAML创建一次全新的联合仿真状态。
 
         目的：每次策略比较都重新创建GPU推理序列、QoS、SSD和事件日历，
@@ -165,6 +175,13 @@ class JointSimulation:
         输入：
             binding_strategy_name: 可选DPU Queue绑定策略覆盖名称。
             workload: 可选旧接口单GPU工作负载；提供时强制使用1个GPU。
+            rate_control_strategy_name: ``baseline`` 或DPU速率策略名称。
+            simulation_config_override: 项目级simulation字典的递归覆盖。
+            workload_defaults_override: 全部GPU共用的LLM工作负载覆盖。
+            backend_config_override: SSD后端配置的递归覆盖；用于
+                在同一工作负载下对照detailed与batched_exact。
+            token_config_file: 可选实验Queue CIR/PIR YAML文件。
+            scheduler_config_file: 可选实验Group/Queue WRR YAML文件。
 
         输出：
             None: 完成全部组件装配、随机序列生成和GPU首次推理安排。
@@ -176,6 +193,12 @@ class JointSimulation:
         self.global_simulation_config = load_yaml(
             global_simulation_config_file
         )["simulation"]
+        if simulation_config_override is not None:
+            # 实验覆盖只作用于本次新建实例，不改写项目YAML。
+            self.global_simulation_config = _deep_merge(
+                self.global_simulation_config,
+                simulation_config_override,
+            )
         if workload is not None:
             self.global_simulation_config = deepcopy(
                 self.global_simulation_config
@@ -202,17 +225,30 @@ class JointSimulation:
         backend_config = load_ssd_config(
             _resolve_integration_path(integration["backend_config"])
         )
+        if backend_config_override is not None:
+            # 后端模式覆盖只作用于本次仿真，不改写公共YAML；
+            # 这使严格等价测试能从完全相同的其余状态启动。
+            backend_config = _deep_merge(
+                backend_config,
+                backend_config_override,
+            )
 
         self.storage_paths = {}
+        selected_token_config_file = (
+            _resolve_integration_path(integration["token_bucket_config"])
+            if token_config_file is None
+            else Path(token_config_file)
+        )
+        selected_scheduler_config_file = (
+            _resolve_integration_path(integration["wrr_config"])
+            if scheduler_config_file is None
+            else Path(scheduler_config_file)
+        )
         for storage_target_id in self.topology["storage_target_ids"]:
             qos = build_qos_simulator(
                 layout_config_file=layout_file,
-                token_config_file=_resolve_integration_path(
-                    integration["token_bucket_config"]
-                ),
-                scheduler_config_file=_resolve_integration_path(
-                    integration["wrr_config"]
-                ),
+                token_config_file=selected_token_config_file,
+                scheduler_config_file=selected_scheduler_config_file,
                 qos_runtime_config_file=qos_runtime_config_file,
                 start_time_us=self.start_time_us,
                 queue_layout=queue_layout,
@@ -230,6 +266,12 @@ class JointSimulation:
             )
 
         multi_gpu_config = load_yaml(MULTI_GPU_CONFIG_FILE)["multi_gpu"]
+        if workload_defaults_override is not None:
+            multi_gpu_config = deepcopy(multi_gpu_config)
+            multi_gpu_config["defaults"] = _deep_merge(
+                multi_gpu_config.get("defaults", {}),
+                workload_defaults_override,
+            )
         gpu_workload_templates = _build_gpu_workloads(
             topology=self.topology,
             multi_gpu_config=multi_gpu_config,
@@ -244,10 +286,9 @@ class JointSimulation:
             ]
             sampler = UniformRandomInferenceSampler(generation_config)
             self.inter_inference_gap_us = sampler.inter_inference_gap_us
-            self.gpu_workload_sequences = {
-                gpu_id: sampler.build_sequence(template, gpu_id)
-                for gpu_id, template in gpu_workload_templates.items()
-            }
+            self.gpu_workload_sequences = sampler.build_sequences(
+                gpu_workload_templates
+            )
             self.workload_generation_config = deepcopy(generation_config)
         else:
             self.inter_inference_gap_us = 0
@@ -293,7 +334,6 @@ class JointSimulation:
         }
         queue_binding_strategy = build_queue_binding_strategy(
             strategy_name=selected_strategy,
-            random_seed=binding_config["random_seed"],
             p_node_ids=self.topology["p_node_ids"],
             queue_ids_by_storage_target=queue_ids_by_storage_target,
         )
@@ -304,22 +344,25 @@ class JointSimulation:
             storage_target_id: storage_path.qos
             for storage_target_id, storage_path in self.storage_paths.items()
         }
+        configured_rate_control = dpu_config["rate_control"]
+        if rate_control_strategy_name is None:
+            selected_rate_control_strategy = (
+                configured_rate_control["strategy"]
+                if configured_rate_control["enabled"]
+                else "baseline"
+            )
+        else:
+            selected_rate_control_strategy = rate_control_strategy_name
+        self.rate_control_strategy_name = selected_rate_control_strategy
+
         rate_controller = None
-        if dpu_config["rate_control"]["enabled"]:
+        if selected_rate_control_strategy == "demand_aware_fcfs_cir":
             # DPU控制面直接使用SSD整数Byte/s容量，不转成浮点GB/s。
-            rate_controller = DemandAwareRateController(
+            rate_controller = DemandAwareFCFSCIRController(
                 capacity_bytes_per_second_by_storage_target={
                     storage_target_id: backend_config["nand"][
                         "read_bandwidth_bytes_per_second"
                     ]
-                    for storage_target_id in self.topology[
-                        "storage_target_ids"
-                    ]
-                },
-                # 每块SSD有独立QoS实例，因此也传入独立的
-                # Queue->Group固定连线，用于生成该路径的WRR权重。
-                queue_to_group_by_storage_target={
-                    storage_target_id: queue_layout.queue_to_group
                     for storage_target_id in self.topology[
                         "storage_target_ids"
                     ]
@@ -765,11 +808,7 @@ class JointSimulation:
             "ssd_count": len(path_results),
             "inference_count": len(inference_results),
             "queue_binding_strategy": dpu_statistics["strategy"],
-            "rate_control_strategy": (
-                None
-                if dpu_statistics["rate_control"] is None
-                else dpu_statistics["rate_control"]["strategy"]
-            ),
+            "rate_control_strategy": self.rate_control_strategy_name,
             "gpus": gpu_results,
             # llms保留为展平后的单次推理结果列表，方便逐请求分析。
             "llms": inference_results,
@@ -796,14 +835,29 @@ class JointSimulation:
         return result
 
 
-def run_joint_simulation(workload=None, binding_strategy=None):
+def run_joint_simulation(
+    workload=None,
+    binding_strategy=None,
+    rate_control_strategy=None,
+    simulation_config_override=None,
+    workload_defaults_override=None,
+    backend_config_override=None,
+    token_config_file=None,
+    scheduler_config_file=None,
+):
     """功能：创建并运行一次全新的统一联合仿真。
 
     目的：提供脚本、测试和绘图共同使用的稳定入口，并支持临时覆盖DPU策略。
 
     输入：
         workload: 可选旧接口单GPU完整工作负载。
-        binding_strategy: 可选互斥固定、普通固定或逐IO随机绑定。
+        binding_strategy: 可选的DPU Queue绑定策略名称。
+        rate_control_strategy: ``baseline`` 或DPU速率策略名称。
+        simulation_config_override: 可选项目级仿真参数覆盖。
+        workload_defaults_override: 可选全GPU LLM工作负载覆盖。
+        backend_config_override: 可选SSD后端配置递归覆盖。
+        token_config_file: 可选Queue令牌YAML。
+        scheduler_config_file: 可选WRR YAML。
 
     输出：
         dict: ``JointSimulation.run`` 返回的完整结果。
@@ -811,6 +865,12 @@ def run_joint_simulation(workload=None, binding_strategy=None):
     return JointSimulation(
         binding_strategy_name=binding_strategy,
         workload=workload,
+        rate_control_strategy_name=rate_control_strategy,
+        simulation_config_override=simulation_config_override,
+        workload_defaults_override=workload_defaults_override,
+        backend_config_override=backend_config_override,
+        token_config_file=token_config_file,
+        scheduler_config_file=scheduler_config_file,
     ).run()
 
 
@@ -866,7 +926,7 @@ def _effective_bandwidth_gb_s(ssd_result):
 def _active_queue_count(dpu_result):
     """功能：统计一次仿真实际使用的全局Queue数量。
 
-    目的：用 ``(SSD, Queue)`` 命名空间量化固定绑定与逐请求随机的分散程度。
+    目的：用 ``(SSD, Queue)`` 命名空间量化绑定策略的Queue占用数量。
 
     输入：
         dpu_result: DPU ``statistics`` 返回的绑定计数。
@@ -934,15 +994,12 @@ def print_result(result):
         rate_statistics = result["dpu"]["rate_control"]
         rate_text = ""
         if rate_statistics is not None:
-            peak_reserved = rate_statistics[
-                "peak_reserved_bytes_per_second"
-            ].get(storage_target_id, 0)
-            peak_waiting = rate_statistics[
-                "peak_waiting_demand_count"
+            peak_assigned = rate_statistics[
+                "peak_assigned_cir_bytes_per_second"
             ].get(storage_target_id, 0)
             rate_text = (
-                f", DPU峰值预留={peak_reserved / 1_000_000_000:.3f} GB/s, "
-                f"峰值等待需求={peak_waiting}"
+                f", DPU峰值CIR总和="
+                f"{peak_assigned / 1_000_000_000:.3f} GB/s"
             )
         print(
             f"{storage_target_id}: QoS下发="
@@ -1012,7 +1069,7 @@ def print_comparison(comparison_results):
 def parse_arguments():
     """功能：读取统一仿真入口的命令行参数。
 
-    目的：允许用户运行YAML默认策略、临时选择单个策略或直接比较两种策略。
+    目的：允许用户运行YAML默认策略、临时选择单个策略或运行配置中的策略列表。
 
     输入：
         无；由argparse读取进程命令行。
@@ -1025,11 +1082,7 @@ def parse_arguments():
     )
     parser.add_argument(
         "--binding-strategy",
-        choices=(
-            "random_unique_sticky",
-            "random_sticky",
-            "random_per_request",
-        ),
+        choices=("balanced_exclusive",),
         default=None,
         help="override DPU queue binding strategy from YAML",
     )

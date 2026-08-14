@@ -1,5 +1,7 @@
 """DPU把KV请求绑定到Queue，并直接读写每块SSD的QoS。"""
 
+from functools import partial
+
 
 class DPURequestGateway:
     """连接Queue绑定、需求感知控制和多个独立QoS实例。"""
@@ -15,7 +17,7 @@ class DPURequestGateway:
         """功能：建立DPU数据路径和QoS状态/设置直连关系。
 
         输入：每SSD Queue列表、绑定策略、请求出口、QoS接口和可选速率控制器。
-        输出：无，同时把QoS出队通知连回DPU。
+        输出：无，同时把QoS Queue状态唤醒连回DPU。
         """
         self.queue_ids = {
             target: list(queue_ids)
@@ -28,9 +30,14 @@ class DPURequestGateway:
         self.assignment_counts = {}
         self.rate_control_write_count = 0
         self.group_weight_write_count = 0
-        for qos in self.qos.values():
-            # 这是QoS到DPU的Queue状态传递，不是SSD completion。
-            qos.set_dispatch_observer(self.on_qos_dispatch)
+        if self.rate_controller is not None:
+            for storage_target_id, qos in self.qos.items():
+                # QoS唤醒不携带IO或Demand信息；SSD ID由初始接线
+                # 固定，DPU在回调中主动读取该QoS的Queue depth快照。
+                qos.set_queue_state_observer(partial(
+                    self.on_qos_queue_state_change,
+                    storage_target_id,
+                ))
 
     def queue_io_counts(self, storage_target_id):
         """功能：读取一块SSD前全部Queue的尚未下发IO数。
@@ -137,7 +144,6 @@ class DPURequestGateway:
         输入：KV Placement请求和到达时刻。输出：展平后的QoS请求。
         """
         basic = request["basic"]
-        demand = request["demand_bw"]
         target = basic["storage_target_id"]
         queue_id = self.binding.select_queue(
             request,
@@ -148,49 +154,82 @@ class DPURequestGateway:
             "p_node_id": basic["p_node_id"],
             "storage_target_id": target,
             "size_bytes": basic["size_bytes"],
-            "demand_group_id": demand["demand_group_id"],
-            "aggregate_required_bytes_per_second": demand[
-                "aggregate_required_bytes_per_second"
-            ],
             "queue_id": queue_id,
             "arrival_time_us": arrival_time_us,
-            "qos_admitted": self.rate_controller is None,
         }
         target_counts = self.assignment_counts.setdefault(target, {})
         node_counts = target_counts.setdefault(basic["p_node_id"], {})
         node_counts[queue_id] = node_counts.get(queue_id, 0) + 1
         self.request_sink(qos_request)
-        if self.rate_controller is not None:
-            self.rate_controller.register(qos_request)
         return qos_request
 
     def submit_batch(self, requests, arrival_time_us):
-        """功能：先登记同时刻的全部IO，再按SSD更新需求控制。
+        """功能：先登记同一层的全部IO，再创建DPU Demand。
 
-        输入：同一层请求列表和到达时刻。输出：展平后的请求列表。
+        目的：先让QoS的逻辑Queue depth反映整个批次，然后DPU
+        才按 ``(SSD, Queue)`` 登记一次KV Placement已聚合的诉求。
+        这个顺序避免在批量尚未入队时把空Queue误判为已完成。
+
+        输入：同一层请求列表和到达时刻。
+        输出：仅包含普通IO数据面字段的QoS请求列表。
         """
         qos_requests = [
             self._submit(request, arrival_time_us) for request in requests
         ]
         if self.rate_controller is not None:
-            targets = {
-                request["storage_target_id"] for request in qos_requests
-            }
-            for target in sorted(targets):
-                updates = self.rate_controller.update(target)
+            demand_rates = {}
+            for request, qos_request in zip(requests, qos_requests):
+                path_key = (
+                    qos_request["storage_target_id"],
+                    qos_request["queue_id"],
+                )
+                # 同一GPU、同一层、同一SSD的Block重复携带
+                # KV Placement已经聚合的同一整数诉求，DPU只登记一次。
+                demand_rates[path_key] = request["demand_bw"][
+                    "aggregate_required_bytes_per_second"
+                ]
+
+            affected_targets = set()
+            for (target, queue_id), requested_cir in demand_rates.items():
+                self.rate_controller.register_demand(
+                    storage_target_id=target,
+                    queue_id=queue_id,
+                    requested_cir_bytes_per_second=requested_cir,
+                    arrival_time_us=arrival_time_us,
+                )
+                affected_targets.add(target)
+
+            for target in sorted(affected_targets):
+                updates = self.rate_controller.recalculate(target)
                 self._write_control_updates(target, updates, arrival_time_us)
         return qos_requests
 
-    def on_qos_dispatch(self, requests, event_time_us):
-        """功能：在IO离开QoS Queue后释放预留带宽并准入队首需求。
+    def on_qos_queue_state_change(self, storage_target_id, event_time_us):
+        """功能：在QoS状态唤醒后主动读取Queue depth并释放Demand。
 
-        输入：本轮下发IO列表和QoS时刻。输出：无。
+        目的：满足硬件接口“QoS→DPU只提供Queue空/非空或
+        depth”。唤醒事件本身不携带request_id、Demand或逐IO
+        dispatch信息；DPU只用快照中的0检测Demand结束。
+
+        输入：
+            storage_target_id: 初始接线已经确定的SSD ID。
+            event_time_us: Queue状态变化发生的仿真时刻。
+
+        输出：
+            None: 必要时将重新分配的CIR/PIR写回同一QoS。
         """
         if self.rate_controller is None:
             return
-        target = requests[0]["storage_target_id"]
-        updates = self.rate_controller.dispatched(requests)
-        self._write_control_updates(target, updates, event_time_us)
+        queue_depths = self.queue_io_counts(storage_target_id)
+        updates = self.rate_controller.release_empty_demands(
+            storage_target_id,
+            queue_depths,
+        )
+        self._write_control_updates(
+            storage_target_id,
+            updates,
+            event_time_us,
+        )
 
     def statistics(self):
         """功能：返回Queue绑定、当前Queue计数和需求控制统计。

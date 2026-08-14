@@ -1,5 +1,9 @@
 # ASU后端运行配置，只保留不能由其他字段直接推导的参数。
 backend:
+  execution_mode: batched_exact                 # 默认用严格等价的整数递推；detailed保留为逐事件真值模型。
+  exact_batch_max_commands: 32                  # batched_exact每个本地批次最多计算32条4 KiB命令。
+  collect_stage_peak_statistics: true           # false只关闭六级峰值诊断，不改变任何仿真时序。
+  collect_nand_service_events: true             # false不保存逐4 KiB NAND绘图事件，启动时刻仍照常计算。
   media_mode: TLC                               # NAND介质模式；可填写TLC或SLC。
   chunk_size_bytes: 4096                        # 后端内部命令为4 KiB，与上层的模型KV block不是同一概念。
 
