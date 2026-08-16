@@ -1,0 +1,3811 @@
+{
+  "policy": "utility_edf_integer_l750",
+  "trace_bundle_dir": "/home/chguo/PycharmProjects/ucm-sqe-simulator/outputs/glm51_64npu_4layer_asu_1_5/gpu_64_asu_1",
+  "effective_manifest": "/home/chguo/PycharmProjects/QoS分析/experiments/results/ucm_trace_steady_4layer_ssd_sweep/1_ssd/utility_edf_integer_l750/effective_sqe_manifest.jsonl",
+  "gpu_count": 64,
+  "storage_path_count": 1,
+  "layer_count_per_gpu": 4,
+  "submitted_layer_count": 223,
+  "inference_count_per_gpu": 5,
+  "warmup_inference_count": 0,
+  "measured_inference_count_per_gpu": null,
+  "completed_inference_count": 23,
+  "completed_inference_count_by_gpu": {
+    "0": 0,
+    "1": 0,
+    "2": 0,
+    "3": 0,
+    "4": 0,
+    "5": 0,
+    "6": 0,
+    "7": 0,
+    "8": 1,
+    "9": 0,
+    "10": 0,
+    "11": 2,
+    "12": 2,
+    "13": 1,
+    "14": 0,
+    "15": 0,
+    "16": 0,
+    "17": 0,
+    "18": 0,
+    "19": 0,
+    "20": 0,
+    "21": 1,
+    "22": 0,
+    "23": 1,
+    "24": 1,
+    "25": 0,
+    "26": 0,
+    "27": 0,
+    "28": 0,
+    "29": 0,
+    "30": 5,
+    "31": 1,
+    "32": 1,
+    "33": 0,
+    "34": 0,
+    "35": 0,
+    "36": 0,
+    "37": 0,
+    "38": 0,
+    "39": 1,
+    "40": 0,
+    "41": 0,
+    "42": 1,
+    "43": 1,
+    "44": 2,
+    "45": 0,
+    "46": 0,
+    "47": 0,
+    "48": 2,
+    "49": 0,
+    "50": 0,
+    "51": 0,
+    "52": 0,
+    "53": 0,
+    "54": 0,
+    "55": 0,
+    "56": 0,
+    "57": 0,
+    "58": 0,
+    "59": 0,
+    "60": 0,
+    "61": 0,
+    "62": 0,
+    "63": 0
+  },
+  "queue_binding_strategy": "one_group_per_gpu",
+  "stop_mode": "first_gpu_reaches_limit",
+  "submitted_sqe_count": 1750,
+  "completed_layer_sqe_count": 1253,
+  "effective_retrieve_sqe_count": 1253,
+  "submitted_entry_count": 181738,
+  "submitted_bytes": 26798358528,
+  "mean_ttft_us": 210366.90230434778,
+  "p95_ttft_us": 370319.7372,
+  "max_ttft_us": 399840.3038,
+  "mean_gpu_utilization_percent": 94.26239243381221,
+  "min_gpu_utilization_percent": 79.5079180475786,
+  "utilization_gpu_count": 15,
+  "mean_observation_window_gpu_utilization_percent": 39.4487903205776,
+  "observation_window_gpu_count": 64,
+  "gpus": {
+    "0": {
+      "gpu_id": 0,
+      "template_source_request_id": "gpu-0000-prefix-0000",
+      "arrival_time_ns": 49898988,
+      "input_tokens": 155215,
+      "cached_prefix_ratio": 0.6621012862345675,
+      "cached_token_count": 102656,
+      "single_layer_compute_ns": 105286459,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 418509073.0,
+      "observation_window_ns": 428601397.2,
+      "observation_window_gpu_utilization_percent": 97.64528901073774,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 4,
+      "active_layer_id": null,
+      "inferences": []
+    },
+    "1": {
+      "gpu_id": 1,
+      "template_source_request_id": "gpu-0001-prefix-0000",
+      "arrival_time_ns": 74751668,
+      "input_tokens": 198626,
+      "cached_prefix_ratio": 0.8955169664960311,
+      "cached_token_count": 177792,
+      "single_layer_compute_ns": 41734776,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 0,
+      "observation_window_ns": 403748717.2,
+      "observation_window_gpu_utilization_percent": 0.0,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 0,
+      "active_layer_id": 0,
+      "inferences": []
+    },
+    "2": {
+      "gpu_id": 2,
+      "template_source_request_id": "gpu-0002-prefix-0000",
+      "arrival_time_ns": 85052655,
+      "input_tokens": 193742,
+      "cached_prefix_ratio": 0.7054136712515339,
+      "cached_token_count": 136576,
+      "single_layer_compute_ns": 114515225,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 0,
+      "observation_window_ns": 393447730.2,
+      "observation_window_gpu_utilization_percent": 0.0,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 0,
+      "active_layer_id": 0,
+      "inferences": []
+    },
+    "3": {
+      "gpu_id": 3,
+      "template_source_request_id": "gpu-0003-prefix-0000",
+      "arrival_time_ns": 19337744,
+      "input_tokens": 180718,
+      "cached_prefix_ratio": 0.8119544424625066,
+      "cached_token_count": 146688,
+      "single_layer_compute_ns": 68169071,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 0,
+      "observation_window_ns": 459162641.2,
+      "observation_window_gpu_utilization_percent": 0.0,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 0,
+      "active_layer_id": 0,
+      "inferences": []
+    },
+    "4": {
+      "gpu_id": 4,
+      "template_source_request_id": "gpu-0004-prefix-0000",
+      "arrival_time_ns": 36639024,
+      "input_tokens": 138982,
+      "cached_prefix_ratio": 0.8541635871102039,
+      "cached_token_count": 118656,
+      "single_layer_compute_ns": 40717148,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 0,
+      "observation_window_ns": 441861361.2,
+      "observation_window_gpu_utilization_percent": 0.0,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 0,
+      "active_layer_id": 0,
+      "inferences": []
+    },
+    "5": {
+      "gpu_id": 5,
+      "template_source_request_id": "gpu-0005-prefix-0000",
+      "arrival_time_ns": 23798712,
+      "input_tokens": 174177,
+      "cached_prefix_ratio": 0.6016657771742688,
+      "cached_token_count": 104704,
+      "single_layer_compute_ns": 139168670,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 443234266.4,
+      "observation_window_ns": 454701673.2,
+      "observation_window_gpu_utilization_percent": 97.47803725477911,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 4,
+      "active_layer_id": null,
+      "inferences": []
+    },
+    "6": {
+      "gpu_id": 6,
+      "template_source_request_id": "gpu-0006-prefix-0000",
+      "arrival_time_ns": 85724163,
+      "input_tokens": 132434,
+      "cached_prefix_ratio": 0.924950240643197,
+      "cached_token_count": 122368,
+      "single_layer_compute_ns": 20164263,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 0,
+      "observation_window_ns": 392776222.2,
+      "observation_window_gpu_utilization_percent": 0.0,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 0,
+      "active_layer_id": 0,
+      "inferences": []
+    },
+    "7": {
+      "gpu_id": 7,
+      "template_source_request_id": "gpu-0007-prefix-0000",
+      "arrival_time_ns": 36771912,
+      "input_tokens": 188007,
+      "cached_prefix_ratio": 0.8990514177808024,
+      "cached_token_count": 168960,
+      "single_layer_compute_ns": 38155049,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 0,
+      "observation_window_ns": 441728473.2,
+      "observation_window_gpu_utilization_percent": 0.0,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 0,
+      "active_layer_id": 0,
+      "inferences": []
+    },
+    "8": {
+      "gpu_id": 8,
+      "template_source_request_id": "gpu-0008-prefix-0000",
+      "arrival_time_ns": 18960530,
+      "input_tokens": 114597,
+      "cached_prefix_ratio": 0.6035214776066872,
+      "cached_token_count": 69120,
+      "single_layer_compute_ns": 91099760,
+      "layer_count": 4,
+      "inference_count": 1,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 1,
+      "measured_compute_time_ns": 364399040,
+      "measured_inference_duration_ns": 370319737.2,
+      "gpu_utilization_percent": 98.40119318382364,
+      "observation_compute_busy_ns": 450657378.8,
+      "observation_window_ns": 459539855.2,
+      "observation_window_gpu_utilization_percent": 98.0670933544743,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 1,
+      "completed_layer_count_in_inflight_inference": 1,
+      "active_layer_id": 1,
+      "inferences": [
+        {
+          "inference_index": 0,
+          "is_warmup": false,
+          "source_request_id": "gpu-0008-prefix-0000:inference:0000",
+          "arrival_time_ns": 18960530,
+          "first_token_time_ns": 389280267.2,
+          "ttft_ns": 370319737.2,
+          "ttft_us": 370319.7372,
+          "compute_only_ttft_ns": 364399040,
+          "storage_stall_ns": 5920697.2,
+          "gpu_utilization_percent": 98.40119318382364,
+          "layers": [
+            {
+              "inference_index": 0,
+              "layer_id": 0,
+              "original_issue_time_ns": 18960530,
+              "effective_issue_time_ns": 18960530,
+              "load_completion_time_ns": 24881227.2,
+              "load_latency_ns": 5920697.2,
+              "compute_start_time_ns": 24881227.2,
+              "compute_done_time_ns": 115980987.2,
+              "entry_count": 540,
+              "bytes": 79626240,
+              "path_bytes_by_storage_target": {
+                "SSD0": 79626240
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 24881227.2
+              }
+            },
+            {
+              "inference_index": 0,
+              "layer_id": 1,
+              "original_issue_time_ns": 18960530,
+              "effective_issue_time_ns": 24881227.2,
+              "load_completion_time_ns": 114866251.2,
+              "load_latency_ns": 89985024,
+              "compute_start_time_ns": 115980987.2,
+              "compute_done_time_ns": 207080747.2,
+              "entry_count": 540,
+              "bytes": 79626240,
+              "path_bytes_by_storage_target": {
+                "SSD0": 79626240
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 114866251.2
+              }
+            },
+            {
+              "inference_index": 0,
+              "layer_id": 2,
+              "original_issue_time_ns": 110060290,
+              "effective_issue_time_ns": 115980987.2,
+              "load_completion_time_ns": 205584868.8,
+              "load_latency_ns": 89603881.6,
+              "compute_start_time_ns": 207080747.2,
+              "compute_done_time_ns": 298180507.2,
+              "entry_count": 540,
+              "bytes": 79626240,
+              "path_bytes_by_storage_target": {
+                "SSD0": 79626240
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 205584868.8
+              }
+            },
+            {
+              "inference_index": 0,
+              "layer_id": 3,
+              "original_issue_time_ns": 201160050,
+              "effective_issue_time_ns": 207080747.2,
+              "load_completion_time_ns": 293656651.2,
+              "load_latency_ns": 86575904,
+              "compute_start_time_ns": 298180507.2,
+              "compute_done_time_ns": 389280267.2,
+              "entry_count": 540,
+              "bytes": 79626240,
+              "path_bytes_by_storage_target": {
+                "SSD0": 79626240
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 293656651.2
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "9": {
+      "gpu_id": 9,
+      "template_source_request_id": "gpu-0009-prefix-0000",
+      "arrival_time_ns": 43476728,
+      "input_tokens": 166241,
+      "cached_prefix_ratio": 0.6365850072985234,
+      "cached_token_count": 105728,
+      "single_layer_compute_ns": 121219952,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 398647743.59999996,
+      "observation_window_ns": 435023657.2,
+      "observation_window_gpu_utilization_percent": 91.63817576401911,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 4,
+      "active_layer_id": null,
+      "inferences": []
+    },
+    "10": {
+      "gpu_id": 10,
+      "template_source_request_id": "gpu-0010-prefix-0000",
+      "arrival_time_ns": 86065860,
+      "input_tokens": 182385,
+      "cached_prefix_ratio": 0.9194109985541091,
+      "cached_token_count": 167680,
+      "single_layer_compute_ns": 29457132,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 0,
+      "observation_window_ns": 392434525.2,
+      "observation_window_gpu_utilization_percent": 0.0,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 0,
+      "active_layer_id": 0,
+      "inferences": []
+    },
+    "11": {
+      "gpu_id": 11,
+      "template_source_request_id": "gpu-0011-prefix-0000",
+      "arrival_time_ns": 84179153,
+      "input_tokens": 131085,
+      "cached_prefix_ratio": 0.8245115089190853,
+      "cached_token_count": 108032,
+      "single_layer_compute_ns": 46179888,
+      "layer_count": 4,
+      "inference_count": 2,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 2,
+      "measured_compute_time_ns": 369439104,
+      "measured_inference_duration_ns": 388766983,
+      "gpu_utilization_percent": 95.02841551747721,
+      "observation_compute_busy_ns": 369933346.8,
+      "observation_window_ns": 394321232.2,
+      "observation_window_gpu_utilization_percent": 93.81522388131755,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 2,
+      "completed_layer_count_in_inflight_inference": 1,
+      "active_layer_id": 1,
+      "inferences": [
+        {
+          "inference_index": 0,
+          "is_warmup": false,
+          "source_request_id": "gpu-0011-prefix-0000:inference:0000",
+          "arrival_time_ns": 84179153,
+          "first_token_time_ns": 283841188.8,
+          "ttft_ns": 199662035.8,
+          "ttft_us": 199662.0358,
+          "compute_only_ttft_ns": 184719552,
+          "storage_stall_ns": 14942483.8,
+          "gpu_utilization_percent": 92.5161116683355,
+          "layers": [
+            {
+              "inference_index": 0,
+              "layer_id": 0,
+              "original_issue_time_ns": 84179153,
+              "effective_issue_time_ns": 84179153,
+              "load_completion_time_ns": 99121636.8,
+              "load_latency_ns": 14942483.8,
+              "compute_start_time_ns": 99121636.8,
+              "compute_done_time_ns": 145301524.8,
+              "entry_count": 844,
+              "bytes": 124452864,
+              "path_bytes_by_storage_target": {
+                "SSD0": 124452864
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 99121636.8
+              }
+            },
+            {
+              "inference_index": 0,
+              "layer_id": 1,
+              "original_issue_time_ns": 84179153,
+              "effective_issue_time_ns": 99121636.8,
+              "load_completion_time_ns": 137157912,
+              "load_latency_ns": 38036275.2,
+              "compute_start_time_ns": 145301524.8,
+              "compute_done_time_ns": 191481412.8,
+              "entry_count": 844,
+              "bytes": 124452864,
+              "path_bytes_by_storage_target": {
+                "SSD0": 124452864
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 137157912
+              }
+            },
+            {
+              "inference_index": 0,
+              "layer_id": 2,
+              "original_issue_time_ns": 130359041,
+              "effective_issue_time_ns": 145301524.8,
+              "load_completion_time_ns": 190599652.8,
+              "load_latency_ns": 45298128,
+              "compute_start_time_ns": 191481412.8,
+              "compute_done_time_ns": 237661300.8,
+              "entry_count": 844,
+              "bytes": 124452864,
+              "path_bytes_by_storage_target": {
+                "SSD0": 124452864
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 190599652.8
+              }
+            },
+            {
+              "inference_index": 0,
+              "layer_id": 3,
+              "original_issue_time_ns": 176538929,
+              "effective_issue_time_ns": 191481412.8,
+              "load_completion_time_ns": 234493617.6,
+              "load_latency_ns": 43012204.8,
+              "compute_start_time_ns": 237661300.8,
+              "compute_done_time_ns": 283841188.8,
+              "entry_count": 844,
+              "bytes": 124452864,
+              "path_bytes_by_storage_target": {
+                "SSD0": 124452864
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 234493617.6
+              }
+            }
+          ]
+        },
+        {
+          "inference_index": 1,
+          "is_warmup": false,
+          "source_request_id": "gpu-0011-prefix-0000:inference:0001",
+          "arrival_time_ns": 283841188.8,
+          "first_token_time_ns": 472946136,
+          "ttft_ns": 189104947.2,
+          "ttft_us": 189104.9472,
+          "compute_only_ttft_ns": 184719552,
+          "storage_stall_ns": 4385395.2,
+          "gpu_utilization_percent": 97.68097277996543,
+          "layers": [
+            {
+              "inference_index": 1,
+              "layer_id": 0,
+              "original_issue_time_ns": 84179153,
+              "effective_issue_time_ns": 283841188.8,
+              "load_completion_time_ns": 288226584,
+              "load_latency_ns": 4385395.2,
+              "compute_start_time_ns": 288226584,
+              "compute_done_time_ns": 334406472,
+              "entry_count": 844,
+              "bytes": 124452864,
+              "path_bytes_by_storage_target": {
+                "SSD0": 124452864
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 288226584
+              }
+            },
+            {
+              "inference_index": 1,
+              "layer_id": 1,
+              "original_issue_time_ns": 84179153,
+              "effective_issue_time_ns": 288226584,
+              "load_completion_time_ns": 332632958.4,
+              "load_latency_ns": 44406374.4,
+              "compute_start_time_ns": 334406472,
+              "compute_done_time_ns": 380586360,
+              "entry_count": 844,
+              "bytes": 124452864,
+              "path_bytes_by_storage_target": {
+                "SSD0": 124452864
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 332632958.4
+              }
+            },
+            {
+              "inference_index": 1,
+              "layer_id": 2,
+              "original_issue_time_ns": 130359041,
+              "effective_issue_time_ns": 334406472,
+              "load_completion_time_ns": 378838296,
+              "load_latency_ns": 44431824,
+              "compute_start_time_ns": 380586360,
+              "compute_done_time_ns": 426766248,
+              "entry_count": 844,
+              "bytes": 124452864,
+              "path_bytes_by_storage_target": {
+                "SSD0": 124452864
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 378838296
+              }
+            },
+            {
+              "inference_index": 1,
+              "layer_id": 3,
+              "original_issue_time_ns": 176538929,
+              "effective_issue_time_ns": 380586360,
+              "load_completion_time_ns": 421158168,
+              "load_latency_ns": 40571808,
+              "compute_start_time_ns": 426766248,
+              "compute_done_time_ns": 472946136,
+              "entry_count": 844,
+              "bytes": 124452864,
+              "path_bytes_by_storage_target": {
+                "SSD0": 124452864
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 421158168
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "12": {
+      "gpu_id": 12,
+      "template_source_request_id": "gpu-0012-prefix-0000",
+      "arrival_time_ns": 2639075,
+      "input_tokens": 112462,
+      "cached_prefix_ratio": 0.7707586580542576,
+      "cached_token_count": 86656,
+      "single_layer_compute_ns": 51694712,
+      "layer_count": 4,
+      "inference_count": 2,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 2,
+      "measured_compute_time_ns": 413557696,
+      "measured_inference_duration_ns": 427411989,
+      "gpu_utilization_percent": 96.75856238089756,
+      "observation_compute_busy_ns": 437272572.4,
+      "observation_window_ns": 475861310.2,
+      "observation_window_gpu_utilization_percent": 91.89075956106171,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 2,
+      "completed_layer_count_in_inflight_inference": 1,
+      "active_layer_id": 1,
+      "inferences": [
+        {
+          "inference_index": 0,
+          "is_warmup": false,
+          "source_request_id": "gpu-0012-prefix-0000:inference:0000",
+          "arrival_time_ns": 2639075,
+          "first_token_time_ns": 219468176,
+          "ttft_ns": 216829101,
+          "ttft_us": 216829.101,
+          "compute_only_ttft_ns": 206778848,
+          "storage_stall_ns": 10050253,
+          "gpu_utilization_percent": 95.36489661505352,
+          "layers": [
+            {
+              "inference_index": 0,
+              "layer_id": 0,
+              "original_issue_time_ns": 2639075,
+              "effective_issue_time_ns": 2639075,
+              "load_completion_time_ns": 5461272,
+              "load_latency_ns": 2822197,
+              "compute_start_time_ns": 5461272,
+              "compute_done_time_ns": 57155984,
+              "entry_count": 677,
+              "bytes": 99827712,
+              "path_bytes_by_storage_target": {
+                "SSD0": 99827712
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 5461272
+              }
+            },
+            {
+              "inference_index": 0,
+              "layer_id": 1,
+              "original_issue_time_ns": 2639075,
+              "effective_issue_time_ns": 5461272,
+              "load_completion_time_ns": 57417393.6,
+              "load_latency_ns": 51956121.6,
+              "compute_start_time_ns": 57417393.6,
+              "compute_done_time_ns": 109112105.6,
+              "entry_count": 677,
+              "bytes": 99827712,
+              "path_bytes_by_storage_target": {
+                "SSD0": 99827712
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 57417393.6
+              }
+            },
+            {
+              "inference_index": 0,
+              "layer_id": 2,
+              "original_issue_time_ns": 54333787,
+              "effective_issue_time_ns": 57417393.6,
+              "load_completion_time_ns": 107714635.2,
+              "load_latency_ns": 50297241.6,
+              "compute_start_time_ns": 109112105.6,
+              "compute_done_time_ns": 160806817.6,
+              "entry_count": 677,
+              "bytes": 99827712,
+              "path_bytes_by_storage_target": {
+                "SSD0": 99827712
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 107714635.2
+              }
+            },
+            {
+              "inference_index": 0,
+              "layer_id": 3,
+              "original_issue_time_ns": 106028499,
+              "effective_issue_time_ns": 109112105.6,
+              "load_completion_time_ns": 167773464,
+              "load_latency_ns": 58661358.4,
+              "compute_start_time_ns": 167773464,
+              "compute_done_time_ns": 219468176,
+              "entry_count": 677,
+              "bytes": 99827712,
+              "path_bytes_by_storage_target": {
+                "SSD0": 99827712
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 167773464
+              }
+            }
+          ]
+        },
+        {
+          "inference_index": 1,
+          "is_warmup": false,
+          "source_request_id": "gpu-0012-prefix-0000:inference:0001",
+          "arrival_time_ns": 219468176,
+          "first_token_time_ns": 430051064,
+          "ttft_ns": 210582888,
+          "ttft_us": 210582.888,
+          "compute_only_ttft_ns": 206778848,
+          "storage_stall_ns": 3804040,
+          "gpu_utilization_percent": 98.19356642121842,
+          "layers": [
+            {
+              "inference_index": 1,
+              "layer_id": 0,
+              "original_issue_time_ns": 2639075,
+              "effective_issue_time_ns": 219468176,
+              "load_completion_time_ns": 223272216,
+              "load_latency_ns": 3804040,
+              "compute_start_time_ns": 223272216,
+              "compute_done_time_ns": 274966928,
+              "entry_count": 677,
+              "bytes": 99827712,
+              "path_bytes_by_storage_target": {
+                "SSD0": 99827712
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 223272216
+              }
+            },
+            {
+              "inference_index": 1,
+              "layer_id": 1,
+              "original_issue_time_ns": 2639075,
+              "effective_issue_time_ns": 223272216,
+              "load_completion_time_ns": 273495729.6,
+              "load_latency_ns": 50223513.6,
+              "compute_start_time_ns": 274966928,
+              "compute_done_time_ns": 326661640,
+              "entry_count": 677,
+              "bytes": 99827712,
+              "path_bytes_by_storage_target": {
+                "SSD0": 99827712
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 273495729.6
+              }
+            },
+            {
+              "inference_index": 1,
+              "layer_id": 2,
+              "original_issue_time_ns": 54333787,
+              "effective_issue_time_ns": 274966928,
+              "load_completion_time_ns": 326178072,
+              "load_latency_ns": 51211144,
+              "compute_start_time_ns": 326661640,
+              "compute_done_time_ns": 378356352,
+              "entry_count": 677,
+              "bytes": 99827712,
+              "path_bytes_by_storage_target": {
+                "SSD0": 99827712
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 326178072
+              }
+            },
+            {
+              "inference_index": 1,
+              "layer_id": 3,
+              "original_issue_time_ns": 106028499,
+              "effective_issue_time_ns": 326661640,
+              "load_completion_time_ns": 375726974.4,
+              "load_latency_ns": 49065334.4,
+              "compute_start_time_ns": 378356352,
+              "compute_done_time_ns": 430051064,
+              "entry_count": 677,
+              "bytes": 99827712,
+              "path_bytes_by_storage_target": {
+                "SSD0": 99827712
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 375726974.4
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "13": {
+      "gpu_id": 13,
+      "template_source_request_id": "gpu-0013-prefix-0000",
+      "arrival_time_ns": 8878678,
+      "input_tokens": 162481,
+      "cached_prefix_ratio": 0.7795409712593472,
+      "cached_token_count": 126592,
+      "single_layer_compute_ns": 71893029,
+      "layer_count": 4,
+      "inference_count": 1,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 1,
+      "measured_compute_time_ns": 287572116,
+      "measured_inference_duration_ns": 307107354.2,
+      "gpu_utilization_percent": 93.63895460892222,
+      "observation_compute_busy_ns": 413252816.4,
+      "observation_window_ns": 469621707.2,
+      "observation_window_gpu_utilization_percent": 87.99695799070166,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 1,
+      "completed_layer_count_in_inflight_inference": 2,
+      "active_layer_id": 2,
+      "inferences": [
+        {
+          "inference_index": 0,
+          "is_warmup": false,
+          "source_request_id": "gpu-0013-prefix-0000:inference:0000",
+          "arrival_time_ns": 8878678,
+          "first_token_time_ns": 315986032.2,
+          "ttft_ns": 307107354.2,
+          "ttft_us": 307107.3542,
+          "compute_only_ttft_ns": 287572116,
+          "storage_stall_ns": 19535238.2,
+          "gpu_utilization_percent": 93.63895460892222,
+          "layers": [
+            {
+              "inference_index": 0,
+              "layer_id": 0,
+              "original_issue_time_ns": 8878678,
+              "effective_issue_time_ns": 8878678,
+              "load_completion_time_ns": 20147889.6,
+              "load_latency_ns": 11269211.6,
+              "compute_start_time_ns": 20147889.6,
+              "compute_done_time_ns": 92040918.6,
+              "entry_count": 989,
+              "bytes": 145833984,
+              "path_bytes_by_storage_target": {
+                "SSD0": 145833984
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 20147889.6
+              }
+            },
+            {
+              "inference_index": 0,
+              "layer_id": 1,
+              "original_issue_time_ns": 8878678,
+              "effective_issue_time_ns": 20147889.6,
+              "load_completion_time_ns": 90469656,
+              "load_latency_ns": 70321766.4,
+              "compute_start_time_ns": 92040918.6,
+              "compute_done_time_ns": 163933947.6,
+              "entry_count": 989,
+              "bytes": 145833984,
+              "path_bytes_by_storage_target": {
+                "SSD0": 145833984
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 90469656
+              }
+            },
+            {
+              "inference_index": 0,
+              "layer_id": 2,
+              "original_issue_time_ns": 80771707,
+              "effective_issue_time_ns": 92040918.6,
+              "load_completion_time_ns": 171419313.6,
+              "load_latency_ns": 79378395,
+              "compute_start_time_ns": 171419313.6,
+              "compute_done_time_ns": 243312342.6,
+              "entry_count": 989,
+              "bytes": 145833984,
+              "path_bytes_by_storage_target": {
+                "SSD0": 145833984
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 171419313.6
+              }
+            },
+            {
+              "inference_index": 0,
+              "layer_id": 3,
+              "original_issue_time_ns": 152664736,
+              "effective_issue_time_ns": 171419313.6,
+              "load_completion_time_ns": 244093003.2,
+              "load_latency_ns": 72673689.6,
+              "compute_start_time_ns": 244093003.2,
+              "compute_done_time_ns": 315986032.2,
+              "entry_count": 989,
+              "bytes": 145833984,
+              "path_bytes_by_storage_target": {
+                "SSD0": 145833984
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 244093003.2
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "14": {
+      "gpu_id": 14,
+      "template_source_request_id": "gpu-0014-prefix-0000",
+      "arrival_time_ns": 59832165,
+      "input_tokens": 133663,
+      "cached_prefix_ratio": 0.8058788228027287,
+      "cached_token_count": 107648,
+      "single_layer_compute_ns": 52113382,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 0,
+      "observation_window_ns": 418668220.2,
+      "observation_window_gpu_utilization_percent": 0.0,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 0,
+      "active_layer_id": 0,
+      "inferences": []
+    },
+    "15": {
+      "gpu_id": 15,
+      "template_source_request_id": "gpu-0015-prefix-0000",
+      "arrival_time_ns": 35845659,
+      "input_tokens": 170237,
+      "cached_prefix_ratio": 0.8990445516066647,
+      "cached_token_count": 152960,
+      "single_layer_compute_ns": 34609375,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 0,
+      "observation_window_ns": 442654726.2,
+      "observation_window_gpu_utilization_percent": 0.0,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 0,
+      "active_layer_id": 0,
+      "inferences": []
+    },
+    "16": {
+      "gpu_id": 16,
+      "template_source_request_id": "gpu-0016-prefix-0000",
+      "arrival_time_ns": 56862291,
+      "input_tokens": 168093,
+      "cached_prefix_ratio": 0.6880474377511778,
+      "cached_token_count": 115584,
+      "single_layer_compute_ns": 105186299,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 220808252.39999998,
+      "observation_window_ns": 421638094.2,
+      "observation_window_gpu_utilization_percent": 52.36914202900786,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 3,
+      "active_layer_id": 3,
+      "inferences": []
+    },
+    "17": {
+      "gpu_id": 17,
+      "template_source_request_id": "gpu-0017-prefix-0000",
+      "arrival_time_ns": 61047071,
+      "input_tokens": 194551,
+      "cached_prefix_ratio": 0.8273526731401015,
+      "cached_token_count": 160896,
+      "single_layer_compute_ns": 67417869,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 0,
+      "observation_window_ns": 417453314.2,
+      "observation_window_gpu_utilization_percent": 0.0,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 0,
+      "active_layer_id": 0,
+      "inferences": []
+    },
+    "18": {
+      "gpu_id": 18,
+      "template_source_request_id": "gpu-0018-prefix-0000",
+      "arrival_time_ns": 67089215,
+      "input_tokens": 185694,
+      "cached_prefix_ratio": 0.8128209399025442,
+      "cached_token_count": 150912,
+      "single_layer_compute_ns": 69675481,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 0,
+      "observation_window_ns": 411411170.2,
+      "observation_window_gpu_utilization_percent": 0.0,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 0,
+      "active_layer_id": 0,
+      "inferences": []
+    },
+    "19": {
+      "gpu_id": 19,
+      "template_source_request_id": "gpu-0019-prefix-0000",
+      "arrival_time_ns": 57433916,
+      "input_tokens": 155540,
+      "cached_prefix_ratio": 0.9618180429407717,
+      "cached_token_count": 149504,
+      "single_layer_compute_ns": 12091347,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 0,
+      "observation_window_ns": 421066469.2,
+      "observation_window_gpu_utilization_percent": 0.0,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 0,
+      "active_layer_id": 0,
+      "inferences": []
+    },
+    "20": {
+      "gpu_id": 20,
+      "template_source_request_id": "gpu-0020-prefix-0000",
+      "arrival_time_ns": 29519125,
+      "input_tokens": 150058,
+      "cached_prefix_ratio": 0.7347311053698542,
+      "cached_token_count": 110208,
+      "single_layer_compute_ns": 79827725,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 0,
+      "observation_window_ns": 448981260.2,
+      "observation_window_gpu_utilization_percent": 0.0,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 0,
+      "active_layer_id": 0,
+      "inferences": []
+    },
+    "21": {
+      "gpu_id": 21,
+      "template_source_request_id": "gpu-0021-prefix-0000",
+      "arrival_time_ns": 87230507,
+      "input_tokens": 103833,
+      "cached_prefix_ratio": 0.9362879779249771,
+      "cached_token_count": 97152,
+      "single_layer_compute_ns": 13383414,
+      "layer_count": 4,
+      "inference_count": 1,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 1,
+      "measured_compute_time_ns": 53533656,
+      "measured_inference_duration_ns": 59570782.6,
+      "gpu_utilization_percent": 89.86562483065313,
+      "observation_compute_busy_ns": 53533656.0,
+      "observation_window_ns": 391269878.2,
+      "observation_window_gpu_utilization_percent": 13.682028436811061,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 1,
+      "completed_layer_count_in_inflight_inference": 0,
+      "active_layer_id": 0,
+      "inferences": [
+        {
+          "inference_index": 0,
+          "is_warmup": false,
+          "source_request_id": "gpu-0021-prefix-0000:inference:0000",
+          "arrival_time_ns": 87230507,
+          "first_token_time_ns": 146801289.6,
+          "ttft_ns": 59570782.6,
+          "ttft_us": 59570.7826,
+          "compute_only_ttft_ns": 53533656,
+          "storage_stall_ns": 6037126.6,
+          "gpu_utilization_percent": 89.86562483065313,
+          "layers": [
+            {
+              "inference_index": 0,
+              "layer_id": 0,
+              "original_issue_time_ns": 87230507,
+              "effective_issue_time_ns": 87230507,
+              "load_completion_time_ns": 93267633.6,
+              "load_latency_ns": 6037126.6,
+              "compute_start_time_ns": 93267633.6,
+              "compute_done_time_ns": 106651047.6,
+              "entry_count": 759,
+              "bytes": 111919104,
+              "path_bytes_by_storage_target": {
+                "SSD0": 111919104
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 93267633.6
+              }
+            },
+            {
+              "inference_index": 0,
+              "layer_id": 1,
+              "original_issue_time_ns": 87230507,
+              "effective_issue_time_ns": 93267633.6,
+              "load_completion_time_ns": 105218942.4,
+              "load_latency_ns": 11951308.8,
+              "compute_start_time_ns": 106651047.6,
+              "compute_done_time_ns": 120034461.6,
+              "entry_count": 759,
+              "bytes": 111919104,
+              "path_bytes_by_storage_target": {
+                "SSD0": 111919104
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 105218942.4
+              }
+            },
+            {
+              "inference_index": 0,
+              "layer_id": 2,
+              "original_issue_time_ns": 100613921,
+              "effective_issue_time_ns": 106651047.6,
+              "load_completion_time_ns": 117664228.8,
+              "load_latency_ns": 11013181.2,
+              "compute_start_time_ns": 120034461.6,
+              "compute_done_time_ns": 133417875.6,
+              "entry_count": 759,
+              "bytes": 111919104,
+              "path_bytes_by_storage_target": {
+                "SSD0": 111919104
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 117664228.8
+              }
+            },
+            {
+              "inference_index": 0,
+              "layer_id": 3,
+              "original_issue_time_ns": 113997335,
+              "effective_issue_time_ns": 120034461.6,
+              "load_completion_time_ns": 128649700.8,
+              "load_latency_ns": 8615239.2,
+              "compute_start_time_ns": 133417875.6,
+              "compute_done_time_ns": 146801289.6,
+              "entry_count": 759,
+              "bytes": 111919104,
+              "path_bytes_by_storage_target": {
+                "SSD0": 111919104
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 128649700.8
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "22": {
+      "gpu_id": 22,
+      "template_source_request_id": "gpu-0022-prefix-0000",
+      "arrival_time_ns": 96154514,
+      "input_tokens": 184823,
+      "cached_prefix_ratio": 0.6199728867916316,
+      "cached_token_count": 114560,
+      "single_layer_compute_ns": 140751202,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 375343667.59999996,
+      "observation_window_ns": 382345871.2,
+      "observation_window_gpu_utilization_percent": 98.16862057957539,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 3,
+      "active_layer_id": 3,
+      "inferences": []
+    },
+    "23": {
+      "gpu_id": 23,
+      "template_source_request_id": "gpu-0023-prefix-0000",
+      "arrival_time_ns": 34860839,
+      "input_tokens": 141056,
+      "cached_prefix_ratio": 0.7225931271841909,
+      "cached_token_count": 101888,
+      "single_layer_compute_ns": 78461539,
+      "layer_count": 4,
+      "inference_count": 1,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 1,
+      "measured_compute_time_ns": 313846156,
+      "measured_inference_duration_ns": 348268829.4,
+      "gpu_utilization_percent": 90.11606250857889,
+      "observation_compute_busy_ns": 401675102.59999996,
+      "observation_window_ns": 443639546.2,
+      "observation_window_gpu_utilization_percent": 90.54086950555987,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 1,
+      "completed_layer_count_in_inflight_inference": 2,
+      "active_layer_id": 2,
+      "inferences": [
+        {
+          "inference_index": 0,
+          "is_warmup": false,
+          "source_request_id": "gpu-0023-prefix-0000:inference:0000",
+          "arrival_time_ns": 34860839,
+          "first_token_time_ns": 383129668.4,
+          "ttft_ns": 348268829.4,
+          "ttft_us": 348268.8294,
+          "compute_only_ttft_ns": 313846156,
+          "storage_stall_ns": 34422673.4,
+          "gpu_utilization_percent": 90.11606250857889,
+          "layers": [
+            {
+              "inference_index": 0,
+              "layer_id": 0,
+              "original_issue_time_ns": 34860839,
+              "effective_issue_time_ns": 34860839,
+              "load_completion_time_ns": 68683032,
+              "load_latency_ns": 33822193,
+              "compute_start_time_ns": 68683032,
+              "compute_done_time_ns": 147144571,
+              "entry_count": 796,
+              "bytes": 117374976,
+              "path_bytes_by_storage_target": {
+                "SSD0": 117374976
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 68683032
+              }
+            },
+            {
+              "inference_index": 0,
+              "layer_id": 1,
+              "original_issue_time_ns": 34860839,
+              "effective_issue_time_ns": 68683032,
+              "load_completion_time_ns": 140092286.4,
+              "load_latency_ns": 71409254.4,
+              "compute_start_time_ns": 147144571,
+              "compute_done_time_ns": 225606110,
+              "entry_count": 796,
+              "bytes": 117374976,
+              "path_bytes_by_storage_target": {
+                "SSD0": 117374976
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 140092286.4
+              }
+            },
+            {
+              "inference_index": 0,
+              "layer_id": 2,
+              "original_issue_time_ns": 113322378,
+              "effective_issue_time_ns": 147144571,
+              "load_completion_time_ns": 226206590.4,
+              "load_latency_ns": 79062019.4,
+              "compute_start_time_ns": 226206590.4,
+              "compute_done_time_ns": 304668129.4,
+              "entry_count": 796,
+              "bytes": 117374976,
+              "path_bytes_by_storage_target": {
+                "SSD0": 117374976
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 226206590.4
+              }
+            },
+            {
+              "inference_index": 0,
+              "layer_id": 3,
+              "original_issue_time_ns": 191783917,
+              "effective_issue_time_ns": 226206590.4,
+              "load_completion_time_ns": 302057956.8,
+              "load_latency_ns": 75851366.4,
+              "compute_start_time_ns": 304668129.4,
+              "compute_done_time_ns": 383129668.4,
+              "entry_count": 796,
+              "bytes": 117374976,
+              "path_bytes_by_storage_target": {
+                "SSD0": 117374976
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 302057956.8
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "24": {
+      "gpu_id": 24,
+      "template_source_request_id": "gpu-0024-prefix-0000",
+      "arrival_time_ns": 32449300,
+      "input_tokens": 101808,
+      "cached_prefix_ratio": 0.7276964677959026,
+      "cached_token_count": 73984,
+      "single_layer_compute_ns": 55737180,
+      "layer_count": 4,
+      "inference_count": 1,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 1,
+      "measured_compute_time_ns": 222948720,
+      "measured_inference_duration_ns": 226480397.6,
+      "gpu_utilization_percent": 98.44062548572636,
+      "observation_compute_busy_ns": 433678477.2,
+      "observation_window_ns": 446051085.2,
+      "observation_window_gpu_utilization_percent": 97.226190360135,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 1,
+      "completed_layer_count_in_inflight_inference": 4,
+      "active_layer_id": null,
+      "inferences": [
+        {
+          "inference_index": 0,
+          "is_warmup": false,
+          "source_request_id": "gpu-0024-prefix-0000:inference:0000",
+          "arrival_time_ns": 32449300,
+          "first_token_time_ns": 258929697.6,
+          "ttft_ns": 226480397.6,
+          "ttft_us": 226480.3976,
+          "compute_only_ttft_ns": 222948720,
+          "storage_stall_ns": 3531677.6,
+          "gpu_utilization_percent": 98.44062548572636,
+          "layers": [
+            {
+              "inference_index": 0,
+              "layer_id": 0,
+              "original_issue_time_ns": 32449300,
+              "effective_issue_time_ns": 32449300,
+              "load_completion_time_ns": 35980977.6,
+              "load_latency_ns": 3531677.6,
+              "compute_start_time_ns": 35980977.6,
+              "compute_done_time_ns": 91718157.6,
+              "entry_count": 578,
+              "bytes": 85229568,
+              "path_bytes_by_storage_target": {
+                "SSD0": 85229568
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 35980977.6
+              }
+            },
+            {
+              "inference_index": 0,
+              "layer_id": 1,
+              "original_issue_time_ns": 32449300,
+              "effective_issue_time_ns": 35980977.6,
+              "load_completion_time_ns": 86823806.4,
+              "load_latency_ns": 50842828.8,
+              "compute_start_time_ns": 91718157.6,
+              "compute_done_time_ns": 147455337.6,
+              "entry_count": 578,
+              "bytes": 85229568,
+              "path_bytes_by_storage_target": {
+                "SSD0": 85229568
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 86823806.4
+              }
+            },
+            {
+              "inference_index": 0,
+              "layer_id": 2,
+              "original_issue_time_ns": 88186480,
+              "effective_issue_time_ns": 91718157.6,
+              "load_completion_time_ns": 142223025.6,
+              "load_latency_ns": 50504868,
+              "compute_start_time_ns": 147455337.6,
+              "compute_done_time_ns": 203192517.6,
+              "entry_count": 578,
+              "bytes": 85229568,
+              "path_bytes_by_storage_target": {
+                "SSD0": 85229568
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 142223025.6
+              }
+            },
+            {
+              "inference_index": 0,
+              "layer_id": 3,
+              "original_issue_time_ns": 143923660,
+              "effective_issue_time_ns": 147455337.6,
+              "load_completion_time_ns": 200851531.2,
+              "load_latency_ns": 53396193.6,
+              "compute_start_time_ns": 203192517.6,
+              "compute_done_time_ns": 258929697.6,
+              "entry_count": 578,
+              "bytes": 85229568,
+              "path_bytes_by_storage_target": {
+                "SSD0": 85229568
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 200851531.2
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "25": {
+      "gpu_id": 25,
+      "template_source_request_id": "gpu-0025-prefix-0000",
+      "arrival_time_ns": 34266934,
+      "input_tokens": 190613,
+      "cached_prefix_ratio": 0.8229314114002525,
+      "cached_token_count": 156800,
+      "single_layer_compute_ns": 67734375,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 0,
+      "observation_window_ns": 444233451.2,
+      "observation_window_gpu_utilization_percent": 0.0,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 0,
+      "active_layer_id": 0,
+      "inferences": []
+    },
+    "26": {
+      "gpu_id": 26,
+      "template_source_request_id": "gpu-0026-prefix-0000",
+      "arrival_time_ns": 38162832,
+      "input_tokens": 156974,
+      "cached_prefix_ratio": 0.6027635879851496,
+      "cached_token_count": 94592,
+      "single_layer_compute_ns": 124963943,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 423224484.59999996,
+      "observation_window_ns": 440337553.2,
+      "observation_window_gpu_utilization_percent": 96.1136477060299,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 4,
+      "active_layer_id": null,
+      "inferences": []
+    },
+    "27": {
+      "gpu_id": 27,
+      "template_source_request_id": "gpu-0027-prefix-0000",
+      "arrival_time_ns": 21297638,
+      "input_tokens": 139193,
+      "cached_prefix_ratio": 0.984778670510885,
+      "cached_token_count": 136960,
+      "single_layer_compute_ns": 4473158,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 0,
+      "observation_window_ns": 457202747.2,
+      "observation_window_gpu_utilization_percent": 0.0,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 0,
+      "active_layer_id": 0,
+      "inferences": []
+    },
+    "28": {
+      "gpu_id": 28,
+      "template_source_request_id": "gpu-0028-prefix-0000",
+      "arrival_time_ns": 67926647,
+      "input_tokens": 172265,
+      "cached_prefix_ratio": 0.8017651377281326,
+      "cached_token_count": 138112,
+      "single_layer_compute_ns": 68415465,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 0,
+      "observation_window_ns": 410573738.2,
+      "observation_window_gpu_utilization_percent": 0.0,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 0,
+      "active_layer_id": 0,
+      "inferences": []
+    },
+    "29": {
+      "gpu_id": 29,
+      "template_source_request_id": "gpu-0029-prefix-0000",
+      "arrival_time_ns": 74996716,
+      "input_tokens": 144252,
+      "cached_prefix_ratio": 0.9246442648555661,
+      "cached_token_count": 133376,
+      "single_layer_compute_ns": 21786859,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 0,
+      "observation_window_ns": 403503669.2,
+      "observation_window_gpu_utilization_percent": 0.0,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 0,
+      "active_layer_id": 0,
+      "inferences": []
+    },
+    "30": {
+      "gpu_id": 30,
+      "template_source_request_id": "gpu-0030-prefix-0000",
+      "arrival_time_ns": 147349,
+      "input_tokens": 104725,
+      "cached_prefix_ratio": 0.9093695713349799,
+      "cached_token_count": 95232,
+      "single_layer_compute_ns": 19016427,
+      "layer_count": 4,
+      "inference_count": 5,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 5,
+      "measured_compute_time_ns": 380328540,
+      "measured_inference_duration_ns": 478353036.2,
+      "gpu_utilization_percent": 79.5079180475786,
+      "observation_compute_busy_ns": 380328540.0,
+      "observation_window_ns": 478353036.2,
+      "observation_window_gpu_utilization_percent": 79.50791804757861,
+      "has_inflight_inference": false,
+      "inflight_inference_index": null,
+      "completed_layer_count_in_inflight_inference": 0,
+      "active_layer_id": null,
+      "inferences": [
+        {
+          "inference_index": 0,
+          "is_warmup": false,
+          "source_request_id": "gpu-0030-prefix-0000:inference:0000",
+          "arrival_time_ns": 147349,
+          "first_token_time_ns": 79939852.2,
+          "ttft_ns": 79792503.2,
+          "ttft_us": 79792.5032,
+          "compute_only_ttft_ns": 76065708,
+          "storage_stall_ns": 3726795.2,
+          "gpu_utilization_percent": 95.32939179679727,
+          "layers": [
+            {
+              "inference_index": 0,
+              "layer_id": 0,
+              "original_issue_time_ns": 147349,
+              "effective_issue_time_ns": 147349,
+              "load_completion_time_ns": 2965579.2,
+              "load_latency_ns": 2818230.2,
+              "compute_start_time_ns": 2965579.2,
+              "compute_done_time_ns": 21982006.2,
+              "entry_count": 744,
+              "bytes": 109707264,
+              "path_bytes_by_storage_target": {
+                "SSD0": 109707264
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 2965579.2
+              }
+            },
+            {
+              "inference_index": 0,
+              "layer_id": 1,
+              "original_issue_time_ns": 147349,
+              "effective_issue_time_ns": 2965579.2,
+              "load_completion_time_ns": 22890571.2,
+              "load_latency_ns": 19924992,
+              "compute_start_time_ns": 22890571.2,
+              "compute_done_time_ns": 41906998.2,
+              "entry_count": 744,
+              "bytes": 109707264,
+              "path_bytes_by_storage_target": {
+                "SSD0": 109707264
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 22890571.2
+              }
+            },
+            {
+              "inference_index": 0,
+              "layer_id": 2,
+              "original_issue_time_ns": 19163776,
+              "effective_issue_time_ns": 22890571.2,
+              "load_completion_time_ns": 41245156.8,
+              "load_latency_ns": 18354585.6,
+              "compute_start_time_ns": 41906998.2,
+              "compute_done_time_ns": 60923425.2,
+              "entry_count": 744,
+              "bytes": 109707264,
+              "path_bytes_by_storage_target": {
+                "SSD0": 109707264
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 41245156.8
+              }
+            },
+            {
+              "inference_index": 0,
+              "layer_id": 3,
+              "original_issue_time_ns": 38180203,
+              "effective_issue_time_ns": 41906998.2,
+              "load_completion_time_ns": 60160075.2,
+              "load_latency_ns": 18253077,
+              "compute_start_time_ns": 60923425.2,
+              "compute_done_time_ns": 79939852.2,
+              "entry_count": 744,
+              "bytes": 109707264,
+              "path_bytes_by_storage_target": {
+                "SSD0": 109707264
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 60160075.2
+              }
+            }
+          ]
+        },
+        {
+          "inference_index": 1,
+          "is_warmup": false,
+          "source_request_id": "gpu-0030-prefix-0000:inference:0001",
+          "arrival_time_ns": 79939852.2,
+          "first_token_time_ns": 172076023.2,
+          "ttft_ns": 92136171,
+          "ttft_us": 92136.171,
+          "compute_only_ttft_ns": 76065708,
+          "storage_stall_ns": 16070463,
+          "gpu_utilization_percent": 82.55792179599042,
+          "layers": [
+            {
+              "inference_index": 1,
+              "layer_id": 0,
+              "original_issue_time_ns": 147349,
+              "effective_issue_time_ns": 79939852.2,
+              "load_completion_time_ns": 96010315.2,
+              "load_latency_ns": 16070463,
+              "compute_start_time_ns": 96010315.2,
+              "compute_done_time_ns": 115026742.2,
+              "entry_count": 744,
+              "bytes": 109707264,
+              "path_bytes_by_storage_target": {
+                "SSD0": 109707264
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 96010315.2
+              }
+            },
+            {
+              "inference_index": 1,
+              "layer_id": 1,
+              "original_issue_time_ns": 147349,
+              "effective_issue_time_ns": 96010315.2,
+              "load_completion_time_ns": 112875595.2,
+              "load_latency_ns": 16865280,
+              "compute_start_time_ns": 115026742.2,
+              "compute_done_time_ns": 134043169.2,
+              "entry_count": 744,
+              "bytes": 109707264,
+              "path_bytes_by_storage_target": {
+                "SSD0": 109707264
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 112875595.2
+              }
+            },
+            {
+              "inference_index": 1,
+              "layer_id": 2,
+              "original_issue_time_ns": 19163776,
+              "effective_issue_time_ns": 115026742.2,
+              "load_completion_time_ns": 131392382.4,
+              "load_latency_ns": 16365640.2,
+              "compute_start_time_ns": 134043169.2,
+              "compute_done_time_ns": 153059596.2,
+              "entry_count": 744,
+              "bytes": 109707264,
+              "path_bytes_by_storage_target": {
+                "SSD0": 109707264
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 131392382.4
+              }
+            },
+            {
+              "inference_index": 1,
+              "layer_id": 3,
+              "original_issue_time_ns": 38180203,
+              "effective_issue_time_ns": 134043169.2,
+              "load_completion_time_ns": 149905483.2,
+              "load_latency_ns": 15862314,
+              "compute_start_time_ns": 153059596.2,
+              "compute_done_time_ns": 172076023.2,
+              "entry_count": 744,
+              "bytes": 109707264,
+              "path_bytes_by_storage_target": {
+                "SSD0": 109707264
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 149905483.2
+              }
+            }
+          ]
+        },
+        {
+          "inference_index": 2,
+          "is_warmup": false,
+          "source_request_id": "gpu-0030-prefix-0000:inference:0002",
+          "arrival_time_ns": 172076023.2,
+          "first_token_time_ns": 265852111.8,
+          "ttft_ns": 93776088.6,
+          "ttft_us": 93776.0886,
+          "compute_only_ttft_ns": 76065708,
+          "storage_stall_ns": 17710380.6,
+          "gpu_utilization_percent": 81.11418287497224,
+          "layers": [
+            {
+              "inference_index": 2,
+              "layer_id": 0,
+              "original_issue_time_ns": 147349,
+              "effective_issue_time_ns": 172076023.2,
+              "load_completion_time_ns": 187488331.2,
+              "load_latency_ns": 15412308,
+              "compute_start_time_ns": 187488331.2,
+              "compute_done_time_ns": 206504758.2,
+              "entry_count": 744,
+              "bytes": 109707264,
+              "path_bytes_by_storage_target": {
+                "SSD0": 109707264
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 187488331.2
+              }
+            },
+            {
+              "inference_index": 2,
+              "layer_id": 1,
+              "original_issue_time_ns": 147349,
+              "effective_issue_time_ns": 187488331.2,
+              "load_completion_time_ns": 203594212.8,
+              "load_latency_ns": 16105881.6,
+              "compute_start_time_ns": 206504758.2,
+              "compute_done_time_ns": 225521185.2,
+              "entry_count": 744,
+              "bytes": 109707264,
+              "path_bytes_by_storage_target": {
+                "SSD0": 109707264
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 203594212.8
+              }
+            },
+            {
+              "inference_index": 2,
+              "layer_id": 2,
+              "original_issue_time_ns": 19163776,
+              "effective_issue_time_ns": 206504758.2,
+              "load_completion_time_ns": 220776523.2,
+              "load_latency_ns": 14271765,
+              "compute_start_time_ns": 225521185.2,
+              "compute_done_time_ns": 244537612.2,
+              "entry_count": 744,
+              "bytes": 109707264,
+              "path_bytes_by_storage_target": {
+                "SSD0": 109707264
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 220776523.2
+              }
+            },
+            {
+              "inference_index": 2,
+              "layer_id": 3,
+              "original_issue_time_ns": 38180203,
+              "effective_issue_time_ns": 225521185.2,
+              "load_completion_time_ns": 246835684.8,
+              "load_latency_ns": 21314499.6,
+              "compute_start_time_ns": 246835684.8,
+              "compute_done_time_ns": 265852111.8,
+              "entry_count": 744,
+              "bytes": 109707264,
+              "path_bytes_by_storage_target": {
+                "SSD0": 109707264
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 246835684.8
+              }
+            }
+          ]
+        },
+        {
+          "inference_index": 3,
+          "is_warmup": false,
+          "source_request_id": "gpu-0030-prefix-0000:inference:0003",
+          "arrival_time_ns": 265852111.8,
+          "first_token_time_ns": 363434806.2,
+          "ttft_ns": 97582694.4,
+          "ttft_us": 97582.6944,
+          "compute_only_ttft_ns": 76065708,
+          "storage_stall_ns": 21516986.4,
+          "gpu_utilization_percent": 77.94999765860123,
+          "layers": [
+            {
+              "inference_index": 3,
+              "layer_id": 0,
+              "original_issue_time_ns": 147349,
+              "effective_issue_time_ns": 265852111.8,
+              "load_completion_time_ns": 282431563.2,
+              "load_latency_ns": 16579451.4,
+              "compute_start_time_ns": 282431563.2,
+              "compute_done_time_ns": 301447990.2,
+              "entry_count": 744,
+              "bytes": 109707264,
+              "path_bytes_by_storage_target": {
+                "SSD0": 109707264
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 282431563.2
+              }
+            },
+            {
+              "inference_index": 3,
+              "layer_id": 1,
+              "original_issue_time_ns": 147349,
+              "effective_issue_time_ns": 282431563.2,
+              "load_completion_time_ns": 296399332.8,
+              "load_latency_ns": 13967769.6,
+              "compute_start_time_ns": 301447990.2,
+              "compute_done_time_ns": 320464417.2,
+              "entry_count": 744,
+              "bytes": 109707264,
+              "path_bytes_by_storage_target": {
+                "SSD0": 109707264
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 296399332.8
+              }
+            },
+            {
+              "inference_index": 3,
+              "layer_id": 2,
+              "original_issue_time_ns": 19163776,
+              "effective_issue_time_ns": 301447990.2,
+              "load_completion_time_ns": 323682379.2,
+              "load_latency_ns": 22234389,
+              "compute_start_time_ns": 323682379.2,
+              "compute_done_time_ns": 342698806.2,
+              "entry_count": 744,
+              "bytes": 109707264,
+              "path_bytes_by_storage_target": {
+                "SSD0": 109707264
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 323682379.2
+              }
+            },
+            {
+              "inference_index": 3,
+              "layer_id": 3,
+              "original_issue_time_ns": 38180203,
+              "effective_issue_time_ns": 323682379.2,
+              "load_completion_time_ns": 344418379.2,
+              "load_latency_ns": 20736000,
+              "compute_start_time_ns": 344418379.2,
+              "compute_done_time_ns": 363434806.2,
+              "entry_count": 744,
+              "bytes": 109707264,
+              "path_bytes_by_storage_target": {
+                "SSD0": 109707264
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 344418379.2
+              }
+            }
+          ]
+        },
+        {
+          "inference_index": 4,
+          "is_warmup": false,
+          "source_request_id": "gpu-0030-prefix-0000:inference:0004",
+          "arrival_time_ns": 363434806.2,
+          "first_token_time_ns": 478500385.2,
+          "ttft_ns": 115065579,
+          "ttft_us": 115065.579,
+          "compute_only_ttft_ns": 76065708,
+          "storage_stall_ns": 38999871,
+          "gpu_utilization_percent": 66.10639659667467,
+          "layers": [
+            {
+              "inference_index": 4,
+              "layer_id": 0,
+              "original_issue_time_ns": 147349,
+              "effective_issue_time_ns": 363434806.2,
+              "load_completion_time_ns": 397668427.2,
+              "load_latency_ns": 34233621,
+              "compute_start_time_ns": 397668427.2,
+              "compute_done_time_ns": 416684854.2,
+              "entry_count": 744,
+              "bytes": 109707264,
+              "path_bytes_by_storage_target": {
+                "SSD0": 109707264
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 397668427.2
+              }
+            },
+            {
+              "inference_index": 4,
+              "layer_id": 1,
+              "original_issue_time_ns": 147349,
+              "effective_issue_time_ns": 397668427.2,
+              "load_completion_time_ns": 406364644.8,
+              "load_latency_ns": 8696217.6,
+              "compute_start_time_ns": 416684854.2,
+              "compute_done_time_ns": 435701281.2,
+              "entry_count": 744,
+              "bytes": 109707264,
+              "path_bytes_by_storage_target": {
+                "SSD0": 109707264
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 406364644.8
+              }
+            },
+            {
+              "inference_index": 4,
+              "layer_id": 2,
+              "original_issue_time_ns": 19163776,
+              "effective_issue_time_ns": 416684854.2,
+              "load_completion_time_ns": 440467531.2,
+              "load_latency_ns": 23782677,
+              "compute_start_time_ns": 440467531.2,
+              "compute_done_time_ns": 459483958.2,
+              "entry_count": 744,
+              "bytes": 109707264,
+              "path_bytes_by_storage_target": {
+                "SSD0": 109707264
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 440467531.2
+              }
+            },
+            {
+              "inference_index": 4,
+              "layer_id": 3,
+              "original_issue_time_ns": 38180203,
+              "effective_issue_time_ns": 440467531.2,
+              "load_completion_time_ns": 457528190.4,
+              "load_latency_ns": 17060659.2,
+              "compute_start_time_ns": 459483958.2,
+              "compute_done_time_ns": 478500385.2,
+              "entry_count": 744,
+              "bytes": 109707264,
+              "path_bytes_by_storage_target": {
+                "SSD0": 109707264
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 457528190.4
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "31": {
+      "gpu_id": 31,
+      "template_source_request_id": "gpu-0031-prefix-0000",
+      "arrival_time_ns": 1798011,
+      "input_tokens": 128204,
+      "cached_prefix_ratio": 0.7714404307034108,
+      "cached_token_count": 98816,
+      "single_layer_compute_ns": 58870193,
+      "layer_count": 4,
+      "inference_count": 1,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 1,
+      "measured_compute_time_ns": 235480772,
+      "measured_inference_duration_ns": 241989933.8,
+      "gpu_utilization_percent": 97.31015183243957,
+      "observation_compute_busy_ns": 461615872.4,
+      "observation_window_ns": 476702374.2,
+      "observation_window_gpu_utilization_percent": 96.83523669767365,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 1,
+      "completed_layer_count_in_inflight_inference": 4,
+      "active_layer_id": null,
+      "inferences": [
+        {
+          "inference_index": 0,
+          "is_warmup": false,
+          "source_request_id": "gpu-0031-prefix-0000:inference:0000",
+          "arrival_time_ns": 1798011,
+          "first_token_time_ns": 243787944.8,
+          "ttft_ns": 241989933.8,
+          "ttft_us": 241989.9338,
+          "compute_only_ttft_ns": 235480772,
+          "storage_stall_ns": 6509161.8,
+          "gpu_utilization_percent": 97.31015183243957,
+          "layers": [
+            {
+              "inference_index": 0,
+              "layer_id": 0,
+              "original_issue_time_ns": 1798011,
+              "effective_issue_time_ns": 1798011,
+              "load_completion_time_ns": 8307172.8,
+              "load_latency_ns": 6509161.8,
+              "compute_start_time_ns": 8307172.8,
+              "compute_done_time_ns": 67177365.8,
+              "entry_count": 772,
+              "bytes": 113836032,
+              "path_bytes_by_storage_target": {
+                "SSD0": 113836032
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 8307172.8
+              }
+            },
+            {
+              "inference_index": 0,
+              "layer_id": 1,
+              "original_issue_time_ns": 1798011,
+              "effective_issue_time_ns": 8307172.8,
+              "load_completion_time_ns": 65748657.6,
+              "load_latency_ns": 57441484.8,
+              "compute_start_time_ns": 67177365.8,
+              "compute_done_time_ns": 126047558.8,
+              "entry_count": 772,
+              "bytes": 113836032,
+              "path_bytes_by_storage_target": {
+                "SSD0": 113836032
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 65748657.6
+              }
+            },
+            {
+              "inference_index": 0,
+              "layer_id": 2,
+              "original_issue_time_ns": 60668204,
+              "effective_issue_time_ns": 67177365.8,
+              "load_completion_time_ns": 125851723.2,
+              "load_latency_ns": 58674357.4,
+              "compute_start_time_ns": 126047558.8,
+              "compute_done_time_ns": 184917751.8,
+              "entry_count": 772,
+              "bytes": 113836032,
+              "path_bytes_by_storage_target": {
+                "SSD0": 113836032
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 125851723.2
+              }
+            },
+            {
+              "inference_index": 0,
+              "layer_id": 3,
+              "original_issue_time_ns": 119538397,
+              "effective_issue_time_ns": 126047558.8,
+              "load_completion_time_ns": 182002968,
+              "load_latency_ns": 55955409.2,
+              "compute_start_time_ns": 184917751.8,
+              "compute_done_time_ns": 243787944.8,
+              "entry_count": 772,
+              "bytes": 113836032,
+              "path_bytes_by_storage_target": {
+                "SSD0": 113836032
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 182002968
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "32": {
+      "gpu_id": 32,
+      "template_source_request_id": "gpu-0032-prefix-0000",
+      "arrival_time_ns": 36599129,
+      "input_tokens": 141149,
+      "cached_prefix_ratio": 0.6530372115637585,
+      "cached_token_count": 92160,
+      "single_layer_compute_ns": 98135017,
+      "layer_count": 4,
+      "inference_count": 1,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 1,
+      "measured_compute_time_ns": 392540068,
+      "measured_inference_duration_ns": 399840303.8,
+      "gpu_utilization_percent": 98.17421212153451,
+      "observation_compute_busy_ns": 399253267.59999996,
+      "observation_window_ns": 441901256.2,
+      "observation_window_gpu_utilization_percent": 90.34897774069735,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 1,
+      "completed_layer_count_in_inflight_inference": 1,
+      "active_layer_id": 1,
+      "inferences": [
+        {
+          "inference_index": 0,
+          "is_warmup": false,
+          "source_request_id": "gpu-0032-prefix-0000:inference:0000",
+          "arrival_time_ns": 36599129,
+          "first_token_time_ns": 436439432.8,
+          "ttft_ns": 399840303.8,
+          "ttft_us": 399840.3038,
+          "compute_only_ttft_ns": 392540068,
+          "storage_stall_ns": 7300235.8,
+          "gpu_utilization_percent": 98.17421212153451,
+          "layers": [
+            {
+              "inference_index": 0,
+              "layer_id": 0,
+              "original_issue_time_ns": 36599129,
+              "effective_issue_time_ns": 36599129,
+              "load_completion_time_ns": 43899364.8,
+              "load_latency_ns": 7300235.8,
+              "compute_start_time_ns": 43899364.8,
+              "compute_done_time_ns": 142034381.8,
+              "entry_count": 720,
+              "bytes": 106168320,
+              "path_bytes_by_storage_target": {
+                "SSD0": 106168320
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 43899364.8
+              }
+            },
+            {
+              "inference_index": 0,
+              "layer_id": 1,
+              "original_issue_time_ns": 36599129,
+              "effective_issue_time_ns": 43899364.8,
+              "load_completion_time_ns": 134046590.4,
+              "load_latency_ns": 90147225.6,
+              "compute_start_time_ns": 142034381.8,
+              "compute_done_time_ns": 240169398.8,
+              "entry_count": 720,
+              "bytes": 106168320,
+              "path_bytes_by_storage_target": {
+                "SSD0": 106168320
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 134046590.4
+              }
+            },
+            {
+              "inference_index": 0,
+              "layer_id": 2,
+              "original_issue_time_ns": 134734146,
+              "effective_issue_time_ns": 142034381.8,
+              "load_completion_time_ns": 237147825.6,
+              "load_latency_ns": 95113443.8,
+              "compute_start_time_ns": 240169398.8,
+              "compute_done_time_ns": 338304415.8,
+              "entry_count": 720,
+              "bytes": 106168320,
+              "path_bytes_by_storage_target": {
+                "SSD0": 106168320
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 237147825.6
+              }
+            },
+            {
+              "inference_index": 0,
+              "layer_id": 3,
+              "original_issue_time_ns": 232869163,
+              "effective_issue_time_ns": 240169398.8,
+              "load_completion_time_ns": 335287166.4,
+              "load_latency_ns": 95117767.6,
+              "compute_start_time_ns": 338304415.8,
+              "compute_done_time_ns": 436439432.8,
+              "entry_count": 720,
+              "bytes": 106168320,
+              "path_bytes_by_storage_target": {
+                "SSD0": 106168320
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 335287166.4
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "33": {
+      "gpu_id": 33,
+      "template_source_request_id": "gpu-0033-prefix-0000",
+      "arrival_time_ns": 87822432,
+      "input_tokens": 179892,
+      "cached_prefix_ratio": 0.7420963615787644,
+      "cached_token_count": 133376,
+      "single_layer_compute_ns": 93181090,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 0,
+      "observation_window_ns": 390677953.2,
+      "observation_window_gpu_utilization_percent": 0.0,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 0,
+      "active_layer_id": 0,
+      "inferences": []
+    },
+    "34": {
+      "gpu_id": 34,
+      "template_source_request_id": "gpu-0034-prefix-0000",
+      "arrival_time_ns": 2441244,
+      "input_tokens": 124840,
+      "cached_prefix_ratio": 0.9542410634122304,
+      "cached_token_count": 119040,
+      "single_layer_compute_ns": 11618590,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 0,
+      "observation_window_ns": 476059141.2,
+      "observation_window_gpu_utilization_percent": 0.0,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 0,
+      "active_layer_id": 0,
+      "inferences": []
+    },
+    "35": {
+      "gpu_id": 35,
+      "template_source_request_id": "gpu-0035-prefix-0000",
+      "arrival_time_ns": 82872226,
+      "input_tokens": 154594,
+      "cached_prefix_ratio": 0.7373610263756553,
+      "cached_token_count": 113920,
+      "single_layer_compute_ns": 81478366,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 217527356.39999998,
+      "observation_window_ns": 395628159.2,
+      "observation_window_gpu_utilization_percent": 54.98277899122807,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 3,
+      "active_layer_id": 3,
+      "inferences": []
+    },
+    "36": {
+      "gpu_id": 36,
+      "template_source_request_id": "gpu-0036-prefix-0000",
+      "arrival_time_ns": 17038915,
+      "input_tokens": 184121,
+      "cached_prefix_ratio": 0.6673619410411173,
+      "cached_token_count": 122752,
+      "single_layer_compute_ns": 122934696,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 444554929.2,
+      "observation_window_ns": 461461470.2,
+      "observation_window_gpu_utilization_percent": 96.336304958966,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 4,
+      "active_layer_id": null,
+      "inferences": []
+    },
+    "37": {
+      "gpu_id": 37,
+      "template_source_request_id": "gpu-0037-prefix-0000",
+      "arrival_time_ns": 39627151,
+      "input_tokens": 121198,
+      "cached_prefix_ratio": 0.8696022211664153,
+      "cached_token_count": 105344,
+      "single_layer_compute_ns": 31758815,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 0,
+      "observation_window_ns": 438873234.2,
+      "observation_window_gpu_utilization_percent": 0.0,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 0,
+      "active_layer_id": 0,
+      "inferences": []
+    },
+    "38": {
+      "gpu_id": 38,
+      "template_source_request_id": "gpu-0038-prefix-0000",
+      "arrival_time_ns": 93540621,
+      "input_tokens": 172948,
+      "cached_prefix_ratio": 0.6717062995407682,
+      "cached_token_count": 116096,
+      "single_layer_compute_ns": 113886218,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 256998480.4,
+      "observation_window_ns": 384959764.2,
+      "observation_window_gpu_utilization_percent": 66.75982902630841,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 3,
+      "active_layer_id": 3,
+      "inferences": []
+    },
+    "39": {
+      "gpu_id": 39,
+      "template_source_request_id": "gpu-0039-prefix-0000",
+      "arrival_time_ns": 43216961,
+      "input_tokens": 131336,
+      "cached_prefix_ratio": 0.7031843789791126,
+      "cached_token_count": 92288,
+      "single_layer_compute_ns": 78221154,
+      "layer_count": 4,
+      "inference_count": 1,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 1,
+      "measured_compute_time_ns": 312884616,
+      "measured_inference_duration_ns": 316224914.2,
+      "gpu_utilization_percent": 98.94369543637937,
+      "observation_compute_busy_ns": 404067985.2,
+      "observation_window_ns": 435283424.2,
+      "observation_window_gpu_utilization_percent": 92.82870946501804,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 1,
+      "completed_layer_count_in_inflight_inference": 2,
+      "active_layer_id": 2,
+      "inferences": [
+        {
+          "inference_index": 0,
+          "is_warmup": false,
+          "source_request_id": "gpu-0039-prefix-0000:inference:0000",
+          "arrival_time_ns": 43216961,
+          "first_token_time_ns": 359441875.2,
+          "ttft_ns": 316224914.2,
+          "ttft_us": 316224.9142,
+          "compute_only_ttft_ns": 312884616,
+          "storage_stall_ns": 3340298.2,
+          "gpu_utilization_percent": 98.94369543637937,
+          "layers": [
+            {
+              "inference_index": 0,
+              "layer_id": 0,
+              "original_issue_time_ns": 43216961,
+              "effective_issue_time_ns": 43216961,
+              "load_completion_time_ns": 46557259.2,
+              "load_latency_ns": 3340298.2,
+              "compute_start_time_ns": 46557259.2,
+              "compute_done_time_ns": 124778413.2,
+              "entry_count": 721,
+              "bytes": 106315776,
+              "path_bytes_by_storage_target": {
+                "SSD0": 106315776
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 46557259.2
+              }
+            },
+            {
+              "inference_index": 0,
+              "layer_id": 1,
+              "original_issue_time_ns": 43216961,
+              "effective_issue_time_ns": 46557259.2,
+              "load_completion_time_ns": 123005822.4,
+              "load_latency_ns": 76448563.2,
+              "compute_start_time_ns": 124778413.2,
+              "compute_done_time_ns": 202999567.2,
+              "entry_count": 721,
+              "bytes": 106315776,
+              "path_bytes_by_storage_target": {
+                "SSD0": 106315776
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 123005822.4
+              }
+            },
+            {
+              "inference_index": 0,
+              "layer_id": 2,
+              "original_issue_time_ns": 121438115,
+              "effective_issue_time_ns": 124778413.2,
+              "load_completion_time_ns": 198720792,
+              "load_latency_ns": 73942378.8,
+              "compute_start_time_ns": 202999567.2,
+              "compute_done_time_ns": 281220721.2,
+              "entry_count": 721,
+              "bytes": 106315776,
+              "path_bytes_by_storage_target": {
+                "SSD0": 106315776
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 198720792
+              }
+            },
+            {
+              "inference_index": 0,
+              "layer_id": 3,
+              "original_issue_time_ns": 199659269,
+              "effective_issue_time_ns": 202999567.2,
+              "load_completion_time_ns": 279688881.6,
+              "load_latency_ns": 76689314.4,
+              "compute_start_time_ns": 281220721.2,
+              "compute_done_time_ns": 359441875.2,
+              "entry_count": 721,
+              "bytes": 106315776,
+              "path_bytes_by_storage_target": {
+                "SSD0": 106315776
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 279688881.6
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "40": {
+      "gpu_id": 40,
+      "template_source_request_id": "gpu-0040-prefix-0000",
+      "arrival_time_ns": 59099759,
+      "input_tokens": 134508,
+      "cached_prefix_ratio": 0.8454005219510904,
+      "cached_token_count": 113664,
+      "single_layer_compute_ns": 41754808,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 0,
+      "observation_window_ns": 419400626.2,
+      "observation_window_gpu_utilization_percent": 0.0,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 0,
+      "active_layer_id": 0,
+      "inferences": []
+    },
+    "41": {
+      "gpu_id": 41,
+      "template_source_request_id": "gpu-0041-prefix-0000",
+      "arrival_time_ns": 35326034,
+      "input_tokens": 170297,
+      "cached_prefix_ratio": 0.9275433097985482,
+      "cached_token_count": 157952,
+      "single_layer_compute_ns": 24729568,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 0,
+      "observation_window_ns": 443174351.2,
+      "observation_window_gpu_utilization_percent": 0.0,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 0,
+      "active_layer_id": 0,
+      "inferences": []
+    },
+    "42": {
+      "gpu_id": 42,
+      "template_source_request_id": "gpu-0042-prefix-0000",
+      "arrival_time_ns": 8189978,
+      "input_tokens": 131858,
+      "cached_prefix_ratio": 0.7267889608491427,
+      "cached_token_count": 95744,
+      "single_layer_compute_ns": 72343750,
+      "layer_count": 4,
+      "inference_count": 1,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 1,
+      "measured_compute_time_ns": 289375000,
+      "measured_inference_duration_ns": 296135101.2,
+      "gpu_utilization_percent": 97.71722393846366,
+      "observation_compute_busy_ns": 418701550.0,
+      "observation_window_ns": 470310407.2,
+      "observation_window_gpu_utilization_percent": 89.0266393407592,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 1,
+      "completed_layer_count_in_inflight_inference": 2,
+      "active_layer_id": 2,
+      "inferences": [
+        {
+          "inference_index": 0,
+          "is_warmup": false,
+          "source_request_id": "gpu-0042-prefix-0000:inference:0000",
+          "arrival_time_ns": 8189978,
+          "first_token_time_ns": 304325079.2,
+          "ttft_ns": 296135101.2,
+          "ttft_us": 296135.1012,
+          "compute_only_ttft_ns": 289375000,
+          "storage_stall_ns": 6760101.2,
+          "gpu_utilization_percent": 97.71722393846366,
+          "layers": [
+            {
+              "inference_index": 0,
+              "layer_id": 0,
+              "original_issue_time_ns": 8189978,
+              "effective_issue_time_ns": 8189978,
+              "load_completion_time_ns": 13062628.8,
+              "load_latency_ns": 4872650.8,
+              "compute_start_time_ns": 13062628.8,
+              "compute_done_time_ns": 85406378.8,
+              "entry_count": 748,
+              "bytes": 110297088,
+              "path_bytes_by_storage_target": {
+                "SSD0": 110297088
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 13062628.8
+              }
+            },
+            {
+              "inference_index": 0,
+              "layer_id": 1,
+              "original_issue_time_ns": 8189978,
+              "effective_issue_time_ns": 13062628.8,
+              "load_completion_time_ns": 80011339.2,
+              "load_latency_ns": 66948710.4,
+              "compute_start_time_ns": 85406378.8,
+              "compute_done_time_ns": 157750128.8,
+              "entry_count": 748,
+              "bytes": 110297088,
+              "path_bytes_by_storage_target": {
+                "SSD0": 110297088
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 80011339.2
+              }
+            },
+            {
+              "inference_index": 0,
+              "layer_id": 2,
+              "original_issue_time_ns": 80533728,
+              "effective_issue_time_ns": 85406378.8,
+              "load_completion_time_ns": 159637579.2,
+              "load_latency_ns": 74231200.4,
+              "compute_start_time_ns": 159637579.2,
+              "compute_done_time_ns": 231981329.2,
+              "entry_count": 748,
+              "bytes": 110297088,
+              "path_bytes_by_storage_target": {
+                "SSD0": 110297088
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 159637579.2
+              }
+            },
+            {
+              "inference_index": 0,
+              "layer_id": 3,
+              "original_issue_time_ns": 152877478,
+              "effective_issue_time_ns": 159637579.2,
+              "load_completion_time_ns": 228964017.6,
+              "load_latency_ns": 69326438.4,
+              "compute_start_time_ns": 231981329.2,
+              "compute_done_time_ns": 304325079.2,
+              "entry_count": 748,
+              "bytes": 110297088,
+              "path_bytes_by_storage_target": {
+                "SSD0": 110297088
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 228964017.6
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "43": {
+      "gpu_id": 43,
+      "template_source_request_id": "gpu-0043-prefix-0000",
+      "arrival_time_ns": 6421854,
+      "input_tokens": 108853,
+      "cached_prefix_ratio": 0.6379710991426375,
+      "cached_token_count": 69376,
+      "single_layer_compute_ns": 79080529,
+      "layer_count": 4,
+      "inference_count": 1,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 1,
+      "measured_compute_time_ns": 316322116,
+      "measured_inference_duration_ns": 328172021.6,
+      "gpu_utilization_percent": 96.38911765170415,
+      "observation_compute_busy_ns": 448406093.2,
+      "observation_window_ns": 472078531.2,
+      "observation_window_gpu_utilization_percent": 94.98548727902838,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 1,
+      "completed_layer_count_in_inflight_inference": 2,
+      "active_layer_id": 2,
+      "inferences": [
+        {
+          "inference_index": 0,
+          "is_warmup": false,
+          "source_request_id": "gpu-0043-prefix-0000:inference:0000",
+          "arrival_time_ns": 6421854,
+          "first_token_time_ns": 334593875.6,
+          "ttft_ns": 328172021.6,
+          "ttft_us": 328172.0216,
+          "compute_only_ttft_ns": 316322116,
+          "storage_stall_ns": 11849905.6,
+          "gpu_utilization_percent": 96.38911765170415,
+          "layers": [
+            {
+              "inference_index": 0,
+              "layer_id": 0,
+              "original_issue_time_ns": 6421854,
+              "effective_issue_time_ns": 6421854,
+              "load_completion_time_ns": 10305201.6,
+              "load_latency_ns": 3883347.6,
+              "compute_start_time_ns": 10305201.6,
+              "compute_done_time_ns": 89385730.6,
+              "entry_count": 542,
+              "bytes": 79921152,
+              "path_bytes_by_storage_target": {
+                "SSD0": 79921152
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 10305201.6
+              }
+            },
+            {
+              "inference_index": 0,
+              "layer_id": 1,
+              "original_issue_time_ns": 6421854,
+              "effective_issue_time_ns": 10305201.6,
+              "load_completion_time_ns": 84693067.2,
+              "load_latency_ns": 74387865.6,
+              "compute_start_time_ns": 89385730.6,
+              "compute_done_time_ns": 168466259.6,
+              "entry_count": 542,
+              "bytes": 79921152,
+              "path_bytes_by_storage_target": {
+                "SSD0": 79921152
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 84693067.2
+              }
+            },
+            {
+              "inference_index": 0,
+              "layer_id": 2,
+              "original_issue_time_ns": 85502383,
+              "effective_issue_time_ns": 89385730.6,
+              "load_completion_time_ns": 176432817.6,
+              "load_latency_ns": 87047087,
+              "compute_start_time_ns": 176432817.6,
+              "compute_done_time_ns": 255513346.6,
+              "entry_count": 542,
+              "bytes": 79921152,
+              "path_bytes_by_storage_target": {
+                "SSD0": 79921152
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 176432817.6
+              }
+            },
+            {
+              "inference_index": 0,
+              "layer_id": 3,
+              "original_issue_time_ns": 164582912,
+              "effective_issue_time_ns": 176432817.6,
+              "load_completion_time_ns": 254363313.6,
+              "load_latency_ns": 77930496,
+              "compute_start_time_ns": 255513346.6,
+              "compute_done_time_ns": 334593875.6,
+              "entry_count": 542,
+              "bytes": 79921152,
+              "path_bytes_by_storage_target": {
+                "SSD0": 79921152
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 254363313.6
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "44": {
+      "gpu_id": 44,
+      "template_source_request_id": "gpu-0044-prefix-0000",
+      "arrival_time_ns": 30365776,
+      "input_tokens": 103575,
+      "cached_prefix_ratio": 0.8110768652974335,
+      "cached_token_count": 83968,
+      "single_layer_compute_ns": 39276843,
+      "layer_count": 4,
+      "inference_count": 2,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 2,
+      "measured_compute_time_ns": 314214744,
+      "measured_inference_duration_ns": 322804493.6,
+      "gpu_utilization_percent": 97.3390241553936,
+      "observation_compute_busy_ns": 425338039.2,
+      "observation_window_ns": 448134609.2,
+      "observation_window_gpu_utilization_percent": 94.91300838364259,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 2,
+      "completed_layer_count_in_inflight_inference": 3,
+      "active_layer_id": 3,
+      "inferences": [
+        {
+          "inference_index": 0,
+          "is_warmup": false,
+          "source_request_id": "gpu-0044-prefix-0000:inference:0000",
+          "arrival_time_ns": 30365776,
+          "first_token_time_ns": 190957610.4,
+          "ttft_ns": 160591834.4,
+          "ttft_us": 160591.8344,
+          "compute_only_ttft_ns": 157107372,
+          "storage_stall_ns": 3484462.4,
+          "gpu_utilization_percent": 97.83023687784713,
+          "layers": [
+            {
+              "inference_index": 0,
+              "layer_id": 0,
+              "original_issue_time_ns": 30365776,
+              "effective_issue_time_ns": 30365776,
+              "load_completion_time_ns": 33850238.4,
+              "load_latency_ns": 3484462.4,
+              "compute_start_time_ns": 33850238.4,
+              "compute_done_time_ns": 73127081.4,
+              "entry_count": 656,
+              "bytes": 96731136,
+              "path_bytes_by_storage_target": {
+                "SSD0": 96731136
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 33850238.4
+              }
+            },
+            {
+              "inference_index": 0,
+              "layer_id": 1,
+              "original_issue_time_ns": 30365776,
+              "effective_issue_time_ns": 33850238.4,
+              "load_completion_time_ns": 71101310.4,
+              "load_latency_ns": 37251072,
+              "compute_start_time_ns": 73127081.4,
+              "compute_done_time_ns": 112403924.4,
+              "entry_count": 656,
+              "bytes": 96731136,
+              "path_bytes_by_storage_target": {
+                "SSD0": 96731136
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 71101310.4
+              }
+            },
+            {
+              "inference_index": 0,
+              "layer_id": 2,
+              "original_issue_time_ns": 69642619,
+              "effective_issue_time_ns": 73127081.4,
+              "load_completion_time_ns": 110132913.6,
+              "load_latency_ns": 37005832.2,
+              "compute_start_time_ns": 112403924.4,
+              "compute_done_time_ns": 151680767.4,
+              "entry_count": 656,
+              "bytes": 96731136,
+              "path_bytes_by_storage_target": {
+                "SSD0": 96731136
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 110132913.6
+              }
+            },
+            {
+              "inference_index": 0,
+              "layer_id": 3,
+              "original_issue_time_ns": 108919462,
+              "effective_issue_time_ns": 112403924.4,
+              "load_completion_time_ns": 144641304,
+              "load_latency_ns": 32237379.6,
+              "compute_start_time_ns": 151680767.4,
+              "compute_done_time_ns": 190957610.4,
+              "entry_count": 656,
+              "bytes": 96731136,
+              "path_bytes_by_storage_target": {
+                "SSD0": 96731136
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 144641304
+              }
+            }
+          ]
+        },
+        {
+          "inference_index": 1,
+          "is_warmup": false,
+          "source_request_id": "gpu-0044-prefix-0000:inference:0001",
+          "arrival_time_ns": 190957610.4,
+          "first_token_time_ns": 353170269.6,
+          "ttft_ns": 162212659.2,
+          "ttft_us": 162212.6592,
+          "compute_only_ttft_ns": 157107372,
+          "storage_stall_ns": 5105287.2,
+          "gpu_utilization_percent": 96.85271961807528,
+          "layers": [
+            {
+              "inference_index": 1,
+              "layer_id": 0,
+              "original_issue_time_ns": 30365776,
+              "effective_issue_time_ns": 190957610.4,
+              "load_completion_time_ns": 196062897.6,
+              "load_latency_ns": 5105287.2,
+              "compute_start_time_ns": 196062897.6,
+              "compute_done_time_ns": 235339740.6,
+              "entry_count": 656,
+              "bytes": 96731136,
+              "path_bytes_by_storage_target": {
+                "SSD0": 96731136
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 196062897.6
+              }
+            },
+            {
+              "inference_index": 1,
+              "layer_id": 1,
+              "original_issue_time_ns": 30365776,
+              "effective_issue_time_ns": 196062897.6,
+              "load_completion_time_ns": 231382296,
+              "load_latency_ns": 35319398.4,
+              "compute_start_time_ns": 235339740.6,
+              "compute_done_time_ns": 274616583.6,
+              "entry_count": 656,
+              "bytes": 96731136,
+              "path_bytes_by_storage_target": {
+                "SSD0": 96731136
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 231382296
+              }
+            },
+            {
+              "inference_index": 1,
+              "layer_id": 2,
+              "original_issue_time_ns": 69642619,
+              "effective_issue_time_ns": 235339740.6,
+              "load_completion_time_ns": 271000036.8,
+              "load_latency_ns": 35660296.2,
+              "compute_start_time_ns": 274616583.6,
+              "compute_done_time_ns": 313893426.6,
+              "entry_count": 656,
+              "bytes": 96731136,
+              "path_bytes_by_storage_target": {
+                "SSD0": 96731136
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 271000036.8
+              }
+            },
+            {
+              "inference_index": 1,
+              "layer_id": 3,
+              "original_issue_time_ns": 108919462,
+              "effective_issue_time_ns": 274616583.6,
+              "load_completion_time_ns": 313080292.8,
+              "load_latency_ns": 38463709.2,
+              "compute_start_time_ns": 313893426.6,
+              "compute_done_time_ns": 353170269.6,
+              "entry_count": 656,
+              "bytes": 96731136,
+              "path_bytes_by_storage_target": {
+                "SSD0": 96731136
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 313080292.8
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "45": {
+      "gpu_id": 45,
+      "template_source_request_id": "gpu-0045-prefix-0000",
+      "arrival_time_ns": 34675747,
+      "input_tokens": 144597,
+      "cached_prefix_ratio": 0.606039783523078,
+      "cached_token_count": 87552,
+      "single_layer_compute_ns": 114272837,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 439959102.59999996,
+      "observation_window_ns": 443824638.2,
+      "observation_window_gpu_utilization_percent": 99.12903988032812,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 4,
+      "active_layer_id": null,
+      "inferences": []
+    },
+    "46": {
+      "gpu_id": 46,
+      "template_source_request_id": "gpu-0046-prefix-0000",
+      "arrival_time_ns": 53173240,
+      "input_tokens": 187306,
+      "cached_prefix_ratio": 0.7895004754255045,
+      "cached_token_count": 147840,
+      "single_layer_compute_ns": 79058494,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 0,
+      "observation_window_ns": 425327145.2,
+      "observation_window_gpu_utilization_percent": 0.0,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 0,
+      "active_layer_id": 0,
+      "inferences": []
+    },
+    "47": {
+      "gpu_id": 47,
+      "template_source_request_id": "gpu-0047-prefix-0000",
+      "arrival_time_ns": 90402791,
+      "input_tokens": 187206,
+      "cached_prefix_ratio": 0.959325687948768,
+      "cached_token_count": 179584,
+      "single_layer_compute_ns": 15268430,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 0,
+      "observation_window_ns": 388097594.2,
+      "observation_window_gpu_utilization_percent": 0.0,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 0,
+      "active_layer_id": 0,
+      "inferences": []
+    },
+    "48": {
+      "gpu_id": 48,
+      "template_source_request_id": "gpu-0048-prefix-0000",
+      "arrival_time_ns": 29223265,
+      "input_tokens": 110794,
+      "cached_prefix_ratio": 0.8420052018466377,
+      "cached_token_count": 93184,
+      "single_layer_compute_ns": 35276443,
+      "layer_count": 4,
+      "inference_count": 2,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 2,
+      "measured_compute_time_ns": 282211544,
+      "measured_inference_duration_ns": 326992875.6,
+      "gpu_utilization_percent": 86.30510480761068,
+      "observation_compute_busy_ns": 363136943.4,
+      "observation_window_ns": 449277120.2,
+      "observation_window_gpu_utilization_percent": 80.82693889204643,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 2,
+      "completed_layer_count_in_inflight_inference": 3,
+      "active_layer_id": 3,
+      "inferences": [
+        {
+          "inference_index": 0,
+          "is_warmup": false,
+          "source_request_id": "gpu-0048-prefix-0000:inference:0000",
+          "arrival_time_ns": 29223265,
+          "first_token_time_ns": 197597721.4,
+          "ttft_ns": 168374456.4,
+          "ttft_us": 168374.4564,
+          "compute_only_ttft_ns": 141105772,
+          "storage_stall_ns": 27268684.4,
+          "gpu_utilization_percent": 83.80473797330697,
+          "layers": [
+            {
+              "inference_index": 0,
+              "layer_id": 0,
+              "original_issue_time_ns": 29223265,
+              "effective_issue_time_ns": 29223265,
+              "load_completion_time_ns": 51965208,
+              "load_latency_ns": 22741943,
+              "compute_start_time_ns": 51965208,
+              "compute_done_time_ns": 87241651,
+              "entry_count": 728,
+              "bytes": 107347968,
+              "path_bytes_by_storage_target": {
+                "SSD0": 107347968
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 51965208
+              }
+            },
+            {
+              "inference_index": 0,
+              "layer_id": 1,
+              "original_issue_time_ns": 29223265,
+              "effective_issue_time_ns": 51965208,
+              "load_completion_time_ns": 82695038.4,
+              "load_latency_ns": 30729830.4,
+              "compute_start_time_ns": 87241651,
+              "compute_done_time_ns": 122518094,
+              "entry_count": 728,
+              "bytes": 107347968,
+              "path_bytes_by_storage_target": {
+                "SSD0": 107347968
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 82695038.4
+              }
+            },
+            {
+              "inference_index": 0,
+              "layer_id": 2,
+              "original_issue_time_ns": 64499708,
+              "effective_issue_time_ns": 87241651,
+              "load_completion_time_ns": 120347928,
+              "load_latency_ns": 33106277,
+              "compute_start_time_ns": 122518094,
+              "compute_done_time_ns": 157794537,
+              "entry_count": 728,
+              "bytes": 107347968,
+              "path_bytes_by_storage_target": {
+                "SSD0": 107347968
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 120347928
+              }
+            },
+            {
+              "inference_index": 0,
+              "layer_id": 3,
+              "original_issue_time_ns": 99776151,
+              "effective_issue_time_ns": 122518094,
+              "load_completion_time_ns": 162321278.4,
+              "load_latency_ns": 39803184.4,
+              "compute_start_time_ns": 162321278.4,
+              "compute_done_time_ns": 197597721.4,
+              "entry_count": 728,
+              "bytes": 107347968,
+              "path_bytes_by_storage_target": {
+                "SSD0": 107347968
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 162321278.4
+              }
+            }
+          ]
+        },
+        {
+          "inference_index": 1,
+          "is_warmup": false,
+          "source_request_id": "gpu-0048-prefix-0000:inference:0001",
+          "arrival_time_ns": 197597721.4,
+          "first_token_time_ns": 356216140.6,
+          "ttft_ns": 158618419.2,
+          "ttft_us": 158618.4192,
+          "compute_only_ttft_ns": 141105772,
+          "storage_stall_ns": 17512647.2,
+          "gpu_utilization_percent": 88.95926003529355,
+          "layers": [
+            {
+              "inference_index": 1,
+              "layer_id": 0,
+              "original_issue_time_ns": 29223265,
+              "effective_issue_time_ns": 197597721.4,
+              "load_completion_time_ns": 211376203.2,
+              "load_latency_ns": 13778481.8,
+              "compute_start_time_ns": 211376203.2,
+              "compute_done_time_ns": 246652646.2,
+              "entry_count": 728,
+              "bytes": 107347968,
+              "path_bytes_by_storage_target": {
+                "SSD0": 107347968
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 211376203.2
+              }
+            },
+            {
+              "inference_index": 1,
+              "layer_id": 1,
+              "original_issue_time_ns": 29223265,
+              "effective_issue_time_ns": 211376203.2,
+              "load_completion_time_ns": 249519384,
+              "load_latency_ns": 38143180.8,
+              "compute_start_time_ns": 249519384,
+              "compute_done_time_ns": 284795827,
+              "entry_count": 728,
+              "bytes": 107347968,
+              "path_bytes_by_storage_target": {
+                "SSD0": 107347968
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 249519384
+              }
+            },
+            {
+              "inference_index": 1,
+              "layer_id": 2,
+              "original_issue_time_ns": 64499708,
+              "effective_issue_time_ns": 249519384,
+              "load_completion_time_ns": 285115262.4,
+              "load_latency_ns": 35595878.4,
+              "compute_start_time_ns": 285115262.4,
+              "compute_done_time_ns": 320391705.4,
+              "entry_count": 728,
+              "bytes": 107347968,
+              "path_bytes_by_storage_target": {
+                "SSD0": 107347968
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 285115262.4
+              }
+            },
+            {
+              "inference_index": 1,
+              "layer_id": 3,
+              "original_issue_time_ns": 99776151,
+              "effective_issue_time_ns": 285115262.4,
+              "load_completion_time_ns": 320939697.6,
+              "load_latency_ns": 35824435.2,
+              "compute_start_time_ns": 320939697.6,
+              "compute_done_time_ns": 356216140.6,
+              "entry_count": 728,
+              "bytes": 107347968,
+              "path_bytes_by_storage_target": {
+                "SSD0": 107347968
+              },
+              "completion_time_ns_by_storage_target": {
+                "SSD0": 320939697.6
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "49": {
+      "gpu_id": 49,
+      "template_source_request_id": "gpu-0049-prefix-0000",
+      "arrival_time_ns": 17182134,
+      "input_tokens": 189553,
+      "cached_prefix_ratio": 0.8967277970578753,
+      "cached_token_count": 169856,
+      "single_layer_compute_ns": 39457132,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 0,
+      "observation_window_ns": 461318251.2,
+      "observation_window_gpu_utilization_percent": 0.0,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 0,
+      "active_layer_id": 0,
+      "inferences": []
+    },
+    "50": {
+      "gpu_id": 50,
+      "template_source_request_id": "gpu-0050-prefix-0000",
+      "arrival_time_ns": 30042707,
+      "input_tokens": 185625,
+      "cached_prefix_ratio": 0.639433885902367,
+      "cached_token_count": 118656,
+      "single_layer_compute_ns": 134152645,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 122263407.59999996,
+      "observation_window_ns": 448457678.2,
+      "observation_window_gpu_utilization_percent": 27.263087141407755,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 1,
+      "active_layer_id": 1,
+      "inferences": []
+    },
+    "51": {
+      "gpu_id": 51,
+      "template_source_request_id": "gpu-0051-prefix-0000",
+      "arrival_time_ns": 68482256,
+      "input_tokens": 145111,
+      "cached_prefix_ratio": 0.7738623629602798,
+      "cached_token_count": 112256,
+      "single_layer_compute_ns": 65815305,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 0,
+      "observation_window_ns": 410018129.2,
+      "observation_window_gpu_utilization_percent": 0.0,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 0,
+      "active_layer_id": 0,
+      "inferences": []
+    },
+    "52": {
+      "gpu_id": 52,
+      "template_source_request_id": "gpu-0052-prefix-0000",
+      "arrival_time_ns": 48650665,
+      "input_tokens": 173920,
+      "cached_prefix_ratio": 0.6208975979922762,
+      "cached_token_count": 107904,
+      "single_layer_compute_ns": 132243590,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 400336334.4,
+      "observation_window_ns": 429849720.2,
+      "observation_window_gpu_utilization_percent": 93.13402233081179,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 4,
+      "active_layer_id": null,
+      "inferences": []
+    },
+    "53": {
+      "gpu_id": 53,
+      "template_source_request_id": "gpu-0053-prefix-0000",
+      "arrival_time_ns": 3452054,
+      "input_tokens": 156685,
+      "cached_prefix_ratio": 0.9087334250264388,
+      "cached_token_count": 142336,
+      "single_layer_compute_ns": 28743991,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 0,
+      "observation_window_ns": 475048331.2,
+      "observation_window_gpu_utilization_percent": 0.0,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 0,
+      "active_layer_id": 0,
+      "inferences": []
+    },
+    "54": {
+      "gpu_id": 54,
+      "template_source_request_id": "gpu-0054-prefix-0000",
+      "arrival_time_ns": 59729632,
+      "input_tokens": 162400,
+      "cached_prefix_ratio": 0.9156288939059829,
+      "cached_token_count": 148608,
+      "single_layer_compute_ns": 27628206,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 0,
+      "observation_window_ns": 418770753.2,
+      "observation_window_gpu_utilization_percent": 0.0,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 0,
+      "active_layer_id": 0,
+      "inferences": []
+    },
+    "55": {
+      "gpu_id": 55,
+      "template_source_request_id": "gpu-0055-prefix-0000",
+      "arrival_time_ns": 79063042,
+      "input_tokens": 198339,
+      "cached_prefix_ratio": 0.9850380321069678,
+      "cached_token_count": 195328,
+      "single_layer_compute_ns": 6031651,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 0,
+      "observation_window_ns": 399437343.2,
+      "observation_window_gpu_utilization_percent": 0.0,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 0,
+      "active_layer_id": 0,
+      "inferences": []
+    },
+    "56": {
+      "gpu_id": 56,
+      "template_source_request_id": "gpu-0056-prefix-0000",
+      "arrival_time_ns": 84436057,
+      "input_tokens": 189732,
+      "cached_prefix_ratio": 0.6066264098198203,
+      "cached_token_count": 115072,
+      "single_layer_compute_ns": 149559295,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 263810108.39999998,
+      "observation_window_ns": 394064328.2,
+      "observation_window_gpu_utilization_percent": 66.94595006988506,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 2,
+      "active_layer_id": 2,
+      "inferences": []
+    },
+    "57": {
+      "gpu_id": 57,
+      "template_source_request_id": "gpu-0057-prefix-0000",
+      "arrival_time_ns": 24392929,
+      "input_tokens": 188677,
+      "cached_prefix_ratio": 0.7625571866852113,
+      "cached_token_count": 143872,
+      "single_layer_compute_ns": 89753606,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 0,
+      "observation_window_ns": 454107456.2,
+      "observation_window_gpu_utilization_percent": 0.0,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 0,
+      "active_layer_id": 0,
+      "inferences": []
+    },
+    "58": {
+      "gpu_id": 58,
+      "template_source_request_id": "gpu-0058-prefix-0000",
+      "arrival_time_ns": 91582818,
+      "input_tokens": 173911,
+      "cached_prefix_ratio": 0.7170224126301091,
+      "cached_token_count": 124672,
+      "single_layer_compute_ns": 98635818,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 0,
+      "observation_window_ns": 386917567.2,
+      "observation_window_gpu_utilization_percent": 0.0,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 0,
+      "active_layer_id": 0,
+      "inferences": []
+    },
+    "59": {
+      "gpu_id": 59,
+      "template_source_request_id": "gpu-0059-prefix-0000",
+      "arrival_time_ns": 9344273,
+      "input_tokens": 187875,
+      "cached_prefix_ratio": 0.636225538804137,
+      "cached_token_count": 119424,
+      "single_layer_compute_ns": 137121395,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 461077180.0,
+      "observation_window_ns": 469156112.2,
+      "observation_window_gpu_utilization_percent": 98.27798636958694,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 4,
+      "active_layer_id": null,
+      "inferences": []
+    },
+    "60": {
+      "gpu_id": 60,
+      "template_source_request_id": "gpu-0060-prefix-0000",
+      "arrival_time_ns": 27630945,
+      "input_tokens": 191818,
+      "cached_prefix_ratio": 0.759783730373299,
+      "cached_token_count": 145664,
+      "single_layer_compute_ns": 92455930,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 0,
+      "observation_window_ns": 450869440.2,
+      "observation_window_gpu_utilization_percent": 0.0,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 0,
+      "active_layer_id": 0,
+      "inferences": []
+    },
+    "61": {
+      "gpu_id": 61,
+      "template_source_request_id": "gpu-0061-prefix-0000",
+      "arrival_time_ns": 52061099,
+      "input_tokens": 156560,
+      "cached_prefix_ratio": 0.6089692992281751,
+      "cached_token_count": 95232,
+      "single_layer_compute_ns": 122852565,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 409333230.59999996,
+      "observation_window_ns": 426439286.2,
+      "observation_window_gpu_utilization_percent": 95.98863046779013,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 4,
+      "active_layer_id": null,
+      "inferences": []
+    },
+    "62": {
+      "gpu_id": 62,
+      "template_source_request_id": "gpu-0062-prefix-0000",
+      "arrival_time_ns": 6268060,
+      "input_tokens": 160673,
+      "cached_prefix_ratio": 0.873188571297574,
+      "cached_token_count": 140288,
+      "single_layer_compute_ns": 40835337,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 0,
+      "observation_window_ns": 472232325.2,
+      "observation_window_gpu_utilization_percent": 0.0,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 0,
+      "active_layer_id": 0,
+      "inferences": []
+    },
+    "63": {
+      "gpu_id": 63,
+      "template_source_request_id": "gpu-0063-prefix-0000",
+      "arrival_time_ns": 15239453,
+      "input_tokens": 177543,
+      "cached_prefix_ratio": 0.8283616353891012,
+      "cached_token_count": 146944,
+      "single_layer_compute_ns": 61296074,
+      "layer_count": 4,
+      "inference_count": 0,
+      "warmup_inference_count": 0,
+      "measured_inference_count": 0,
+      "measured_compute_time_ns": 0,
+      "measured_inference_duration_ns": 0,
+      "gpu_utilization_percent": null,
+      "observation_compute_busy_ns": 0,
+      "observation_window_ns": 463260932.2,
+      "observation_window_gpu_utilization_percent": 0.0,
+      "has_inflight_inference": true,
+      "inflight_inference_index": 0,
+      "completed_layer_count_in_inflight_inference": 0,
+      "active_layer_id": 0,
+      "inferences": []
+    }
+  },
+  "storage_paths": {
+    "SSD0": {
+      "request_count": 129788,
+      "bytes": 19138019328,
+      "completed_request_count": 129741,
+      "completed_bytes": 19131088896,
+      "cir_dispatch_count": 124213,
+      "excess_dispatch_count": 5575,
+      "first_submit_time_us": 160.0,
+      "last_completion_time_us": 478500.12,
+      "active_time_us": 478340.3852,
+      "average_bandwidth_gb_s": 40.00920666566374,
+      "qos_dispatched_bandwidth_gb_s": 40.00920666566374,
+      "ssd_completed_bandwidth_gb_s": 39.99471817124756,
+      "ssd_blocked_attempt_count": 0
+    }
+  },
+  "request_conservation": {
+    "status": "partial_snapshot",
+    "target": {
+      "layers": 1280,
+      "sqes": 11780,
+      "entries": 1231460,
+      "bytes": 181586165760
+    },
+    "submitted": {
+      "layers": 223,
+      "sqes": 1750,
+      "entries": 181738,
+      "bytes": 26798358528
+    },
+    "effective_completed_sqes": 1253,
+    "qos_dispatched": {
+      "entries": 129788,
+      "bytes": 19138019328
+    },
+    "ssd_completed": {
+      "entries": 129741,
+      "bytes": 19131088896
+    },
+    "outstanding": {
+      "before_qos_entries": 51950,
+      "before_qos_bytes": 7660339200,
+      "in_ssd_entries": 47,
+      "in_ssd_bytes": 6930432,
+      "total_entries": 51997,
+      "total_bytes": 7667269632,
+      "owned_entry_count": 51997,
+      "active_layer_pending_entry_count": 51997
+    }
+  },
+  "rate_control": {
+    "strategy": "utility_edf",
+    "active_demand_count": 52,
+    "completed_demand_count_by_storage_target": {
+      "SSD0": 171
+    },
+    "completed_coflow_count": 171,
+    "active_coflow_count": 52,
+    "completed_layer_count": 171,
+    "completed_layer_count_by_p_node": {
+      "P30": 20,
+      "P12": 9,
+      "P31": 8,
+      "P43": 6,
+      "P42": 6,
+      "P59": 4,
+      "P13": 6,
+      "P8": 5,
+      "P5": 4,
+      "P36": 4,
+      "P44": 11,
+      "P24": 8,
+      "P45": 4,
+      "P32": 5,
+      "P39": 6,
+      "P26": 4,
+      "P48": 11,
+      "P0": 4,
+      "P61": 4,
+      "P23": 6,
+      "P9": 4,
+      "P52": 4,
+      "P21": 4,
+      "P11": 9,
+      "P22": 3,
+      "P56": 2,
+      "P38": 3,
+      "P16": 3,
+      "P35": 3,
+      "P50": 1
+    },
+    "current_inference_completed_layer_count_by_p_node": {
+      "P30": 4,
+      "P31": 4,
+      "P34": 0,
+      "P12": 1,
+      "P53": 0,
+      "P62": 0,
+      "P43": 2,
+      "P42": 2,
+      "P13": 2,
+      "P59": 4,
+      "P63": 0,
+      "P36": 4,
+      "P49": 0,
+      "P8": 1,
+      "P3": 0,
+      "P27": 0,
+      "P5": 4,
+      "P57": 0,
+      "P60": 0,
+      "P48": 3,
+      "P20": 0,
+      "P50": 1,
+      "P44": 3,
+      "P24": 4,
+      "P25": 0,
+      "P45": 4,
+      "P23": 2,
+      "P41": 0,
+      "P15": 0,
+      "P32": 1,
+      "P4": 0,
+      "P7": 0,
+      "P26": 4,
+      "P37": 0,
+      "P39": 2,
+      "P9": 4,
+      "P52": 4,
+      "P0": 4,
+      "P61": 4,
+      "P46": 0,
+      "P16": 3,
+      "P19": 0,
+      "P40": 0,
+      "P54": 0,
+      "P14": 0,
+      "P17": 0,
+      "P18": 0,
+      "P28": 0,
+      "P51": 0,
+      "P1": 0,
+      "P29": 0,
+      "P55": 0,
+      "P35": 3,
+      "P11": 1,
+      "P56": 2,
+      "P2": 0,
+      "P6": 0,
+      "P10": 0,
+      "P21": 0,
+      "P33": 0,
+      "P47": 0,
+      "P58": 0,
+      "P38": 3,
+      "P22": 3
+    },
+    "restore_after_final_layer": false,
+    "peak_assigned_cir_bytes_per_second": {
+      "SSD0": 40000000000
+    },
+    "decision_count": 394,
+    "initial_decision_count": 150,
+    "prefetch_decision_count": 244,
+    "feasibility_conflict_count": 122,
+    "selection_change_count": 172,
+    "score_mode": "integer",
+    "deadline_allowance_us": 750,
+    "compute_layer_count": 4
+  },
+  "termination": {
+    "stop_mode": "first_gpu_reaches_limit",
+    "full_trace_completed": false,
+    "stopping_gpu_ids": [
+      30
+    ],
+    "completed_gpu_count": 1,
+    "inflight_gpu_count": 63,
+    "pending_event_count": 13
+  },
+  "event_loop": {
+    "completion_time_us": 478500.3852,
+    "processed_event_count": 396998
+  },
+  "wall_time_seconds": 20.982051922008395
+}
