@@ -118,6 +118,38 @@ class BalancedExclusiveBindingTests(unittest.TestCase):
             self.assertEqual(set(group_counts.values()), {8})
 
 
+class OneGroupPerGpuBindingTests(unittest.TestCase):
+    """验证每张GPU固定使用自己连续Group的首Queue。"""
+
+    def test_each_gpu_uses_the_first_queue_of_its_group(self):
+        p_node_ids = [f"P{index}" for index in range(8)]
+        queues = [f"q{index:03d}" for index in range(256)]
+        strategy = build_queue_binding_strategy(
+            "one_group_per_gpu",
+            p_node_ids,
+            {"SSD0": queues, "SSD1": queues},
+        )
+
+        expected = [f"q{index:03d}" for index in range(0, 256, 32)]
+        for storage_target_id in ("SSD0", "SSD1"):
+            self.assertEqual(
+                [
+                    strategy.bindings[(p_node_id, storage_target_id)]
+                    for p_node_id in p_node_ids
+                ],
+                expected,
+            )
+
+    def test_gpu_count_must_divide_256(self):
+        queues = [f"q{index:03d}" for index in range(256)]
+        with self.assertRaisesRegex(ValueError, "divide 256"):
+            build_queue_binding_strategy(
+                "one_group_per_gpu",
+                [f"P{index}" for index in range(10)],
+                {"SSD0": queues},
+            )
+
+
 class FCFSCIRControllerTests(unittest.TestCase):
     """验证仅使用整数运算的先到先服务CIR分配。"""
 

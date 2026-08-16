@@ -6,6 +6,32 @@ simulation:
   experiment:
     output_file: experiments/results/utility_edf_topology_scan/summary.json
 
+  # --mode ucm-trace 只读这个分区；下面原有分区继续提供
+  # DPU/QoS/SSD 硬件参数，不再维护第二份 YAML。
+  ucm_trace:
+    trace_bundle_root: ../ucm-sqe-simulator/outputs/glm51_128npu_4layer_asu_1_10
+    trace_bundle_pattern: gpu_128_asu_{ssd_count}
+    output_dir: experiments/results/ucm_trace_4layer_ssd_sweep
+    policies:
+      - baseline
+      - cir_only
+
+  # 稳态模式复用每张 GPU 的四层 SQE 模板。
+  ucm_trace_steady:
+    trace_bundle_root: ../ucm-sqe-simulator/outputs/glm51_64npu_4layer_asu_1_5
+    trace_bundle_pattern: gpu_64_asu_{ssd_count}
+    output_dir: experiments/results/ucm_trace_steady_4layer_ssd_sweep
+    ssd_counts: [1, 2, 3, 4, 5]
+    inference_count_per_gpu: 5
+    warmup_inference_count: 0
+    stop_mode: first_gpu_reaches_limit
+    parallel_workers: 15
+    queue_binding_strategy: one_group_per_gpu
+    policies:
+      - baseline
+      - cir_only
+      - utility_edf_integer_l750
+
   # GPU和SSD数量都在拓扑分区设置；列表只写一个值时就是单一拓扑实验。
   topology:
     gpu_count: 128

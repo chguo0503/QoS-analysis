@@ -30,6 +30,8 @@ def register_demand(
     arrival_time_us=0,
     request_count=1,
     block_size_bytes=None,
+    inference_arrival_time_us=0,
+    demand_group_id=None,
 ):
     """以1 MB/s容量登记，使Byte数数值等于服务微秒。"""
     if block_size_bytes is None and request_count == 1:
@@ -40,7 +42,11 @@ def register_demand(
         requested_cir_bytes_per_second=CAPACITY_BYTES_PER_SECOND,
         arrival_time_us=arrival_time_us,
         p_node_id=p_node_id,
-        demand_group_id=f"{p_node_id}_group",
+        demand_group_id=(
+            f"{p_node_id}_group"
+            if demand_group_id is None
+            else demand_group_id
+        ),
         batch_total_bytes=byte_count,
         path_bytes=byte_count,
         path_request_count=request_count,
@@ -55,7 +61,7 @@ def register_demand(
         prefetch_layer_index=(
             0 if compute_layer_index is None else compute_layer_index + 1
         ),
-        inference_arrival_time_us=0,
+        inference_arrival_time_us=inference_arrival_time_us,
     )
 
 
@@ -193,6 +199,79 @@ class UtilityEDFReferenceTests(unittest.TestCase):
         self.assertEqual(
             finite.queue_pirs["SSD0"]["q0"],
             CAPACITY_BYTES_PER_SECOND,
+        )
+
+    def test_same_p_node_can_complete_two_consecutive_inferences(self):
+        """新Layer 0重新park固定路径，每次4层后恢复。"""
+        controller = self.build_controller()
+        controller.prepark_all_queues(
+            {"SSD0": ["q0"]},
+            {"SSD0": {"q0": "P0"}},
+        )
+
+        for inference_index, inference_arrival_us in enumerate((10, 1_000)):
+            for layer_index in range(4):
+                arrival_time_us = inference_arrival_us + layer_index * 10
+                register_demand(
+                    controller,
+                    "q0",
+                    "P0",
+                    10,
+                    10,
+                    arrival_time_us=arrival_time_us,
+                    compute_layer_index=(
+                        None if layer_index == 0 else layer_index - 1
+                    ),
+                    inference_arrival_time_us=inference_arrival_us,
+                    demand_group_id=(
+                        f"inference_{inference_index}_layer_{layer_index}"
+                    ),
+                )
+                if layer_index == 0:
+                    self.assertNotIn(
+                        ("SSD0", "q0"),
+                        controller.restored_queue_paths,
+                    )
+                    self.assertEqual(
+                        controller.current_inference_completed_layer_count_by_p_node[
+                            "P0"
+                        ],
+                        0,
+                    )
+                    self.assertEqual(
+                        controller._desired_states("SSD0", None)["q0"],
+                        controller._PARKED_QUEUE_STATE,
+                    )
+
+                controller.recalculate(
+                    "SSD0",
+                    event_time_us=arrival_time_us,
+                    queue_depths={"q0": 1},
+                )
+                controller.release_empty_demands(
+                    "SSD0",
+                    {"q0": 0},
+                    event_time_us=arrival_time_us + 1,
+                )
+
+            self.assertIn(("SSD0", "q0"), controller.restored_queue_paths)
+            self.assertEqual(
+                controller.current_inference_completed_layer_count_by_p_node[
+                    "P0"
+                ],
+                4,
+            )
+
+        self.assertEqual(controller.completed_layer_count_by_p_node["P0"], 8)
+        self.assertEqual(
+            controller.completed_coflow_count_by_p_node["P0"],
+            8,
+        )
+        statistics = controller.statistics()
+        self.assertEqual(statistics["completed_layer_count"], 8)
+        self.assertEqual(
+            statistics["current_inference_arrival_time_us_by_p_node"],
+            {"P0": 1_000},
         )
 
     def test_started_owner_is_not_preempted_by_new_arrival(self):

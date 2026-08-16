@@ -1056,6 +1056,7 @@ class UtilityEDFController:
         deadline_allowance_us=1_000,
         compute_layer_count=4,
         finite_selected_pir=False,
+        restore_after_final_layer=True,
     ):
         """功能：创建单p_node、work-conserving的Utility+EDF控制器。"""
         if score_mode not in ("integer", "power"):
@@ -1076,6 +1077,8 @@ class UtilityEDFController:
             raise ValueError("compute_layer_count must be a positive integer")
         if not isinstance(finite_selected_pir, bool):
             raise TypeError("finite_selected_pir must be bool")
+        if not isinstance(restore_after_final_layer, bool):
+            raise TypeError("restore_after_final_layer must be bool")
 
         self.capacity = dict(
             capacity_bytes_per_second_by_storage_target
@@ -1096,6 +1099,7 @@ class UtilityEDFController:
         self.deadline_allowance_us = deadline_allowance_us
         self.compute_layer_count = compute_layer_count
         self.finite_selected_pir = finite_selected_pir
+        self.restore_after_final_layer = restore_after_final_layer
         self.demands = {target: {} for target in self.capacity}
         self.queue_depths = {target: {} for target in self.capacity}
         self.queue_rates = {target: {} for target in self.capacity}
@@ -1117,7 +1121,14 @@ class UtilityEDFController:
         self.restored_queue_paths = set()
         self.active_group_paths = {}
         self.seen_p_node_ids = set()
-        self.completed_coflow_count_by_p_node = {}
+        # 当前推理计数每次Layer 0重置；累计计数不重置。
+        self.current_inference_arrival_time_us_by_p_node = {}
+        self.current_inference_completed_layer_count_by_p_node = {}
+        self.completed_layer_count_by_p_node = {}
+        # 保留旧字段名，一个coflow对应一层读组。
+        self.completed_coflow_count_by_p_node = (
+            self.completed_layer_count_by_p_node
+        )
         self.completed_demand_count = {
             target: 0 for target in self.capacity
         }
@@ -1222,6 +1233,67 @@ class UtilityEDFController:
             raise ValueError(f"{field_name} must be a positive integer")
         return value
 
+    def _repark_p_node_paths(self, p_node_id):
+        """让一张GPU的全部固定路径重新受Utility Gate管理。"""
+        for storage_target_id, owner_map in (
+            self.queue_owner_by_storage_target.items()
+        ):
+            for queue_id, owner_id in owner_map.items():
+                if owner_id == p_node_id:
+                    self.restored_queue_paths.discard((
+                        storage_target_id,
+                        queue_id,
+                    ))
+
+    def _reset_inference_policy_state(self, p_node_id):
+        """为子类保留新推理状态重置钩子。"""
+
+    def _track_inference(
+        self,
+        p_node_id,
+        inference_arrival_time_us,
+        is_layer_zero,
+    ):
+        """用推理到达时刻识别同一GPU的连续推理。"""
+        arrivals = self.current_inference_arrival_time_us_by_p_node
+        previous_arrival = arrivals.get(p_node_id)
+        if previous_arrival is None:
+            arrivals[p_node_id] = inference_arrival_time_us
+            self.current_inference_completed_layer_count_by_p_node[
+                p_node_id
+            ] = 0
+            if is_layer_zero:
+                self._repark_p_node_paths(p_node_id)
+                self._reset_inference_policy_state(p_node_id)
+            return
+        if previous_arrival == inference_arrival_time_us:
+            return
+        if not is_layer_zero:
+            raise ValueError("a new inference must start with Layer 0")
+        completed = self.current_inference_completed_layer_count_by_p_node.get(
+            p_node_id,
+            0,
+        )
+        if completed < self.compute_layer_count:
+            raise ValueError(
+                "a new inference cannot start before the previous one completes"
+            )
+
+        arrivals[p_node_id] = inference_arrival_time_us
+        self.current_inference_completed_layer_count_by_p_node[p_node_id] = 0
+        self._repark_p_node_paths(p_node_id)
+        self._reset_inference_policy_state(p_node_id)
+
+    def _record_completed_layer(self, p_node_id):
+        """同时更新当前推理和累计完成层数。"""
+        current_counts = (
+            self.current_inference_completed_layer_count_by_p_node
+        )
+        current_counts[p_node_id] = current_counts.get(p_node_id, 0) + 1
+        total_counts = self.completed_layer_count_by_p_node
+        total_counts[p_node_id] = total_counts.get(p_node_id, 0) + 1
+        return current_counts[p_node_id]
+
     def register_demand(
         self,
         storage_target_id,
@@ -1253,23 +1325,6 @@ class UtilityEDFController:
         if demand_group_id is None:
             demand_group_id = (p_node_id, arrival_time_us)
 
-        self.managed_queue_ids[storage_target_id].add(queue_id)
-        owner_map = self.queue_owner_by_storage_target[storage_target_id]
-        previous_owner = owner_map.get(queue_id)
-        if previous_owner is not None and previous_owner != p_node_id:
-            raise ValueError(
-                f"queue {queue_id!r} on {storage_target_id!r} "
-                "cannot change p_node owner"
-            )
-        owner_map[queue_id] = p_node_id
-        if (
-            self.completed_coflow_count_by_p_node.get(p_node_id, 0)
-            < self.compute_layer_count
-        ):
-            self.restored_queue_paths.discard(
-                (storage_target_id, queue_id)
-            )
-
         arrival_time_us = self._non_negative_integer(
             arrival_time_us,
             "arrival_time_us",
@@ -1279,6 +1334,32 @@ class UtilityEDFController:
             "inference_arrival_time_us",
             fallback=arrival_time_us,
         )
+
+        self.managed_queue_ids[storage_target_id].add(queue_id)
+        owner_map = self.queue_owner_by_storage_target[storage_target_id]
+        previous_owner = owner_map.get(queue_id)
+        if previous_owner is not None and previous_owner != p_node_id:
+            raise ValueError(
+                f"queue {queue_id!r} on {storage_target_id!r} "
+                "cannot change p_node owner"
+            )
+        owner_map[queue_id] = p_node_id
+        self._track_inference(
+            p_node_id,
+            inference_arrival_time_us,
+            compute_layer_index is None,
+        )
+        if (
+            self.current_inference_completed_layer_count_by_p_node.get(
+                p_node_id,
+                0,
+            )
+            < self.compute_layer_count
+        ):
+            self.restored_queue_paths.discard(
+                (storage_target_id, queue_id)
+            )
+
         service_window_us = self._non_negative_integer(
             service_window_us,
             "service_window_us",
@@ -1482,9 +1563,11 @@ class UtilityEDFController:
 
     def _prefetch_key(self, candidate):
         """返回预取EDF与稳定平局键。"""
-        completed_count = self.completed_coflow_count_by_p_node.get(
-            candidate["p_node_id"],
-            0,
+        completed_count = (
+            self.current_inference_completed_layer_count_by_p_node.get(
+                candidate["p_node_id"],
+                0,
+            )
         )
         return (
             candidate["deadline_us"],
@@ -1762,16 +1845,10 @@ class UtilityEDFController:
             if not paths:
                 del self.active_group_paths[group_key]
                 p_node_id = demand["p_node_id"]
-                self.completed_coflow_count_by_p_node[p_node_id] = (
-                    self.completed_coflow_count_by_p_node.get(
-                        p_node_id,
-                        0,
-                    )
-                    + 1
-                )
+                current_completed = self._record_completed_layer(p_node_id)
                 if (
-                    self.completed_coflow_count_by_p_node[p_node_id]
-                    >= self.compute_layer_count
+                    self.restore_after_final_layer
+                    and current_completed >= self.compute_layer_count
                 ):
                     # 第四个读组的最后一条SSD路径排空后，
                     # 才让这个p_node的所有固定Queue恢复
@@ -1809,6 +1886,7 @@ class UtilityEDFController:
                 for target_demands in self.demands.values()
                 for demand in target_demands.values()
             }),
+            "active_coflow_count": len(self.active_group_paths),
             "selected_p_node_id": self.selected_p_node_id,
             "completed_demand_count_by_storage_target": dict(
                 self.completed_demand_count
@@ -1819,12 +1897,41 @@ class UtilityEDFController:
             "completed_coflow_count_by_p_node": dict(
                 self.completed_coflow_count_by_p_node
             ),
+            "completed_layer_count": sum(
+                self.completed_layer_count_by_p_node.values()
+            ),
+            "completed_layer_count_by_p_node": dict(
+                self.completed_layer_count_by_p_node
+            ),
+            "current_inference_completed_layer_count_by_p_node": dict(
+                self.current_inference_completed_layer_count_by_p_node
+            ),
+            "current_inference_arrival_time_us_by_p_node": dict(
+                self.current_inference_arrival_time_us_by_p_node
+            ),
             "p_node_statistics": {
                 p_node_id: {
                     "completed_coflow_count": (
                         self.completed_coflow_count_by_p_node.get(
                             p_node_id,
                             0,
+                        )
+                    ),
+                    "completed_layer_count": (
+                        self.completed_layer_count_by_p_node.get(
+                            p_node_id,
+                            0,
+                        )
+                    ),
+                    "current_inference_completed_layer_count": (
+                        self.current_inference_completed_layer_count_by_p_node.get(
+                            p_node_id,
+                            0,
+                        )
+                    ),
+                    "current_inference_arrival_time_us": (
+                        self.current_inference_arrival_time_us_by_p_node.get(
+                            p_node_id
                         )
                     ),
                 }
@@ -1846,6 +1953,7 @@ class UtilityEDFController:
             "owner_locked": self.owner_locked,
             "decision_history": list(self.decision_history),
             "finite_selected_pir": self.finite_selected_pir,
+            "restore_after_final_layer": self.restore_after_final_layer,
             "managed_queue_count": sum(
                 len(queue_ids)
                 for queue_ids in self.managed_queue_ids.values()
@@ -1915,6 +2023,13 @@ class UtilityEDFAblationController(UtilityEDFController):
         self.completed_path_group_count_by_storage_target = {
             target: {} for target in self.capacity
         }
+
+    def _reset_inference_policy_state(self, p_node_id):
+        """c0的每盘完成层数也按推理重置。"""
+        for counts in (
+            self.completed_path_group_count_by_storage_target.values()
+        ):
+            counts[p_node_id] = 0
 
     @staticmethod
     def _fcfs_key(candidate):
@@ -2350,12 +2465,7 @@ class UtilityEDFAblationController(UtilityEDFController):
             # lock、EDF tie-break或Queue恢复。
             if not paths:
                 del self.active_group_paths[group_key]
-                self.completed_coflow_count_by_p_node[p_node_id] = (
-                    self.completed_coflow_count_by_p_node.get(
-                        p_node_id,
-                        0,
-                    ) + 1
-                )
+                self._record_completed_layer(p_node_id)
 
         return self.recalculate(
             storage_target_id,

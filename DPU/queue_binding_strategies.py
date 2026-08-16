@@ -85,9 +85,48 @@ class BalancedExclusiveBindingStrategy(QueueBindingStrategy):
         ]
 
 
+class OneGroupPerGpuBindingStrategy(BalancedExclusiveBindingStrategy):
+    """每张GPU独占一段连续Queue，并固定使用段首Queue。"""
+
+    strategy_name = "one_group_per_gpu"
+    queue_count = 256
+
+    def prepare_bindings(self, p_node_ids, queue_ids_by_storage_target):
+        """将256条Queue等分成N组，GPU i使用第i组首Queue。"""
+        gpu_count = len(p_node_ids)
+        if gpu_count == 0:
+            raise ValueError("one_group_per_gpu requires at least one GPU")
+        if len(set(p_node_ids)) != gpu_count:
+            raise ValueError("one_group_per_gpu requires unique p_node IDs")
+        if self.queue_count % gpu_count != 0:
+            raise ValueError(
+                "one_group_per_gpu requires the GPU count to divide 256"
+            )
+
+        queues_per_group = self.queue_count // gpu_count
+        for storage_target_id, queue_ids in queue_ids_by_storage_target.items():
+            if len(queue_ids) != self.queue_count:
+                raise ValueError(
+                    "one_group_per_gpu requires exactly 256 Queues on "
+                    f"{storage_target_id}"
+                )
+            if len(set(queue_ids)) != self.queue_count:
+                raise ValueError(
+                    "one_group_per_gpu requires unique Queue IDs on "
+                    f"{storage_target_id}"
+                )
+            for gpu_index, p_node_id in enumerate(p_node_ids):
+                self.bindings[(p_node_id, storage_target_id)] = queue_ids[
+                    gpu_index * queues_per_group
+                ]
+
+
 QUEUE_BINDING_STRATEGIES = {
     BalancedExclusiveBindingStrategy.strategy_name: (
         BalancedExclusiveBindingStrategy
+    ),
+    OneGroupPerGpuBindingStrategy.strategy_name: (
+        OneGroupPerGpuBindingStrategy
     ),
 }
 

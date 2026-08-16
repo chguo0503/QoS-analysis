@@ -31,6 +31,10 @@ from llm_workload.layer_request import (
     build_scenario,
 )
 from qos import build_qos_simulator, build_queue_layout
+from simulation_common.aggregate_logs import (
+    CountOnlyAppendLog,
+    DispatchAggregateLog,
+)
 from simulation_common.config_utils import load_yaml
 from simulation_common.storage_path import StoragePath
 
@@ -912,92 +916,6 @@ def run_joint_simulation(
     ).run()
 
 
-class CountOnlyAppendLog:
-    """只统计追加次数，不保留逐请求诊断字典。"""
-
-    def __init__(self):
-        """功能：创建只计数的记录容器。
-
-        目的：摘要实验不保留数百万条SSD完成或NAND事件字典，降低内存与运行时间。
-
-        输入：无。
-
-        输出：None；把累计记录数初始化为0。
-        """
-        self.count = 0
-
-    def append(self, record):
-        """功能：消费一条诊断记录并累计数量。
-
-        目的：保持后端原有append调用位置和时序，仅省略与最终摘要无关的字典保存。
-
-        输入：
-            record: 一条SSD完成或NAND服务记录；内容不会被保留。
-
-        输出：None；累计数量加1。
-        """
-        self.count += 1
-
-    def __len__(self):
-        """功能：返回已消费记录数。
-
-        目的：提供与普通list相同的长度查询接口，供请求守恒统计使用。
-
-        输入：无。
-
-        输出：
-            int: 已消费的记录数量。
-        """
-        return self.count
-
-
-class DispatchAggregateLog:
-    """聚合QoS下发数量、字节和速率类别，不保存逐IO字典。"""
-
-    def __init__(self):
-        """功能：创建空的QoS下发聚合器。
-
-        目的：摘要实验保留守恒与CIR/EXCESS统计，同时避免长期保存每个请求对象。
-
-        输入：无。
-
-        输出：None；初始化全部累计字段。
-        """
-        self.count = 0
-        self.byte_count = 0
-        self.cir_count = 0
-        self.excess_count = 0
-
-    def append(self, request):
-        """功能：聚合一条已成功提交SSD的QoS请求。
-
-        目的：不改变请求经过Queue、WRR、令牌和SSD反压的路径，只替换最终日志保存。
-
-        输入：
-            request: 已完成QoS下发的普通请求字典。
-
-        输出：None；更新请求数、字节数和速率类别计数。
-        """
-        self.count += 1
-        self.byte_count += request["size_bytes"]
-        if request["qos_rate_class"] == "CIR":
-            self.cir_count += 1
-        else:
-            self.excess_count += 1
-
-    def __len__(self):
-        """功能：返回成功下发请求数。
-
-        目的：保持QoS内部通过len计算dispatch_index的语义不变。
-
-        输入：无。
-
-        输出：
-            int: 成功下发请求数量。
-        """
-        return self.count
-
-
 def nearest_rank_p95(values):
     """功能：按nearest-rank定义计算P95。
 
@@ -1528,12 +1446,13 @@ def run_configured_experiment(config):
 def parse_arguments():
     """功能：解析统一仿真入口的唯一命令行参数。
 
-    目的：所有实验参数保存在一个YAML；命令行只负责选择这份配置文件。
+    目的：所有实验参数保存在一个YAML；命令行只选择
+    合成 workload 或 UCM trace 模式。
 
     输入：无；由argparse读取进程命令行。
 
     输出：
-        argparse.Namespace: 包含统一YAML路径。
+        argparse.Namespace: 包含统一 YAML 路径和运行模式。
     """
     parser = argparse.ArgumentParser(
         description="Run the unified multi-GPU, multi-SSD QoS simulation.",
@@ -1544,19 +1463,42 @@ def parse_arguments():
         default=SIMULATION_CONFIG_FILE,
         help="project-wide simulation YAML",
     )
+    parser.add_argument(
+        "--mode",
+        choices=("synthetic", "ucm-trace", "ucm-trace-steady"),
+        default="synthetic",
+        help="run synthetic, one-shot UCM trace, or steady UCM trace",
+    )
     return parser.parse_args()
 
 
 def main():
-    """功能：运行统一YAML实验并打印最终summary.json内容。
+    """功能：运行合成 workload 或 UCM trace 实验。
 
-    目的：作为项目唯一可执行仿真入口，依次完成全部SSD数量和DPU策略组合。
+    目的：作为项目唯一可执行入口，根据 ``--mode`` 选择数据源。
 
     输入：无；读取parse_arguments返回的统一YAML路径。
 
     输出：None；写入一个summary.json并在终端打印相同JSON。
     """
     arguments = parse_arguments()
+    if arguments.mode == "ucm-trace-steady":
+        from ucm_trace_qos_simulator import (
+            run_configured_steady_experiment,
+        )
+
+        summary = run_configured_steady_experiment(arguments.config)
+        print(json.dumps(summary, indent=2, ensure_ascii=False))
+        return
+    if arguments.mode == "ucm-trace":
+        # 延迟导入避免合成 workload 模式加载 trace 解析器。
+        from ucm_trace_qos_simulator import (
+            run_configured_experiment as run_ucm_trace_experiment,
+        )
+
+        summary = run_ucm_trace_experiment(arguments.config)
+        print(json.dumps(summary, indent=2, ensure_ascii=False))
+        return
     config = load_simulation_config(arguments.config)
     summary = run_configured_experiment(config)
     write_summary(summary, resolve_output_file(config))

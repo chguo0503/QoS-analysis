@@ -27,3 +27,8 @@ htmlcov/
 build/
 dist/
 *.egg-info/
+
+# UCM trace 闭环实验会生成较大的 manifest 和结果文件。
+experiments/results/ucm_trace_ttft/
+experiments/results/ucm_trace_4layer_ssd_sweep/
+experiments/results/ucm_trace_steady_4layer_ssd_sweep/

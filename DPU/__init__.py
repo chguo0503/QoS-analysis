@@ -3,6 +3,7 @@
 from DPU.dispatcher import DPURequestGateway
 from DPU.queue_binding_strategies import (
     QUEUE_BINDING_STRATEGIES,
+    OneGroupPerGpuBindingStrategy,
     build_queue_binding_strategy,
 )
 from DPU.rate_controller import (
@@ -18,6 +19,7 @@ __all__ = [
     "QUEUE_BINDING_STRATEGIES",
     "CoflowPriorityController",
     "DemandAwareFCFSCIRController",
+    "OneGroupPerGpuBindingStrategy",
     "UtilityEDFAblationController",
     "UtilityEDFController",
     "build_queue_binding_strategy",

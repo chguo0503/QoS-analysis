@@ -158,6 +158,7 @@ def make_request(
     compute_layer_index=None,
     prefetch_layer_index=0,
     service_window_us=100,
+    inference_arrival_time_us=7,
 ):
     """构造带Utility+EDF必需元数据的单Block请求。"""
     return {
@@ -171,7 +172,7 @@ def make_request(
             "demand_group_id": demand_group_id,
             "compute_layer_index": compute_layer_index,
             "prefetch_layer_index": prefetch_layer_index,
-            "inference_arrival_time_us": 7,
+            "inference_arrival_time_us": inference_arrival_time_us,
             "service_window_us": service_window_us,
             "deadline_us": arrival_time_us + service_window_us,
             "aggregate_bytes_on_storage_target": size_bytes,
@@ -511,6 +512,90 @@ class StrictUtilityIntegrationTests(unittest.TestCase):
             ["p0_0", "p0_1", "p1_0"],
         )
         self.assertEqual(gateway.group_weight_write_count, 0)
+
+    def test_steady_mode_blocks_second_inference_until_next_tick(self):
+        """首轮末层后保持park，第二轮Layer 0不能提前走EXCESS。"""
+        qos = build_minimal_qos()
+        backend = _BudgetBackend()
+        qos.set_backend(backend)
+        controller = UtilityEDFController(
+            {"SSD0": CAPACITY_BYTES_PER_SECOND},
+            score_mode="integer",
+            deadline_allowance_us=750,
+            compute_layer_count=4,
+            restore_after_final_layer=False,
+        )
+        gateway = DPURequestGateway(
+            {"SSD0": ["q000", "q001"]},
+            _FixedBinding({("P0", "SSD0"): "q000"}),
+            qos.input,
+            {"SSD0": qos},
+            controller,
+        )
+        qos.process_at(0)
+
+        def submit_layer(inference_index, layer_index, issue_time_us, start_us):
+            gateway.submit_batch([
+                make_request(
+                    f"i{inference_index}_layer_{layer_index}",
+                    "P0",
+                    f"i{inference_index}_layer_{layer_index}",
+                    1,
+                    arrival_time_us=issue_time_us,
+                    compute_layer_index=(
+                        None if layer_index == 0 else layer_index - 1
+                    ),
+                    prefetch_layer_index=layer_index,
+                    inference_arrival_time_us=start_us,
+                ),
+            ], arrival_time_us=issue_time_us)
+
+        # 第一轮四层都在控制tick上下发。
+        for layer_index, issue_time_us in enumerate((80, 240, 400, 560)):
+            submit_layer(0, layer_index, issue_time_us, 80)
+            backend.set_budget(issue_time_us, 1)
+            qos.process_at(issue_time_us)
+            qos.process_at(issue_time_us + CONTROL_PERIOD_US)
+
+        self.assertEqual(len(backend.accepted), 4)
+        self.assertEqual(controller.completed_layer_count_by_p_node["P0"], 4)
+        self.assertNotIn(("SSD0", "q000"), controller.restored_queue_paths)
+        queue_controller = qos.token_stage.controllers["q000"]
+        self.assertIsNotNone(queue_controller.pir_bucket)
+        self.assertEqual(queue_controller.pir_bucket.fill_per_tick, 0)
+
+        # 第二轮在647 us到达，只能在720 us Gate打开后下发。
+        submit_layer(1, 0, 647, 647)
+        backend.set_budget(647, 1)
+        qos.process_at(647)
+        qos.process_at(719)
+        self.assertEqual(
+            len(backend.accepted),
+            4,
+            "second inference Layer 0 leaked through EXCESS before 720 us",
+        )
+
+        backend.set_budget(720, 1)
+        qos.process_at(720)
+        self.assertEqual(
+            (backend.accepted[-1][0]["request_id"], backend.accepted[-1][1]),
+            ("i1_layer_0", 720),
+        )
+        qos.process_at(800)
+
+        for layer_index, issue_time_us in enumerate((880, 1_040, 1_200), 1):
+            submit_layer(1, layer_index, issue_time_us, 647)
+            backend.set_budget(issue_time_us, 1)
+            qos.process_at(issue_time_us)
+            qos.process_at(issue_time_us + CONTROL_PERIOD_US)
+
+        statistics = controller.statistics()
+        self.assertEqual(statistics["active_demand_count"], 0)
+        self.assertEqual(statistics["active_coflow_count"], 0)
+        self.assertEqual(statistics["completed_coflow_count"], 8)
+        self.assertEqual(statistics["completed_layer_count"], 8)
+        self.assertEqual(statistics["restored_queue_count"], 0)
+        self.assertFalse(statistics["restore_after_final_layer"])
 
     def test_next_layer_stays_parked_until_p_node_is_selected_again(self):
         qos = _RecordingQoS(["q000", "q001"])
