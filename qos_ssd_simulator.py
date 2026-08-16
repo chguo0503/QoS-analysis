@@ -4,50 +4,57 @@
 import argparse
 from copy import deepcopy
 from functools import partial
+import json
 import math
 from pathlib import Path
+import re
+from time import perf_counter
 
 from DPU import (
+    CoflowPriorityController,
     DPURequestGateway,
     DemandAwareFCFSCIRController,
+    UtilityEDFAblationController,
+    UtilityEDFController,
     build_queue_binding_strategy,
 )
-from backends.asu_ssd import SSDSimulator, load_ssd_config
+from backends.asu_ssd import SSDSimulator
 from backends.asu_ssd.time_utils import time_to_us, us_to_time
 from discrete_simulation import EventLoop
 from llm_workload.inference_workload_sampler import (
     UniformRandomInferenceSampler,
 )
 from llm_workload.kv_placement_manager import KVPlacementManager
-from llm_workload.layer_request import DEFAULT_WORKLOAD, LLMWorkload
-from qos import build_qos_simulator, load_queue_layout
+from llm_workload.layer_request import (
+    DEFAULT_WORKLOAD,
+    LLMWorkload,
+    build_scenario,
+)
+from qos import build_qos_simulator, build_queue_layout
 from simulation_common.config_utils import load_yaml
 from simulation_common.storage_path import StoragePath
 
 
 PROJECT_DIR = Path(__file__).resolve().parent
-QOS_CONFIG_DIR = PROJECT_DIR / "qos" / "config"
-INTEGRATION_CONFIG_FILE = QOS_CONFIG_DIR / "qos_ssd_config.yaml"
-MULTI_GPU_CONFIG_FILE = (
-    PROJECT_DIR / "llm_workload" / "config" / "multi_gpu_workloads.yaml"
-)
+SIMULATION_CONFIG_FILE = PROJECT_DIR / "config" / "simulation_config.yaml"
 GPU_LAYER_READY_PRIORITY = 10
 # 同时刻先固化已完成推理，再让所有GPU的下一次推理一起进入层就绪阶段。
 GPU_COMPLETION_PRIORITY = 5
 
 
-def _resolve_integration_path(path_text):
-    """功能：解析联合配置中相对于qos/config的文件路径。
+def load_simulation_config(config_file=SIMULATION_CONFIG_FILE):
+    """功能：读取项目唯一仿真YAML中的完整simulation配置。
 
-    目的：保证从任意工作目录启动脚本时都读取同一组项目配置。
+    目的：让统一入口、测试和组件默认值引用同一份GPU、SSD、DPU、QoS
+    与工作负载配置，不再维护模块级YAML之间的路径关系。
 
     输入：
-        path_text: ``qos_ssd_config.yaml`` 中记录的相对路径文本。
+        config_file: 项目统一YAML路径。
 
     输出：
-        Path: 规范化后的绝对文件路径。
+        dict: ``simulation`` 节点的完整深拷贝。
     """
-    return (QOS_CONFIG_DIR / path_text).resolve()
+    return deepcopy(load_yaml(config_file)["simulation"])
 
 
 def _deep_merge(base, override):
@@ -89,7 +96,12 @@ def _build_topology(simulation_config):
     """
     topology_config = simulation_config["topology"]
     gpu_count = topology_config["gpu_count"]
-    storage_path_count = topology_config["storage_path_count"]
+    # 正式扫描从topology.ssd_counts逐项覆盖storage_path_count；直接创建
+    # JointSimulation时则默认使用列表中的第一项，避免在YAML重复写SSD数量。
+    storage_path_count = topology_config.get(
+        "storage_path_count",
+        topology_config["ssd_counts"][0],
+    )
     gpu_ids = [
         f"{topology_config['gpu_id_prefix']}{index}"
         for index in range(gpu_count)
@@ -111,17 +123,17 @@ def _build_topology(simulation_config):
 
 def _build_gpu_workloads(
     topology,
-    multi_gpu_config,
+    workload_config,
     single_workload=None,
 ):
     """功能：为拓扑中的每张独立GPU构造工作负载模板。
 
-    目的：GPU数量只由项目级simulation YAML决定；multi_gpu YAML仅提供默认值和按ID
-    覆盖。模板中的输入长度和命中率会在后续每次推理采样时替换。
+    目的：GPU数量、默认工作负载和按GPU覆盖都来自项目唯一YAML。模板中的
+    输入长度和命中率会在后续每次推理采样时替换。
 
     输入：
         topology: ``_build_topology`` 生成的设备ID列表。
-        multi_gpu_config: multi_gpu_workloads YAML中的默认值和覆盖项。
+        workload_config: ``simulation.workload`` 默认值及 ``gpu_overrides``。
         single_workload: 可选旧接口单GPU完整工作负载；提供时只创建GPU0。
 
     输出：
@@ -132,8 +144,8 @@ def _build_gpu_workloads(
         workload.setdefault("p_node_id", topology["p_node_ids"][0])
         return {topology["gpu_ids"][0]: workload}
 
-    defaults = multi_gpu_config.get("defaults", {})
-    overrides = multi_gpu_config.get("gpu_overrides", {})
+    defaults = deepcopy(workload_config)
+    overrides = defaults.pop("gpu_overrides", {})
 
     workloads = {}
     for index, gpu_id in enumerate(topology["gpu_ids"]):
@@ -144,9 +156,7 @@ def _build_gpu_workloads(
         # 默认YAML只描述一张GPU，因此拓扑展开时必须重新生成全局唯一身份。
         # 用户若在GPU覆盖项中显式提供这两个字段，则尊重实验配置。
         if "workload_id" not in gpu_override:
-            workload["workload_id"] = (
-                f"{DEFAULT_WORKLOAD['workload_id']}_{gpu_id}"
-            )
+            workload["workload_id"] = f"{defaults['workload_id']}_{gpu_id}"
         if "p_node_id" not in gpu_override:
             workload["p_node_id"] = topology["p_node_ids"][index]
         workloads[gpu_id] = workload
@@ -161,13 +171,13 @@ class JointSimulation:
         binding_strategy_name=None,
         workload=None,
         rate_control_strategy_name=None,
+        config=None,
+        config_file=SIMULATION_CONFIG_FILE,
         simulation_config_override=None,
         workload_defaults_override=None,
         backend_config_override=None,
-        token_config_file=None,
-        scheduler_config_file=None,
     ):
-        """功能：根据全部YAML创建一次全新的联合仿真状态。
+        """功能：根据项目唯一YAML创建一次全新的联合仿真状态。
 
         目的：每次策略比较都重新创建GPU推理序列、QoS、SSD和事件日历，
         确保前一次实验的随机状态、令牌、队列和流水线不会污染下一次结果。
@@ -176,23 +186,20 @@ class JointSimulation:
             binding_strategy_name: 可选DPU Queue绑定策略覆盖名称。
             workload: 可选旧接口单GPU工作负载；提供时强制使用1个GPU。
             rate_control_strategy_name: ``baseline`` 或DPU速率策略名称。
+            config: 可选的完整 ``simulation`` 配置字典；测试可直接传入副本。
+            config_file: config为None时读取的项目统一YAML路径。
             simulation_config_override: 项目级simulation字典的递归覆盖。
             workload_defaults_override: 全部GPU共用的LLM工作负载覆盖。
             backend_config_override: SSD后端配置的递归覆盖；用于
                 在同一工作负载下对照detailed与batched_exact。
-            token_config_file: 可选实验Queue CIR/PIR YAML文件。
-            scheduler_config_file: 可选实验Group/Queue WRR YAML文件。
-
         输出：
             None: 完成全部组件装配、随机序列生成和GPU首次推理安排。
         """
-        integration = load_yaml(INTEGRATION_CONFIG_FILE)["integration"]
-        global_simulation_config_file = _resolve_integration_path(
-            integration["global_simulation_config"]
+        self.global_simulation_config = (
+            load_simulation_config(config_file)
+            if config is None
+            else deepcopy(config)
         )
-        self.global_simulation_config = load_yaml(
-            global_simulation_config_file
-        )["simulation"]
         if simulation_config_override is not None:
             # 实验覆盖只作用于本次新建实例，不改写项目YAML。
             self.global_simulation_config = _deep_merge(
@@ -215,15 +222,10 @@ class JointSimulation:
         self.scheduled_gpu_completion_events = set()
         self.completed_gpu_ids = set()
 
-        layout_file = _resolve_integration_path(
-            integration["queue_layout_config"]
-        )
-        qos_runtime_config_file = _resolve_integration_path(
-            integration["qos_runtime_config"]
-        )
-        queue_layout = load_queue_layout(layout_file)
-        backend_config = load_ssd_config(
-            _resolve_integration_path(integration["backend_config"])
+        qos_config = self.global_simulation_config["qos"]
+        queue_layout = build_queue_layout(qos_config["queue_layout"])
+        backend_config = deepcopy(
+            self.global_simulation_config["ssd"]["backend"]
         )
         if backend_config_override is not None:
             # 后端模式覆盖只作用于本次仿真，不改写公共YAML；
@@ -234,22 +236,9 @@ class JointSimulation:
             )
 
         self.storage_paths = {}
-        selected_token_config_file = (
-            _resolve_integration_path(integration["token_bucket_config"])
-            if token_config_file is None
-            else Path(token_config_file)
-        )
-        selected_scheduler_config_file = (
-            _resolve_integration_path(integration["wrr_config"])
-            if scheduler_config_file is None
-            else Path(scheduler_config_file)
-        )
         for storage_target_id in self.topology["storage_target_ids"]:
             qos = build_qos_simulator(
-                layout_config_file=layout_file,
-                token_config_file=selected_token_config_file,
-                scheduler_config_file=selected_scheduler_config_file,
-                qos_runtime_config_file=qos_runtime_config_file,
+                qos_config=qos_config,
                 start_time_us=self.start_time_us,
                 queue_layout=queue_layout,
             )
@@ -265,18 +254,18 @@ class JointSimulation:
                 event_loop=self.event_loop,
             )
 
-        multi_gpu_config = load_yaml(MULTI_GPU_CONFIG_FILE)["multi_gpu"]
+        workload_config = deepcopy(self.global_simulation_config["workload"])
         if workload_defaults_override is not None:
-            multi_gpu_config = deepcopy(multi_gpu_config)
-            multi_gpu_config["defaults"] = _deep_merge(
-                multi_gpu_config.get("defaults", {}),
+            workload_config = _deep_merge(
+                workload_config,
                 workload_defaults_override,
             )
         gpu_workload_templates = _build_gpu_workloads(
             topology=self.topology,
-            multi_gpu_config=multi_gpu_config,
+            workload_config=workload_config,
             single_workload=workload,
         )
+        self.llm_scenario = build_scenario(self.global_simulation_config)
 
         # 旧的workload参数是单GPU快速实验接口，保持只运行一次；
         # 正常YAML入口则在事件循环前一次性生成全部随机序列。
@@ -319,9 +308,7 @@ class JointSimulation:
             for gpu_id, template in gpu_workload_templates.items()
         }
 
-        dpu_config = load_yaml(
-            _resolve_integration_path(integration["dpu_config"])
-        )["dpu"]
+        dpu_config = self.global_simulation_config["dpu"]
         binding_config = dpu_config["queue_binding"]
         selected_strategy = (
             binding_config["strategy"]
@@ -346,27 +333,117 @@ class JointSimulation:
         }
         configured_rate_control = dpu_config["rate_control"]
         if rate_control_strategy_name is None:
-            selected_rate_control_strategy = (
-                configured_rate_control["strategy"]
-                if configured_rate_control["enabled"]
-                else "baseline"
-            )
+            selected_rate_control_strategy = configured_rate_control[
+                "strategies"
+            ][0]
         else:
             selected_rate_control_strategy = rate_control_strategy_name
         self.rate_control_strategy_name = selected_rate_control_strategy
 
         rate_controller = None
+        capacity_by_storage_target = {
+            storage_target_id: backend_config["nand"][
+                "read_bandwidth_bytes_per_second"
+            ]
+            for storage_target_id in self.topology["storage_target_ids"]
+        }
         if selected_rate_control_strategy == "demand_aware_fcfs_cir":
             # DPU控制面直接使用SSD整数Byte/s容量，不转成浮点GB/s。
             rate_controller = DemandAwareFCFSCIRController(
-                capacity_bytes_per_second_by_storage_target={
-                    storage_target_id: backend_config["nand"][
-                        "read_bandwidth_bytes_per_second"
-                    ]
-                    for storage_target_id in self.topology[
-                        "storage_target_ids"
-                    ]
-                },
+                capacity_bytes_per_second_by_storage_target=(
+                    capacity_by_storage_target
+                ),
+            )
+        elif selected_rate_control_strategy.startswith("utility_edf_"):
+            strategy_match = re.fullmatch(
+                r"utility_edf_(integer|power)_l([1-9][0-9]*)",
+                selected_rate_control_strategy,
+            )
+            if strategy_match is None:
+                raise ValueError(
+                    "utility EDF strategy must match "
+                    "utility_edf_<integer|power>_l<positive integer>"
+                )
+            compute_layer_count = (
+                workload_config["last_layer_index"]
+                - workload_config["first_layer_index"]
+                + 1
+            )
+            rate_controller = UtilityEDFController(
+                capacity_bytes_per_second_by_storage_target=(
+                    capacity_by_storage_target
+                ),
+                score_mode=strategy_match.group(1),
+                deadline_allowance_us=int(strategy_match.group(2)),
+                compute_layer_count=compute_layer_count,
+            )
+        elif selected_rate_control_strategy.startswith("ablation"):
+            strategy_match = re.fullmatch(
+                r"ablation_c([01])_u([01])_e([01])",
+                selected_rate_control_strategy,
+            )
+            if strategy_match is None:
+                raise ValueError(
+                    "ablation strategy must match "
+                    "ablation_c<0|1>_u<0|1>_e<0|1>"
+                )
+            compute_layer_count = (
+                workload_config["last_layer_index"]
+                - workload_config["first_layer_index"]
+                + 1
+            )
+            rate_controller = UtilityEDFAblationController(
+                capacity_bytes_per_second_by_storage_target=(
+                    capacity_by_storage_target
+                ),
+                coordination_enabled=(strategy_match.group(1) == "1"),
+                utility_enabled=(strategy_match.group(2) == "1"),
+                edf_enabled=(strategy_match.group(3) == "1"),
+                compute_layer_count=compute_layer_count,
+            )
+        elif selected_rate_control_strategy.startswith((
+            "coflow_",
+            "cohort_",
+            "paced_",
+        )):
+            # 策略名格式：
+            #   coflow_<ordering>_k<并发GPU数>
+            #   cohort_<ordering>_k<并发GPU数>
+            #   paced_<ordering>_k<并发GPU数>
+            # 前者只在有活跃Queue时占槽；后者在一次推理的
+            # 多个KV读组之间保留owner，避免compute空档让全部
+            # 初始层请求提前灌入SSD。
+            persistent_cohort = selected_rate_control_strategy.startswith(
+                "cohort_"
+            )
+            finite_selected_pir = selected_rate_control_strategy.startswith(
+                "paced_"
+            )
+            strategy_prefix = (
+                "cohort_"
+                if persistent_cohort
+                else "paced_" if finite_selected_pir else "coflow_"
+            )
+            strategy_suffix = selected_rate_control_strategy[
+                len(strategy_prefix):
+            ]
+            ordering, width_text = strategy_suffix.rsplit("_k", 1)
+            # 普通coflow与persistent cohort都获得每次推理的
+            # KV读组数；只有cohort_前缀会启用跨层占槽。
+            expected_coflow_count = (
+                workload_config["last_layer_index"]
+                - workload_config["first_layer_index"]
+                + 1
+            )
+            rate_controller = CoflowPriorityController(
+                capacity_bytes_per_second_by_storage_target=(
+                    capacity_by_storage_target
+                ),
+                ordering=ordering,
+                selection_width=int(width_text),
+                persistent_cohort=persistent_cohort,
+                expected_coflow_count=expected_coflow_count,
+                finite_selected_pir=finite_selected_pir,
             )
         self.dpu = DPURequestGateway(
             queue_ids_by_storage_target=queue_ids_by_storage_target,
@@ -404,7 +481,10 @@ class JointSimulation:
 
         workload = deepcopy(sequence[inference_index])
         workload["arrival_time_us"] = start_time_us
-        self.llms[gpu_id] = LLMWorkload(workload=workload)
+        self.llms[gpu_id] = LLMWorkload(
+            workload=workload,
+            scenario=self.llm_scenario,
+        )
         self.active_inference_indexes[gpu_id] = inference_index
         self.next_inference_indexes[gpu_id] += 1
         self._schedule_gpu_layer(gpu_id)
@@ -731,43 +811,6 @@ class JointSimulation:
             "per_storage_target": per_storage_target,
         }
 
-    @staticmethod
-    def _demand_satisfaction_statistics(inference_results):
-        """功能：统计SSD读取需求在GPU计算窗口内的完成比例。
-
-        目的：以一张GPU的一层为一个demand；该层分散在所有SSD
-        上的Block全部完成，且最晚完成时刻不超过GPU计算窗口，
-        才记为满足。因此指标使用真实SSD完成时刻，不使用QoS下发时刻。
-
-        输入：全部GPU已完成的单次推理结果列表。
-        输出：满足数、总需求数、满足率和每份需求明细。
-        """
-        demands = []
-        for inference in inference_results:
-            for layer in inference["layers"]:
-                if layer["block_count"] == 0:
-                    continue
-                demands.append({
-                    "gpu_id": inference["gpu_id"],
-                    "inference_index": inference["inference_index"],
-                    "demand_group_id": layer["layer_request_id"],
-                    "compute_done_time_us": layer["compute_done_time_us"],
-                    "io_completion_time_us": layer["io_completion_time_us"],
-                    "satisfied": (
-                        layer["io_completion_time_us"]
-                        <= layer["compute_done_time_us"]
-                    ),
-                })
-        satisfied_count = sum(demand["satisfied"] for demand in demands)
-        return {
-            "satisfied_demand_count": satisfied_count,
-            "total_demand_count": len(demands),
-            "satisfaction_ratio": (
-                satisfied_count / len(demands) if demands else 1.0
-            ),
-            "demands": demands,
-        }
-
     def run(self):
         """功能：运行全局事件日历直到全部GPU完成所有推理。
 
@@ -796,10 +839,6 @@ class JointSimulation:
             for storage_target_id, storage_path in self.storage_paths.items()
         }
         conservation = self._conservation_statistics(gpu_results, path_results)
-        demand_satisfaction = self._demand_satisfaction_statistics(
-            inference_results
-        )
-
         dpu_statistics = self.dpu.statistics()
         result = {
             "gpu_count": len(gpu_results),
@@ -818,7 +857,6 @@ class JointSimulation:
             "storage_paths": path_results,
             "dpu": dpu_statistics,
             "request_conservation": conservation,
-            "demand_satisfaction": demand_satisfaction,
             "event_loop": {
                 "completion_time_us": time_to_us(self.event_loop.current_time),
                 "processed_event_count": self.event_loop.processed_event_count,
@@ -839,11 +877,11 @@ def run_joint_simulation(
     workload=None,
     binding_strategy=None,
     rate_control_strategy=None,
+    config=None,
+    config_file=SIMULATION_CONFIG_FILE,
     simulation_config_override=None,
     workload_defaults_override=None,
     backend_config_override=None,
-    token_config_file=None,
-    scheduler_config_file=None,
 ):
     """功能：创建并运行一次全新的统一联合仿真。
 
@@ -853,11 +891,11 @@ def run_joint_simulation(
         workload: 可选旧接口单GPU完整工作负载。
         binding_strategy: 可选的DPU Queue绑定策略名称。
         rate_control_strategy: ``baseline`` 或DPU速率策略名称。
+        config: 可选完整 ``simulation`` 配置字典。
+        config_file: config为None时读取的统一YAML路径。
         simulation_config_override: 可选项目级仿真参数覆盖。
         workload_defaults_override: 可选全GPU LLM工作负载覆盖。
         backend_config_override: 可选SSD后端配置递归覆盖。
-        token_config_file: 可选Queue令牌YAML。
-        scheduler_config_file: 可选WRR YAML。
 
     输出：
         dict: ``JointSimulation.run`` 返回的完整结果。
@@ -866,252 +904,663 @@ def run_joint_simulation(
         binding_strategy_name=binding_strategy,
         workload=workload,
         rate_control_strategy_name=rate_control_strategy,
+        config=config,
+        config_file=config_file,
         simulation_config_override=simulation_config_override,
         workload_defaults_override=workload_defaults_override,
         backend_config_override=backend_config_override,
-        token_config_file=token_config_file,
-        scheduler_config_file=scheduler_config_file,
     ).run()
 
 
-def compare_queue_binding_strategies(strategy_names=None, workload=None):
-    """功能：使用完全相同配置分别运行多种DPU Queue绑定策略。
+class CountOnlyAppendLog:
+    """只统计追加次数，不保留逐请求诊断字典。"""
 
-    目的：建立项目最终策略评测入口，确保每种策略都从空令牌、空SSD和相同
-    KV Placement映射开始，结果之间可以直接比较。
+    def __init__(self):
+        """功能：创建只计数的记录容器。
+
+        目的：摘要实验不保留数百万条SSD完成或NAND事件字典，降低内存与运行时间。
+
+        输入：无。
+
+        输出：None；把累计记录数初始化为0。
+        """
+        self.count = 0
+
+    def append(self, record):
+        """功能：消费一条诊断记录并累计数量。
+
+        目的：保持后端原有append调用位置和时序，仅省略与最终摘要无关的字典保存。
+
+        输入：
+            record: 一条SSD完成或NAND服务记录；内容不会被保留。
+
+        输出：None；累计数量加1。
+        """
+        self.count += 1
+
+    def __len__(self):
+        """功能：返回已消费记录数。
+
+        目的：提供与普通list相同的长度查询接口，供请求守恒统计使用。
+
+        输入：无。
+
+        输出：
+            int: 已消费的记录数量。
+        """
+        return self.count
+
+
+class DispatchAggregateLog:
+    """聚合QoS下发数量、字节和速率类别，不保存逐IO字典。"""
+
+    def __init__(self):
+        """功能：创建空的QoS下发聚合器。
+
+        目的：摘要实验保留守恒与CIR/EXCESS统计，同时避免长期保存每个请求对象。
+
+        输入：无。
+
+        输出：None；初始化全部累计字段。
+        """
+        self.count = 0
+        self.byte_count = 0
+        self.cir_count = 0
+        self.excess_count = 0
+
+    def append(self, request):
+        """功能：聚合一条已成功提交SSD的QoS请求。
+
+        目的：不改变请求经过Queue、WRR、令牌和SSD反压的路径，只替换最终日志保存。
+
+        输入：
+            request: 已完成QoS下发的普通请求字典。
+
+        输出：None；更新请求数、字节数和速率类别计数。
+        """
+        self.count += 1
+        self.byte_count += request["size_bytes"]
+        if request["qos_rate_class"] == "CIR":
+            self.cir_count += 1
+        else:
+            self.excess_count += 1
+
+    def __len__(self):
+        """功能：返回成功下发请求数。
+
+        目的：保持QoS内部通过len计算dispatch_index的语义不变。
+
+        输入：无。
+
+        输出：
+            int: 成功下发请求数量。
+        """
+        return self.count
+
+
+def nearest_rank_p95(values):
+    """功能：按nearest-rank定义计算P95。
+
+    目的：避免不同统计库的插值规则让多次实验摘要不可直接比较。
 
     输入：
-        strategy_names: 可选策略名称列表；默认读取DPU YAML比较列表。
-        workload: 可选用于快速单GPU实验的完整工作负载。
+        values: 非空数值序列。
 
     输出：
-        dict: ``strategy_name -> 联合仿真结果`` 映射。
+        number: 排序后ceil(0.95*N)-1位置的数值。
     """
-    if strategy_names is None:
-        integration = load_yaml(INTEGRATION_CONFIG_FILE)["integration"]
-        dpu_config = load_yaml(
-            _resolve_integration_path(integration["dpu_config"])
-        )["dpu"]["queue_binding"]
-        strategy_names = dpu_config["comparison_strategies"]
-    return {
-        strategy_name: run_joint_simulation(
-            workload=workload,
-            binding_strategy=strategy_name,
+    ordered = sorted(values)
+    return ordered[math.ceil(len(ordered) * 0.95) - 1]
+
+
+def gpu_utilization_percent(inference):
+    """功能：计算一次推理窗口内的GPU模型利用率。
+
+    目的：量化TTFT中GPU计算所占比例；SSD等待越长，该比例越低。
+
+    输入：
+        inference: 包含compute_only_ttft_us和ttft_us的推理结果。
+
+    输出：
+        float: GPU计算时间占实际TTFT的百分比。
+    """
+    return (
+        inference["compute_only_ttft_us"]
+        / inference["ttft_us"]
+        * 100
+    )
+
+
+def build_simulation(config, ssd_count, policy):
+    """功能：根据统一配置创建一个拓扑与策略实验实例。
+
+    目的：每个实验点都从空Queue、空令牌和空SSD启动，并仅覆盖当前SSD数量与策略。
+
+    输入：
+        config: 完整simulation配置字典。
+        ssd_count: 本实验点要实例化的独立QoS+SSD数量。
+        policy: baseline或demand_aware_fcfs_cir。
+
+    输出：
+        JointSimulation: 尚未运行的联合仿真实例。
+    """
+    run_config = deepcopy(config)
+    run_config["topology"]["storage_path_count"] = ssd_count
+    return JointSimulation(
+        config=run_config,
+        binding_strategy_name=run_config["dpu"]["queue_binding"]["strategy"],
+        rate_control_strategy_name=policy,
+    )
+
+
+def install_summary_only_logs(simulation):
+    """功能：把高频明细日志替换为等价聚合容器。
+
+    目的：完整执行数据通路和SSD时序，只关闭最终摘要不需要的逐请求记录保留。
+
+    输入：
+        simulation: 尚未开始运行的JointSimulation实例。
+
+    输出：
+        dict: storage_target_id到QoS下发聚合器的映射。
+    """
+    dispatch_logs = {}
+    for storage_target_id, storage_path in simulation.storage_paths.items():
+        dispatch_log = DispatchAggregateLog()
+        storage_path.qos.dispatched_requests = dispatch_log
+        storage_path.ssd.backend.completed_requests = CountOnlyAppendLog()
+        storage_path.ssd.backend.nand_service_events = CountOnlyAppendLog()
+        dispatch_logs[storage_target_id] = dispatch_log
+    return dispatch_logs
+
+
+def collect_inference_results(simulation):
+    """功能：按GPU拓扑顺序展开全部已完成推理。
+
+    目的：统一支持每GPU一次或多次推理，并为层时序和GPU利用率摘要提供输入。
+
+    输入：
+        simulation: 所有GPU均已完成的JointSimulation实例。
+
+    输出：
+        list: 按GPU、推理序号排列的完整推理结果。
+    """
+    return [
+        inference
+        for gpu_id in simulation.gpu_workload_sequences
+        for inference in simulation.completed_inference_results[gpu_id]
+    ]
+
+
+def summarize_run(simulation, dispatch_logs, wall_time_seconds):
+    """功能：生成一个策略实验点的紧凑性能与守恒摘要。
+
+    目的：报告层读取延迟、TTFT、GPU利用率、SSD尾时刻和CIR/EXCESS数量，
+    同时确认GPU、QoS和SSD的请求数与字节数严格守恒。
+
+    输入：
+        simulation: 已运行至全部GPU完成的联合仿真实例。
+        dispatch_logs: 每块SSD的QoS下发聚合器。
+        wall_time_seconds: 本实验点的真实运行耗时。
+
+    输出：
+        dict: 当前SSD数量与DPU策略的紧凑摘要。
+    """
+    inferences = collect_inference_results(simulation)
+    signed_deltas_us = []
+    actual_reads_us = []
+    for inference in inferences:
+        initial_read = inference["initial_layer_read"]
+        initial_read_us = initial_read["read_time_us"]
+        actual_reads_us.append(initial_read_us)
+        # 首层没有可重叠的前一层计算窗口，全部读取时间都属于启动缺口。
+        signed_deltas_us.append(initial_read_us)
+        for layer in inference["layers"]:
+            # 末层不预取测量窗口外数据，不能把它的0us读取误当成
+            # 一个提前完成的负delta样本。
+            if layer["prefetch_layer_index"] is None:
+                continue
+            layer_start_us = layer["layer_start_time_us"]
+            actual_read_us = layer["io_completion_time_us"] - layer_start_us
+            target_window_us = layer["compute_done_time_us"] - layer_start_us
+            actual_reads_us.append(actual_read_us)
+            signed_deltas_us.append(actual_read_us - target_window_us)
+
+    expected_request_count = sum(
+        inference["request_count"] for inference in inferences
+    )
+    expected_completed_count = sum(
+        inference["completed_request_count"] for inference in inferences
+    )
+    qos_request_count = sum(log.count for log in dispatch_logs.values())
+    qos_byte_count = sum(log.byte_count for log in dispatch_logs.values())
+    ssd_request_count = sum(
+        len(path.ssd.backend.completed_requests)
+        for path in simulation.storage_paths.values()
+    )
+    ssd_byte_count = sum(
+        path.ssd.backend.completed_bytes()
+        for path in simulation.storage_paths.values()
+    )
+    expected_byte_count = sum(
+        inference["request_count"] * inference["block_size_bytes"]
+        for inference in inferences
+    )
+    if len({
+        expected_request_count,
+        expected_completed_count,
+        qos_request_count,
+        ssd_request_count,
+    }) != 1:
+        raise RuntimeError("request conservation failed")
+    if len({expected_byte_count, qos_byte_count, ssd_byte_count}) != 1:
+        raise RuntimeError("byte conservation failed")
+
+    last_completion_by_ssd_us = {}
+    for storage_target_id, path in simulation.storage_paths.items():
+        completion_time = path.ssd.backend.last_completion_time
+        last_completion_by_ssd_us[storage_target_id] = (
+            None if completion_time is None else time_to_us(completion_time)
         )
-        for strategy_name in strategy_names
+    completed_ssd_times = [
+        value for value in last_completion_by_ssd_us.values()
+        if value is not None
+    ]
+
+    ttft_values_us = [inference["ttft_us"] for inference in inferences]
+    gpu_utilizations_percent = [
+        gpu_utilization_percent(inference) for inference in inferences
+    ]
+    dpu_statistics = simulation.dpu.statistics()
+    rate_control = dpu_statistics["rate_control"]
+    if rate_control is not None and rate_control["active_demand_count"] != 0:
+        raise RuntimeError("demand-aware run ended with active Queue demands")
+
+    expected_inference_count = sum(
+        len(sequence)
+        for sequence in simulation.gpu_workload_sequences.values()
+    )
+    if len(inferences) != expected_inference_count:
+        raise RuntimeError("inference completion/starvation check failed")
+
+    compact_rate_control = None
+    if rate_control is not None:
+        compact_rate_control = {
+            key: rate_control[key]
+            for key in (
+                "strategy",
+                "ordering",
+                "selection_width",
+                "active_demand_count",
+                "active_p_node_count",
+                "completed_coflow_count",
+                "selection_change_count",
+                "selected_queue_count",
+                "max_queue_wait_us",
+                "peak_assigned_cir_bytes_per_second",
+                "persistent_cohort",
+                "finite_selected_pir",
+                "min_window_threshold_us",
+                "score_mode",
+                "deadline_allowance_us",
+                "compute_layer_count",
+                "coordination_enabled",
+                "utility_enabled",
+                "edf_enabled",
+                "decision_count",
+                "initial_decision_count",
+                "prefetch_decision_count",
+                "feasibility_conflict_count",
+            )
+            if key in rate_control
+        }
+        p_node_statistics = rate_control.get("p_node_statistics", {})
+        if p_node_statistics:
+            expected_coflow_count = len(
+                simulation.global_simulation_config["workload"].get(
+                    "layer_indexes",
+                    range(
+                        simulation.global_simulation_config["workload"][
+                            "first_layer_index"
+                        ],
+                        simulation.global_simulation_config["workload"][
+                            "last_layer_index"
+                        ] + 1,
+                    ),
+                )
+            )
+            compact_rate_control["p_node_count"] = len(p_node_statistics)
+            compact_rate_control["starved_p_node_count"] = sum(
+                profile["completed_coflow_count"] < expected_coflow_count
+                for profile in p_node_statistics.values()
+            )
+
+    return {
+        "late_gpu_layer_count": sum(
+            delta_us > 0 for delta_us in signed_deltas_us
+        ),
+        "p95_delta_us": nearest_rank_p95(signed_deltas_us),
+        "worst_delta_us": max(signed_deltas_us),
+        "mean_actual_read_us": sum(actual_reads_us) / len(actual_reads_us),
+        "mean_ttft_us": sum(ttft_values_us) / len(ttft_values_us),
+        "p95_ttft_us": nearest_rank_p95(ttft_values_us),
+        "max_ttft_us": max(ttft_values_us),
+        "mean_gpu_utilization_percent": (
+            sum(gpu_utilizations_percent) / len(gpu_utilizations_percent)
+        ),
+        "min_gpu_utilization_percent": min(gpu_utilizations_percent),
+        "p95_gpu_utilization_percent": nearest_rank_p95(
+            gpu_utilizations_percent
+        ),
+        "max_gpu_utilization_percent": max(gpu_utilizations_percent),
+        "completed_inference_count": len(inferences),
+        "starvation_free": True,
+        "last_completion_by_ssd_us": last_completion_by_ssd_us,
+        "overall_last_completion_us": (
+            max(completed_ssd_times)
+            if completed_ssd_times
+            else simulation.start_time_us
+        ),
+        "request_count": expected_request_count,
+        "byte_count": expected_byte_count,
+        "cir_dispatch_count": sum(
+            log.cir_count for log in dispatch_logs.values()
+        ),
+        "excess_dispatch_count": sum(
+            log.excess_count for log in dispatch_logs.values()
+        ),
+        "processed_event_count": simulation.event_loop.processed_event_count,
+        "rate_control_write_count": dpu_statistics[
+            "rate_control_write_count"
+        ],
+        "queue_weight_write_count": dpu_statistics[
+            "queue_weight_write_count"
+        ],
+        "group_weight_write_count": dpu_statistics[
+            "group_weight_write_count"
+        ],
+        "control_update_tick_aligned_write_count": dpu_statistics[
+            "control_update_tick_aligned_write_count"
+        ],
+        "control_update_non_tick_write_count": dpu_statistics[
+            "control_update_non_tick_write_count"
+        ],
+        "control_update_period_us_by_storage_target": dpu_statistics[
+            "control_update_period_us_by_storage_target"
+        ],
+        "rate_control": compact_rate_control,
+        "wall_time_seconds": wall_time_seconds,
     }
 
 
-def _effective_bandwidth_gb_s(ssd_result):
-    """功能：计算一块SSD从首次接收到最后完成之间的平均有效带宽。
+def summarize_pair(baseline_summary, demand_aware_summary):
+    """功能：比较两种策略的平均GPU利用率。
 
-    目的：使用真实后端服务区间比较不同绑定策略下每块SSD的利用情况。
-
-    输入：
-        ssd_result: 单个StoragePath中的SSD最终结果。
-
-    输出：
-        float: 十进制GB/s；空SSD或零时长结果返回0。
-    """
-    first_time_us = ssd_result["first_submit_time_us"]
-    last_time_us = ssd_result["last_completion_time_us"]
-    if first_time_us is None or last_time_us is None:
-        return 0.0
-    elapsed_us = last_time_us - first_time_us
-    if elapsed_us <= 0:
-        return 0.0
-    return ssd_result["completed_bytes"] / (elapsed_us * 1_000)
-
-
-def _active_queue_count(dpu_result):
-    """功能：统计一次仿真实际使用的全局Queue数量。
-
-    目的：用 ``(SSD, Queue)`` 命名空间量化绑定策略的Queue占用数量。
+    目的：用百分点表达Demand-aware相对Baseline的整体GPU利用率变化。
 
     输入：
-        dpu_result: DPU ``statistics`` 返回的绑定计数。
+        baseline_summary: Baseline实验点摘要。
+        demand_aware_summary: Demand-aware FCFS CIR实验点摘要。
 
     输出：
-        int: 至少接收过一个请求的不同 ``(storage_target_id, queue_id)`` 数量。
+        dict: Demand-aware减Baseline的平均利用率百分点。
     """
-    active_queues = set()
-    for storage_target_id, p_node_counts in dpu_result[
-        "assignment_counts"
-    ].items():
-        for queue_counts in p_node_counts.values():
-            for queue_id, request_count in queue_counts.items():
-                if request_count > 0:
-                    active_queues.add((storage_target_id, queue_id))
-    return len(active_queues)
+    return {
+        "mean_gpu_utilization_gain_percentage_points": (
+            demand_aware_summary["mean_gpu_utilization_percent"]
+            - baseline_summary["mean_gpu_utilization_percent"]
+        ),
+    }
 
 
-def print_result(result):
-    """功能：打印一次多GPU、多StoragePath联合仿真的核心结果。
+def _relative_change_percent(baseline_value, policy_value):
+    """功能：计算策略值相对Baseline的有符号百分比变化。
 
-    目的：同时展示每GPU的多次推理TTFT、每条QoS+SSD路径吞吐和DPU分散度，
-    便于快速验证项目级拓扑配置。
+    目的：为Mean、P95和Max TTFT提供方向一致的相对变化；正数
+    表示TTFT退化，负数表示TTFT改善。
 
     输入：
-        result: ``run_joint_simulation`` 返回的完整结果。
+        baseline_value: Baseline指标值。
+        policy_value: 待比较策略的指标值。
 
     输出：
-        None: 将人类可读摘要写入标准输出。
+        float | None: ``(policy-baseline)/baseline*100``；Baseline为0时
+        返回None，避免在summary.json中写入非标准Infinity。
     """
-    print("=" * 82)
-    print(
-        "多GPU -> DPU -> 多StoragePath联合仿真 | "
-        f"GPU={result['gpu_count']} "
-        f"StoragePath={result['storage_path_count']} "
-        f"推理={result['inference_count']} "
-        f"绑定策略={result['queue_binding_strategy']} "
-        f"速率策略={result['rate_control_strategy']}"
+    if baseline_value == 0:
+        return None
+    return (policy_value - baseline_value) / baseline_value * 100
+
+
+def summarize_policy_comparison(baseline_summary, policy_summary):
+    """功能：通用比较一个非Baseline策略与Baseline的关键指标。
+
+    目的：直接报告平均GPU利用率是否达到约定目标，并完整保留
+    平均、P95、Max TTFT以及最低GPU利用率的变化。
+
+    输入：
+        baseline_summary: Baseline实验点的summarize_run输出。
+        policy_summary: 待比较策略的summarize_run输出。
+
+    输出：
+        dict: 利用率百分点变化、目标与达标状态，以及有符号
+        TTFT绝对/百分比变化。TTFT正数变化表示退化。
+    """
+    baseline_mean_utilization = baseline_summary[
+        "mean_gpu_utilization_percent"
+    ]
+    policy_mean_utilization = policy_summary[
+        "mean_gpu_utilization_percent"
+    ]
+    target_mean_utilization = min(
+        baseline_mean_utilization + 25.0,
+        99.5,
     )
-    print("=" * 82)
-
-    for gpu_id, gpu_result in result["gpus"].items():
-        print(
-            f"{gpu_id}/{gpu_result['p_node_id']}: "
-            f"推理={gpu_result['completed_inference_count']}/"
-            f"{gpu_result['inference_count']}, "
-            f"IO={gpu_result['completed_request_count']}/"
-            f"{gpu_result['request_count']}, "
-            f"平均TTFT={gpu_result['mean_ttft_us'] / 1000:.3f} ms, "
-            f"P95={gpu_result['p95_ttft_us'] / 1000:.3f} ms, "
-            f"最大={gpu_result['max_ttft_us'] / 1000:.3f} ms"
+    comparison = {
+        "mean_gpu_utilization_gain_percentage_points": (
+            policy_mean_utilization - baseline_mean_utilization
+        ),
+        "target_mean_gpu_utilization_percent": target_mean_utilization,
+        "meets_target": policy_mean_utilization >= target_mean_utilization,
+        "min_gpu_utilization_change_percentage_points": (
+            policy_summary["min_gpu_utilization_percent"]
+            - baseline_summary["min_gpu_utilization_percent"]
+        ),
+    }
+    for statistic in ("mean", "p95", "max"):
+        metric_name = f"{statistic}_ttft_us"
+        baseline_value = baseline_summary[metric_name]
+        policy_value = policy_summary[metric_name]
+        comparison[f"{statistic}_ttft_change_us"] = (
+            policy_value - baseline_value
         )
-        for inference in gpu_result["inferences"]:
-            print(
-                f"  #{inference['inference_index']:02d}: "
-                f"输入={inference['input_tokens']:,} Token, "
-                f"命中率={inference['prefill_layer_hit_ratio']:.2%}, "
-                f"IO={inference['request_count']:,}, "
-                f"TTFT={inference['ttft_us'] / 1000:.3f} ms"
+        comparison[f"{statistic}_ttft_change_percent"] = (
+            _relative_change_percent(baseline_value, policy_value)
+        )
+    return comparison
+
+
+def write_summary(summary, output_file):
+    """功能：原子写入唯一summary.json检查点。
+
+    目的：长时间扫描中每完成一个策略就保存进度，且不生成CSV或manifest。
+
+    输入：
+        summary: 当前已完成实验点的摘要字典。
+        output_file: summary.json目标路径。
+
+    输出：None；通过同目录临时文件替换目标JSON。
+    """
+    output_file = Path(output_file)
+    output_file.parent.mkdir(parents=True, exist_ok=True)
+    temporary_file = output_file.with_suffix(".json.tmp")
+    temporary_file.write_text(
+        json.dumps(summary, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    temporary_file.replace(output_file)
+
+
+def run_one(config, ssd_count, policy):
+    """功能：运行并汇总一个SSD数量与DPU策略组合。
+
+    目的：各实验点串行执行以限制峰值内存，并打印可观察的长任务进度。
+
+    输入：
+        config: 完整simulation配置字典。
+        ssd_count: 当前独立QoS+SSD数量。
+        policy: 当前DPU速率策略名称。
+
+    输出：
+        dict: 当前实验点的紧凑摘要。
+    """
+    print(f"START ssd_count={ssd_count} policy={policy}", flush=True)
+    simulation = build_simulation(config, ssd_count, policy)
+    dispatch_logs = install_summary_only_logs(simulation)
+    started_at = perf_counter()
+    simulation.event_loop.run_until(simulation._all_gpus_complete)
+    wall_time_seconds = perf_counter() - started_at
+    summary = summarize_run(simulation, dispatch_logs, wall_time_seconds)
+    print(
+        f"DONE ssd_count={ssd_count} policy={policy} "
+        f"wall={wall_time_seconds:.3f}s "
+        f"mean_ttft={summary['mean_ttft_us']:.3f}us",
+        flush=True,
+    )
+    return summary
+
+
+def resolve_output_file(config):
+    """功能：解析统一配置中的summary.json目标路径。
+
+    目的：相对路径始终以项目根目录为基准，使入口可从任意工作目录启动。
+
+    输入：
+        config: 包含experiment.output_file的完整simulation配置。
+
+    输出：
+        Path: 绝对输出路径。
+    """
+    output_file = Path(config["experiment"]["output_file"])
+    if output_file.is_absolute():
+        return output_file
+    return PROJECT_DIR / output_file
+
+
+def run_configured_experiment(config):
+    """功能：运行统一YAML声明的全部SSD数量和策略。
+
+    目的：用一个入口替代experiments目录中的多个脚本，并在每个实验点后更新
+    同一个summary.json。
+
+    输入：
+        config: 完整simulation配置字典。
+
+    输出：
+        dict: 实验元数据、各拓扑策略摘要、通用comparisons映射
+        及兼容旧Demand-aware输出的paired结果。
+    """
+    experiment = config["experiment"]
+    workload = config["workload"]
+    generation = config["workload_generation"]
+    backend = config["ssd"]["backend"]
+    output_file = resolve_output_file(config)
+    policies = list(config["dpu"]["rate_control"]["strategies"])
+    ssd_counts = list(config["topology"]["ssd_counts"])
+
+    summary = {
+        "experiment": {
+            "gpu_count": config["topology"]["gpu_count"],
+            "inference_count_per_gpu": generation[
+                "inference_count_per_gpu"
+            ],
+            "batch_size": workload["batch_size"],
+            "effective_compute_tflops": config["gpu"][
+                "effective_compute_tflops"
+            ],
+            "first_layer_index": workload["first_layer_index"],
+            "last_layer_index": workload["last_layer_index"],
+            "ssd_counts": ssd_counts,
+            "policies": policies,
+            "seed": generation["random_seed"],
+            "input_tokens_range": generation["input_tokens_range"],
+            "hit_ratio_range": generation[
+                "prefill_layer_hit_ratio_range"
+            ],
+            "placement_strategy": workload["placement"]["strategy"],
+            "queue_binding_strategy": config["dpu"]["queue_binding"][
+                "strategy"
+            ],
+            "backend_execution_mode": backend["execution_mode"],
+            "backend_batch_commands": backend["exact_batch_max_commands"],
+        },
+        "topologies": {},
+    }
+
+    for ssd_count in ssd_counts:
+        topology_summary = {}
+        summary["topologies"][f"{ssd_count}_ssd"] = topology_summary
+        for policy in policies:
+            topology_summary[policy] = run_one(
+                config,
+                ssd_count,
+                policy,
             )
-
-    for storage_target_id, path_result in result["storage_paths"].items():
-        qos_result = path_result["qos"]
-        ssd_result = path_result["ssd"]
-        rate_statistics = result["dpu"]["rate_control"]
-        rate_text = ""
-        if rate_statistics is not None:
-            peak_assigned = rate_statistics[
-                "peak_assigned_cir_bytes_per_second"
-            ].get(storage_target_id, 0)
-            rate_text = (
-                f", DPU峰值CIR总和="
-                f"{peak_assigned / 1_000_000_000:.3f} GB/s"
-            )
-        print(
-            f"{storage_target_id}: QoS下发="
-            f"{qos_result['dispatched_request_count']}/"
-            f"{qos_result['input_request_count']}, "
-            f"SSD完成字节={ssd_result['completed_bytes']:,}, "
-            f"有效带宽={_effective_bandwidth_gb_s(ssd_result):.3f} GB/s"
-            f"{rate_text}"
-        )
-    print(f"实际使用全局Queue数={_active_queue_count(result['dpu'])}")
-    demand_satisfaction = result["demand_satisfaction"]
-    print(
-        "需求满足率="
-        f"{demand_satisfaction['satisfied_demand_count']}/"
-        f"{demand_satisfaction['total_demand_count']} "
-        f"({demand_satisfaction['satisfaction_ratio']:.2%})"
-    )
-    print(
-        "DPU CIR/PIR设置="
-        f"{result['dpu']['rate_control_write_count']}, "
-        "Group WRR权重设置="
-        f"{result['dpu']['group_weight_write_count']}"
-    )
-
-
-def print_comparison(comparison_results):
-    """功能：并排打印多种DPU Queue绑定策略的核心指标。
-
-    目的：以相同随机工作负载快速比较平均/P95/最大TTFT、
-    Queue分散度和总SSD字节。
-
-    输入：
-        comparison_results: ``compare_queue_binding_strategies`` 返回的结果映射。
-
-    输出：
-        None: 将策略对比表写入标准输出。
-    """
-    print("=" * 112)
-    print("DPU Queue绑定策略比较")
-    print("=" * 112)
-    print(
-        f"{'策略':<24}{'平均TTFT(ms)':>16}{'P95 TTFT(ms)':>16}"
-        f"{'最大TTFT(ms)':>16}"
-        f"{'使用Queue数':>14}{'SSD完成字节':>20}"
-    )
-    for strategy_name, result in comparison_results.items():
-        ttft_values = sorted(
-            inference_result["ttft_us"] / 1000
-            for gpu_result in result["gpus"].values()
-            for inference_result in gpu_result["inferences"]
-        )
-        p95_index = math.ceil(0.95 * len(ttft_values)) - 1
-        total_completed_bytes = sum(
-            path_result["ssd"]["completed_bytes"]
-            for path_result in result["storage_paths"].values()
-        )
-        print(
-            f"{strategy_name:<24}"
-            f"{sum(ttft_values) / len(ttft_values):>16.3f}"
-            f"{ttft_values[p95_index]:>16.3f}"
-            f"{ttft_values[-1]:>16.3f}"
-            f"{_active_queue_count(result['dpu']):>14d}"
-            f"{total_completed_bytes:>20,d}"
-        )
+            write_summary(summary, output_file)
+        if "baseline" in topology_summary:
+            topology_summary["comparisons"] = {
+                policy: summarize_policy_comparison(
+                    topology_summary["baseline"],
+                    topology_summary[policy],
+                )
+                for policy in policies
+                if policy != "baseline" and policy in topology_summary
+            }
+            if "demand_aware_fcfs_cir" in topology_summary:
+                topology_summary["paired"] = summarize_pair(
+                    topology_summary["baseline"],
+                    topology_summary["demand_aware_fcfs_cir"],
+                )
+            write_summary(summary, output_file)
+    return summary
 
 
 def parse_arguments():
-    """功能：读取统一仿真入口的命令行参数。
+    """功能：解析统一仿真入口的唯一命令行参数。
 
-    目的：允许用户运行YAML默认策略、临时选择单个策略或运行配置中的策略列表。
+    目的：所有实验参数保存在一个YAML；命令行只负责选择这份配置文件。
 
-    输入：
-        无；由argparse读取进程命令行。
+    输入：无；由argparse读取进程命令行。
 
     输出：
-        argparse.Namespace: 解析后的策略覆盖和比较开关。
+        argparse.Namespace: 包含统一YAML路径。
     """
     parser = argparse.ArgumentParser(
-        description="Run multi-GPU, multi-SSD QoS simulation."
+        description="Run the unified multi-GPU, multi-SSD QoS simulation.",
     )
     parser.add_argument(
-        "--binding-strategy",
-        choices=("balanced_exclusive",),
-        default=None,
-        help="override DPU queue binding strategy from YAML",
-    )
-    parser.add_argument(
-        "--compare-binding-strategies",
-        action="store_true",
-        help="run and compare all strategies listed in DPU YAML",
+        "--config",
+        type=Path,
+        default=SIMULATION_CONFIG_FILE,
+        help="project-wide simulation YAML",
     )
     return parser.parse_args()
 
 
 def main():
-    """功能：执行命令行选择的联合仿真或策略比较。
+    """功能：运行统一YAML实验并打印最终summary.json内容。
 
-    目的：提供项目唯一可直接运行入口，替代已经删除的多GPU专用脚本。
+    目的：作为项目唯一可执行仿真入口，依次完成全部SSD数量和DPU策略组合。
 
-    输入：
-        无；使用 ``parse_arguments`` 的命令行结果。
+    输入：无；读取parse_arguments返回的统一YAML路径。
 
-    输出：
-        None: 打印单次结果或策略对比表。
+    输出：None；写入一个summary.json并在终端打印相同JSON。
     """
     arguments = parse_arguments()
-    if arguments.compare_binding_strategies:
-        print_comparison(compare_queue_binding_strategies())
-        return
-    print_result(
-        run_joint_simulation(binding_strategy=arguments.binding_strategy)
-    )
+    config = load_simulation_config(arguments.config)
+    summary = run_configured_experiment(config)
+    write_summary(summary, resolve_output_file(config))
+    print(json.dumps(summary, indent=2, ensure_ascii=False))
 
 
 if __name__ == "__main__":

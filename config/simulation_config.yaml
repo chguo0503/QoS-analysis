@@ -1,18 +1,163 @@
+# 项目唯一仿真配置。修改本文件后，统一从 qos_ssd_simulator.py 启动。
 simulation:
-  start_time_us: 0  # 所有GPU、QoS和SSD共享的全局仿真起始时刻。
+  start_time_us: 0
 
-  # 项目级拓扑：一个StoragePath代表一套独立QoS + 一块ASU SSD。
+  # 一次命令会依次运行下面所有 SSD 数量与 DPU 策略，并只写一个 summary.json。
+  experiment:
+    output_file: experiments/results/utility_edf_topology_scan/summary.json
+
+  # GPU和SSD数量都在拓扑分区设置；列表只写一个值时就是单一拓扑实验。
   topology:
-    gpu_count: 10  # 自动生成GPU0到GPU9以及对应P节点。
-    storage_path_count: 5  # 自动生成SSD0到SSD4五套独立QoS + ASU SSD。
+    gpu_count: 128
+    ssd_counts: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     gpu_id_prefix: GPU
     p_node_id_prefix: P
     storage_target_id_prefix: SSD
 
-  # 每张GPU顺序执行多次推理；不同GPU仍在同一事件时间线上并行。
+  # 每张 GPU 的随机负载在事件循环开始前一次性确定，保证两种策略完全配对。
   workload_generation:
-    inference_count_per_gpu: 2  # 每张GPU重复执行的推理次数。
-    random_seed: 6103  # 只用于输入长度和命中率，与Placement/DPU种子独立。
-    input_tokens_range: [100_000, 200_000]  # 两个端点都包含的均匀整数采样区间。
-    prefill_layer_hit_ratio_range: [0.50, 0.99]  # 每次推理独立均匀采样。
-    inter_inference_gap_us: 0  # 同一GPU前一次完成后启动下一次的等待时间。
+    inference_count_per_gpu: 1
+    random_seed: 6103
+    input_tokens_range: [100_000, 200_000]
+    prefill_layer_hit_ratio_range: [0.50, 0.99]
+    unique_across_gpus: true
+    inter_inference_gap_us: 0
+
+  model:
+    name: GLM-5.1
+    profile:
+      active_parameters: 40_000_000_000
+      hidden_layers: 78
+      kv_lora_rank: 512
+      qk_rope_head_dim: 64
+
+  gpu:
+    device: NVIDIA GeForce RTX 4090
+    count: 1
+    memory_gb: 24
+    effective_compute_tflops: 512.0
+    operation_factor_per_parameter_token: 2.0
+
+  kv_cache:
+    bits_per_element: 16
+    tokens_per_block: 128
+
+  # 当前正式实验运行 Layer 0～3、Batch Size 1，并稳定随机放置每个 Block。
+  workload:
+    workload_id: glm51_all_gpus
+    p_node_id: P0
+    model: GLM-5.1
+    first_layer_index: 0
+    last_layer_index: 3
+    arrival_time_us: 0
+    input_tokens: 100_000
+    batch_size: 1
+    prefill_layer_hit_ratio: 0.99
+    placement:
+      strategy: random
+      allowed_storage_targets: all
+      random_seed: 6103
+    gpu_overrides: {}
+
+  dpu:
+    queue_binding:
+      # 每个 (GPU, SSD) 在初始化时固定占用一条互不冲突的 Queue。
+      strategy: balanced_exclusive
+    rate_control:
+      # 默认运行硬件友好的整数Utility+EDF策略；power版本保留为增强实验入口。
+      strategies: [baseline, utility_edf_integer_l750]
+
+  qos:
+    queue_layout:
+      queue_count: 256
+      queue_id_prefix: q
+      queue_id_width: 3
+      group_count: 8
+      queues_per_group: 32
+      group_id_prefix: g
+
+    # Baseline与新策略共用初态CIR=0、PIR=uncapped。Utility+EDF仅让当前
+    # owner保持PIR uncapped，其余等待Queue临时设为PIR=0并禁用Queue WRR。
+    token_bucket:
+      update_period_us: 80
+      initial_state: empty
+      queue_max_io_size_bytes: 147456
+      # 一条Queue在一个80 us控制周期内可承载整块SSD的40 GB/s；
+      # 否则有限PIR即使配置40 GB/s也会被过小burst上限截成约7.37 GB/s。
+      queue_cbs_bytes: 3_200_000
+      queue_pbs_bytes: 3_200_000
+      group_rates:
+        - {group_id: g0, cir_gb_s: 0}
+        - {group_id: g1, cir_gb_s: 0}
+        - {group_id: g2, cir_gb_s: 0}
+        - {group_id: g3, cir_gb_s: 0}
+        - {group_id: g4, cir_gb_s: 0}
+        - {group_id: g5, cir_gb_s: 0}
+        - {group_id: g6, cir_gb_s: 0}
+        - {group_id: g7, cir_gb_s: 0}
+      queue_cir_weight_bitmap: &uniform_queue_weights
+        [1, 1, 1, 1, 1, 1, 1, 1,
+         1, 1, 1, 1, 1, 1, 1, 1,
+         1, 1, 1, 1, 1, 1, 1, 1,
+         1, 1, 1, 1, 1, 1, 1, 1]
+      queue_default_pir_gb_s: uncapped
+      queue_overrides: {}
+
+    # Group权重固定为1；Utility+EDF只动态开关Queue权重，不写Group WRR。
+    scheduler:
+      algorithm: HIERARCHICAL_WRR
+      final_arbitration: RR
+      group_weight_bitmap: [1, 1, 1, 1, 1, 1, 1, 1]
+      queue_weight_bitmaps:
+        g0: *uniform_queue_weights
+        g1: *uniform_queue_weights
+        g2: *uniform_queue_weights
+        g3: *uniform_queue_weights
+        g4: *uniform_queue_weights
+        g5: *uniform_queue_weights
+        g6: *uniform_queue_weights
+        g7: *uniform_queue_weights
+
+    runtime:
+      same_timestamp_event_order:
+        - token_refill
+        - rate_update
+        - io_arrival
+        - scheduler_dispatch
+
+  ssd:
+    backend:
+      # batched_exact 严格复用 detailed 的整数时序公式；这里只合并连续4 KiB命令计算。
+      execution_mode: batched_exact
+      exact_batch_max_commands: 32
+      collect_stage_peak_statistics: false
+      collect_nand_service_events: false
+      media_mode: TLC
+      chunk_size_bytes: 4096
+
+      fcp:
+        atom_slots: 30
+        atom_rate_per_second: 6000000
+        latency_us: 5
+      bcp:
+        input_queue_depth_commands: 1024
+        max_inflight_commands: 20
+        command_rate_per_second: 10000000
+        latency_us: 2
+      nfi:
+        command_slots: 10
+        command_rate_per_second: 10000000
+        latency_us: 1
+      nand:
+        command_slots: 512
+        read_bandwidth_bytes_per_second: 40000000000
+        slc_latency_us: 23
+        tlc_latency_us: 50
+      bdp:
+        command_slots: 20
+        command_rate_per_second: 10000000
+        latency_us: 2
+      das:
+        atom_slots: 18
+        atom_rate_per_second: 6000000
+        latency_us: 3

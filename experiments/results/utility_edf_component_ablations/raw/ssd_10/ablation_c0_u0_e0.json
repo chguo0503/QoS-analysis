@@ -1,0 +1,127 @@
+{
+  "experiment": {
+    "gpu_count": 128,
+    "inference_count_per_gpu": 1,
+    "batch_size": 1,
+    "effective_compute_tflops": 512.0,
+    "first_layer_index": 0,
+    "last_layer_index": 3,
+    "random_seed": 6103,
+    "input_tokens_range": [
+      100000,
+      200000
+    ],
+    "prefill_layer_hit_ratio_range": [
+      0.5,
+      0.99
+    ],
+    "placement_strategy": "random",
+    "queue_binding_strategy": "balanced_exclusive",
+    "backend_execution_mode": "batched_exact",
+    "backend_batch_commands": 32,
+    "control_period_us": 80
+  },
+  "experiment_sha256": "b70ca7f91a87692284cdb764fa29963af0407c91843afbc392a0f41d7afac47a",
+  "schema_version": 1,
+  "source_sha256": "06580e27461d1481fb1f9d45ffde6306b65a9eff2260a8f6242615d3bcdfcf56",
+  "factor_definitions": {
+    "C": {
+      "0": "per-SSD local owner with local path lock",
+      "1": "global cross-SSD p-node owner with sticky coflow lock"
+    },
+    "U": {
+      "0": "stable FCFS Stage-0 ordering",
+      "1": "integer Utility Density Stage-0 ordering"
+    },
+    "E": {
+      "0": "stable FCFS prefetch ordering without deadline protection",
+      "1": "EDF prefetch ordering with deadline+750us prefix protection"
+    },
+    "shared_foundation": "single-owner admission Gate per SSD; waiting Queue=(0,0,0); selected Queue=(SSD capacity,uncapped,1); t=0 pre-park; strict 80us control grid; fixed Group WRR"
+  },
+  "ssd_count": 10,
+  "policy": "ablation_c0_u0_e0",
+  "summary": {
+    "late_gpu_layer_count": 210,
+    "p95_delta_us": 35441.85181538462,
+    "worst_delta_us": 42747.7232,
+    "mean_actual_read_us": 21828.231998858213,
+    "mean_ttft_us": 336019.27857139404,
+    "p95_ttft_us": 679979.579651282,
+    "max_ttft_us": 761092.6847384616,
+    "mean_gpu_utilization_percent": 83.21908241759225,
+    "min_gpu_utilization_percent": 12.384199752172178,
+    "p95_gpu_utilization_percent": 98.91272454268872,
+    "max_gpu_utilization_percent": 99.80656365523055,
+    "completed_inference_count": 128,
+    "starvation_free": true,
+    "last_completion_by_ssd_us": {
+      "SSD0": 388880.9456,
+      "SSD1": 388936.2416,
+      "SSD2": 388899.3776,
+      "SSD3": 388847.768,
+      "SSD4": 388917.8096,
+      "SSD5": 388906.7504,
+      "SSD6": 388888.3184,
+      "SSD7": 388855.1408,
+      "SSD8": 388895.6912,
+      "SSD9": 388836.7088
+    },
+    "overall_last_completion_us": 388936.2416,
+    "request_count": 456116,
+    "byte_count": 67257040896,
+    "cir_dispatch_count": 288565,
+    "excess_dispatch_count": 167551,
+    "processed_event_count": 1426010,
+    "rate_control_write_count": 11520,
+    "queue_weight_write_count": 10240,
+    "group_weight_write_count": 0,
+    "control_update_tick_aligned_write_count": 21760,
+    "control_update_non_tick_write_count": 0,
+    "control_update_period_us_by_storage_target": {
+      "SSD0": 80,
+      "SSD1": 80,
+      "SSD2": 80,
+      "SSD3": 80,
+      "SSD4": 80,
+      "SSD5": 80,
+      "SSD6": 80,
+      "SSD7": 80,
+      "SSD8": 80,
+      "SSD9": 80
+    },
+    "rate_control": {
+      "strategy": "ablation_c0_u0_e0",
+      "active_demand_count": 0,
+      "active_p_node_count": 0,
+      "completed_coflow_count": 512,
+      "selection_change_count": 5967,
+      "peak_assigned_cir_bytes_per_second": {
+        "SSD0": 40000000000,
+        "SSD1": 40000000000,
+        "SSD2": 40000000000,
+        "SSD3": 40000000000,
+        "SSD4": 40000000000,
+        "SSD5": 40000000000,
+        "SSD6": 40000000000,
+        "SSD7": 40000000000,
+        "SSD8": 40000000000,
+        "SSD9": 40000000000
+      },
+      "finite_selected_pir": false,
+      "score_mode": "integer",
+      "deadline_allowance_us": 750,
+      "compute_layer_count": 4,
+      "coordination_enabled": false,
+      "utility_enabled": false,
+      "edf_enabled": false,
+      "decision_count": 10240,
+      "initial_decision_count": 3807,
+      "prefetch_decision_count": 5586,
+      "feasibility_conflict_count": 0,
+      "p_node_count": 128,
+      "starved_p_node_count": 0
+    },
+    "wall_time_seconds": 72.20996472600382
+  }
+}

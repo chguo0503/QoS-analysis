@@ -1,0 +1,115 @@
+{
+  "experiment": {
+    "gpu_count": 128,
+    "inference_count_per_gpu": 1,
+    "batch_size": 1,
+    "effective_compute_tflops": 512.0,
+    "first_layer_index": 0,
+    "last_layer_index": 3,
+    "random_seed": 6103,
+    "input_tokens_range": [
+      100000,
+      200000
+    ],
+    "prefill_layer_hit_ratio_range": [
+      0.5,
+      0.99
+    ],
+    "placement_strategy": "random",
+    "queue_binding_strategy": "balanced_exclusive",
+    "backend_execution_mode": "batched_exact",
+    "backend_batch_commands": 32,
+    "control_period_us": 80
+  },
+  "experiment_sha256": "b70ca7f91a87692284cdb764fa29963af0407c91843afbc392a0f41d7afac47a",
+  "schema_version": 1,
+  "source_sha256": "06580e27461d1481fb1f9d45ffde6306b65a9eff2260a8f6242615d3bcdfcf56",
+  "factor_definitions": {
+    "C": {
+      "0": "per-SSD local owner with local path lock",
+      "1": "global cross-SSD p-node owner with sticky coflow lock"
+    },
+    "U": {
+      "0": "stable FCFS Stage-0 ordering",
+      "1": "integer Utility Density Stage-0 ordering"
+    },
+    "E": {
+      "0": "stable FCFS prefetch ordering without deadline protection",
+      "1": "EDF prefetch ordering with deadline+750us prefix protection"
+    },
+    "shared_foundation": "single-owner admission Gate per SSD; waiting Queue=(0,0,0); selected Queue=(SSD capacity,uncapped,1); t=0 pre-park; strict 80us control grid; fixed Group WRR"
+  },
+  "ssd_count": 6,
+  "policy": "ablation_c1_u0_e0",
+  "summary": {
+    "late_gpu_layer_count": 278,
+    "p95_delta_us": 63797.7584,
+    "worst_delta_us": 74058.0592,
+    "mean_actual_read_us": 53936.305683153034,
+    "mean_ttft_us": 382623.8121651042,
+    "p95_ttft_us": 684268.142851282,
+    "max_ttft_us": 770139.9869128206,
+    "mean_gpu_utilization_percent": 73.10404099596974,
+    "min_gpu_utilization_percent": 6.092938831617458,
+    "p95_gpu_utilization_percent": 98.21006444967992,
+    "max_gpu_utilization_percent": 99.7072992545043,
+    "completed_inference_count": 128,
+    "starvation_free": true,
+    "last_completion_by_ssd_us": {
+      "SSD0": 411589.5024,
+      "SSD1": 411626.3664,
+      "SSD2": 411600.5616,
+      "SSD3": 411545.2656,
+      "SSD4": 411600.5616,
+      "SSD5": 411537.8928
+    },
+    "overall_last_completion_us": 411626.3664,
+    "request_count": 456116,
+    "byte_count": 67257040896,
+    "cir_dispatch_count": 325939,
+    "excess_dispatch_count": 130177,
+    "processed_event_count": 1462120,
+    "rate_control_write_count": 7552,
+    "queue_weight_write_count": 7424,
+    "group_weight_write_count": 0,
+    "control_update_tick_aligned_write_count": 14976,
+    "control_update_non_tick_write_count": 0,
+    "control_update_period_us_by_storage_target": {
+      "SSD0": 80,
+      "SSD1": 80,
+      "SSD2": 80,
+      "SSD3": 80,
+      "SSD4": 80,
+      "SSD5": 80
+    },
+    "rate_control": {
+      "strategy": "ablation_c1_u0_e0",
+      "active_demand_count": 0,
+      "active_p_node_count": 0,
+      "completed_coflow_count": 512,
+      "selection_change_count": 530,
+      "peak_assigned_cir_bytes_per_second": {
+        "SSD0": 40000000000,
+        "SSD1": 40000000000,
+        "SSD2": 40000000000,
+        "SSD3": 40000000000,
+        "SSD4": 40000000000,
+        "SSD5": 40000000000
+      },
+      "finite_selected_pir": false,
+      "score_mode": "integer",
+      "deadline_allowance_us": 750,
+      "compute_layer_count": 4,
+      "coordination_enabled": true,
+      "utility_enabled": false,
+      "edf_enabled": false,
+      "decision_count": 9472,
+      "initial_decision_count": 2932,
+      "prefetch_decision_count": 6096,
+      "feasibility_conflict_count": 0,
+      "p_node_count": 128,
+      "starved_p_node_count": 0
+    },
+    "wall_time_seconds": 85.0375398369506
+  }
+}

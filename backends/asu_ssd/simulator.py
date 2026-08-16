@@ -10,22 +10,22 @@ from .batched_backend import BatchedExactASUBackend
 from .time_utils import time_to_us, us_to_time
 
 
-CONFIG_DIR = Path(__file__).parent / "config"
-DEFAULT_CONFIG_FILE = CONFIG_DIR / "asu_backend_config.yaml"
+PROJECT_DIR = Path(__file__).resolve().parents[2]
+DEFAULT_CONFIG_FILE = PROJECT_DIR / "config" / "simulation_config.yaml"
 
 
 def load_ssd_config(config_file=DEFAULT_CONFIG_FILE):
-    """功能：读取SSD内部流水线参数。
+    """功能：从项目统一YAML读取SSD内部流水线参数。
 
     目的：把ASU流水线的容量、速率和延迟配置与Python实现分离。
 
     输入：
-        config_file: ASU后端YAML文件路径。
+        config_file: 项目统一仿真YAML路径。
 
     输出：
-        dict: YAML中 ``backend`` 节点对应的配置字典。
+        dict: ``simulation.ssd.backend`` 对应的配置字典。
     """
-    return load_yaml(config_file)["backend"]
+    return load_yaml(config_file)["simulation"]["ssd"]["backend"]
 
 
 class SSDSimulator:

@@ -33,6 +33,31 @@ class StoragePath:
         self.qos.set_backend(ssd)
         self.scheduled_qos_times = set()
         self.scheduled_ssd_times = set()
+        self.qos.set_control_event_observer(
+            self._on_qos_control_event_scheduled
+        )
+
+    def _on_qos_control_event_scheduled(self, event_time_us):
+        """功能：把提前的QoS控制时刻安全映射到全局事件日历。
+
+        目的：跨SSD控制写入只进入目标QoS内部heap；本回调在不递归执行
+        QoS的前提下补排一个更早事件。同一时刻的多次rate/weight写入由
+        ``scheduled_qos_times`` 去重，过去时刻由 ``_schedule_qos_at``
+        钳制到全局当前时刻。
+
+        输入：目标QoS报告的新最早控制生效微秒时刻。
+        输出：无；仅在它早于当前已排QoS事件时修改全局日历。
+        """
+        event_time = max(
+            us_to_time(event_time_us),
+            self.event_loop.current_time,
+        )
+        if (
+            self.scheduled_qos_times
+            and min(self.scheduled_qos_times) <= event_time
+        ):
+            return
+        self._schedule_qos_at(event_time)
 
     def input(self, request):
         """功能：把一个DPU请求登记到当前SSD对应的QoS。

@@ -49,6 +49,16 @@ class DiscreteEventSimulator:
         self.pending_group_weight_update_keys = []
         self.pending_group_weight_updates = {}
 
+        # Queue WRR与Queue速率共用rate_update事件阶段。每个时间戳保存
+        # 一张部分权重，控制面同时间重复写入时按Queue合并、最后值覆盖。
+        self.pending_queue_weight_update_keys = []
+        self.pending_queue_weight_updates = {}
+
+        # 控制写入可能来自另一条StoragePath的QoS回调。观察者只接收
+        # “内部最早控制时刻提前”通知，由StoragePath负责把它映射到全局日历；
+        # 不在这里直接推进时钟，避免同一QoS回调内递归重入。
+        self.control_event_observer = None
+
         # observer只在Queue depth变化后唤醒DPU读取快照，
         # 事件本身不携带请求、Demand或SSD完成信息。
         self.queue_state_observer = None
@@ -88,6 +98,42 @@ class DiscreteEventSimulator:
         self.queue_state_observer = observer
         return self
 
+    def set_control_event_observer(self, observer):
+        """功能：连接QoS最早控制事件变化到外部事件协调器。
+
+        目的：DPU可能从另一块SSD的Queue状态回调写入本QoS；若新控制时刻
+        早于本路径已安排的QoS事件，外部协调器必须及时重排全局日历。
+
+        输入：接收关键字 ``event_time_us`` 的可调用对象；None表示关闭。
+        输出：自身，便于StoragePath装配时连续调用。
+        """
+        self.control_event_observer = observer
+        return self
+
+    def _next_control_event_time_us(self):
+        """返回三类待处理控制事件中最早的生效微秒时刻。"""
+        event_times = []
+        if self.pending_rate_update_keys:
+            event_times.append(self.pending_rate_update_keys[0][0])
+        if self.pending_group_weight_update_keys:
+            event_times.append(self.pending_group_weight_update_keys[0])
+        if self.pending_queue_weight_update_keys:
+            event_times.append(self.pending_queue_weight_update_keys[0])
+        return min(event_times) if event_times else None
+
+    def _notify_earlier_control_event(self, previous_time_us):
+        """最早控制时刻提前时发送一次无重入唤醒通知。"""
+        next_time_us = self._next_control_event_time_us()
+        if (
+            self.control_event_observer is not None
+            and next_time_us is not None
+            and (
+                previous_time_us is None
+                or next_time_us < previous_time_us
+            )
+        ):
+            self.control_event_observer(event_time_us=next_time_us)
+
     def queue_io_counts(self):
         """功能：读取当前QoS全部Queue的逻辑IO数量。
 
@@ -124,6 +170,7 @@ class DiscreteEventSimulator:
         输出：
             None: 登记或覆盖同时刻同Queue的控制事件。
         """
+        previous_control_time_us = self._next_control_event_time_us()
         update_key = (effective_time_us, queue_id)
         if update_key not in self.pending_rate_updates:
             heapq.heappush(self.pending_rate_update_keys, update_key)
@@ -131,6 +178,7 @@ class DiscreteEventSimulator:
             cir_fill_bytes_per_tick,
             pir_fill_bytes_per_tick,
         )
+        self._notify_earlier_control_event(previous_control_time_us)
 
     def schedule_group_weight_update(self, weights, effective_time_us):
         """功能：登记一张DPU动态Group WRR权重。
@@ -141,12 +189,34 @@ class DiscreteEventSimulator:
         输入：``group_id -> 整数权重`` 映射和生效微秒时刻。
         输出：无；登记或覆盖该时刻的Group控制事件。
         """
+        previous_control_time_us = self._next_control_event_time_us()
         if effective_time_us not in self.pending_group_weight_updates:
             heapq.heappush(
                 self.pending_group_weight_update_keys,
                 effective_time_us,
             )
         self.pending_group_weight_updates[effective_time_us] = dict(weights)
+        self._notify_earlier_control_event(previous_control_time_us)
+
+    def schedule_queue_weight_update(self, weights, effective_time_us):
+        """功能：登记一张DPU动态Queue WRR权重。
+
+        目的：让Queue权重与CIR/PIR设置在同一个 ``rate_update`` 阶段
+        按离散时间生效；同一时刻的部分写入按Queue合并，重复Queue只保留
+        最后一次设置。
+
+        输入：``queue_id -> 非负整数权重`` 映射和生效微秒时刻。
+        输出：无；登记或覆盖该时刻的Queue控制事件。
+        """
+        previous_control_time_us = self._next_control_event_time_us()
+        if effective_time_us not in self.pending_queue_weight_updates:
+            heapq.heappush(
+                self.pending_queue_weight_update_keys,
+                effective_time_us,
+            )
+            self.pending_queue_weight_updates[effective_time_us] = {}
+        self.pending_queue_weight_updates[effective_time_us].update(weights)
+        self._notify_earlier_control_event(previous_control_time_us)
 
     def input(self, request):
         """功能：登记一个未来或当前时刻到达QoS的普通IO。
@@ -186,7 +256,7 @@ class DiscreteEventSimulator:
             无；读取控制事件堆和当前QoS时刻。
 
         输出：
-            int: 本阶段实际生效的Queue和Group设置数量。
+            int: 本阶段实际生效的Queue速率、Group权重和Queue权重设置数量。
         """
         applied_count = 0
         while self.pending_rate_update_keys:
@@ -210,6 +280,15 @@ class DiscreteEventSimulator:
             heapq.heappop(self.pending_group_weight_update_keys)
             weights = self.pending_group_weight_updates.pop(effective_time_us)
             self.scheduler.set_group_weights(weights)
+            applied_count += 1
+
+        while self.pending_queue_weight_update_keys:
+            effective_time_us = self.pending_queue_weight_update_keys[0]
+            if effective_time_us > self.current_time_us:
+                break
+            heapq.heappop(self.pending_queue_weight_update_keys)
+            weights = self.pending_queue_weight_updates.pop(effective_time_us)
+            self.scheduler.set_queue_weights(weights)
             applied_count += 1
         return applied_count
 
@@ -330,6 +409,7 @@ class DiscreteEventSimulator:
             int: 本次调用成功下发的完整IO数量。
         """
         dispatched_count = 0
+        queue_became_empty = False
         while True:
             # 后端检查必须发生在select_next_queue之前；否则SSD已满时一次失败
             # 尝试也会移动WRR游标，从而改变下一次真正成功仲裁的公平顺序。
@@ -362,10 +442,13 @@ class DiscreteEventSimulator:
             dispatched_count += 1
 
             self.registered_queue_io_counts[queue_id] -= 1
+            if self.registered_queue_io_counts[queue_id] == 0:
+                queue_became_empty = True
 
-        if dispatched_count and self.queue_state_observer is not None:
-            # 一次非阻塞下发循环结束后只唤醒一次DPU，
-            # 不携带刚下发的IO列表；DPU必须主动读取256条Queue状态。
+        if queue_became_empty and self.queue_state_observer is not None:
+            # DPU当前只在Queue从非空变空时释放Demand；中间depth递减
+            # 不改变控制决策，因此只在至少一条Queue排空后唤醒一次。
+            # 事件仍不携带IO信息，DPU必须主动读取完整depth快照。
             self.queue_state_observer(event_time_us=self.current_time_us)
 
         return dispatched_count
@@ -458,6 +541,14 @@ class DiscreteEventSimulator:
             if next_group_weight_update_time <= self.current_time_us:
                 return self.current_time_us
 
+        next_queue_weight_update_time = None
+        if self.pending_queue_weight_update_keys:
+            next_queue_weight_update_time = (
+                self.pending_queue_weight_update_keys[0]
+            )
+            if next_queue_weight_update_time <= self.current_time_us:
+                return self.current_time_us
+
         if not self._has_queued_requests():
             event_times = [
                 event_time
@@ -465,6 +556,7 @@ class DiscreteEventSimulator:
                     next_arrival_time,
                     next_rate_update_time,
                     next_group_weight_update_time,
+                    next_queue_weight_update_time,
                 )
                 if event_time is not None
             ]
@@ -482,6 +574,8 @@ class DiscreteEventSimulator:
             event_times.append(next_rate_update_time)
         if next_group_weight_update_time is not None:
             event_times.append(next_group_weight_update_time)
+        if next_queue_weight_update_time is not None:
+            event_times.append(next_queue_weight_update_time)
         return min(event_times)
 
     def process_at(self, event_time_us):

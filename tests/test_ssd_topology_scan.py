@@ -1,35 +1,38 @@
-"""Test GPU-utilization metrics and stable-random topology-scan placement."""
+"""Test GPU-utilization metrics and unified topology-scan construction."""
 
-from argparse import Namespace
+from copy import deepcopy
 import unittest
 
-from experiments.scan_ssd_topologies import (
+from qos_ssd_simulator import (
     build_simulation,
     gpu_utilization_percent,
+    load_simulation_config,
     summarize_pair,
 )
 
 
-def build_test_arguments():
-    """Function: create a compact argument set for scan-construction tests.
+def build_test_config():
+    """Function: create a compact unified configuration for construction tests.
 
     Purpose: exercise the production configuration builder without running a
     large SSD simulation or duplicating its command-line parser.
 
     Input: none.
 
-    Output: namespace containing all fields consumed by ``build_simulation``.
+    Output: independent simulation configuration dictionary.
     """
-    return Namespace(
-        gpu_count=4,
-        batch_size=1,
-        layer_count=4,
-        input_token_min=1_000,
-        input_token_max=2_000,
-        hit_ratio_min=0.50,
-        hit_ratio_max=0.99,
-        seed=6103,
-    )
+    config = deepcopy(load_simulation_config())
+    config["topology"]["gpu_count"] = 4
+    config["workload_generation"].update({
+        "input_tokens_range": [1_000, 2_000],
+        "prefill_layer_hit_ratio_range": [0.50, 0.99],
+    })
+    config["workload"].update({
+        "first_layer_index": 0,
+        "last_layer_index": 3,
+        "batch_size": 1,
+    })
+    return config
 
 
 class GPUUtilizationTests(unittest.TestCase):
@@ -97,10 +100,10 @@ class RandomPlacementConfigurationTests(unittest.TestCase):
 
         Output: assertions on strategy, workload identity and Queue bindings.
         """
-        arguments = build_test_arguments()
-        baseline = build_simulation(arguments, 3, "baseline")
+        config = build_test_config()
+        baseline = build_simulation(config, 3, "baseline")
         demand_aware = build_simulation(
-            arguments,
+            config,
             3,
             "demand_aware_fcfs_cir",
         )

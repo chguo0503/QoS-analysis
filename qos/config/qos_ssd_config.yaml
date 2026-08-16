@@ -1,9 +1,0 @@
-# 多GPU、多SSD联合仿真复用同一组组件配置，每个SSD会创建独立QoS和SSD实例。
-integration:                                   # integration下面只保存模块之间的连接关系。
-  global_simulation_config: ../../config/simulation_config.yaml # 读取全局时钟与GPU/StoragePath拓扑。
-  dpu_config: ../../DPU/config/dpu_config.yaml   # DPU选择任务进入哪个已有QoS队列。
-  queue_layout_config: queue_layout_config.yaml # 生成q000到q255以及8组固定映射。
-  token_bucket_config: token_bucket_config.yaml # 读取Group/Queue CIR及可选PIR；不重复创建SSD Root桶。
-  wrr_config: wrr_config.yaml                   # 读取组内、组间WRR权重位图和最终RR规则。
-  qos_runtime_config: qos_runtime_config.yaml   # 只读取单个QoS实例的同时间戳处理顺序。
-  backend_config: ../../backends/asu_ssd/config/asu_backend_config.yaml # 作为每块SSD的默认硬件参数模板。

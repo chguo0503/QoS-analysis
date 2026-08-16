@@ -5,7 +5,6 @@ import random
 import unittest
 
 from backends.asu_ssd.simulator import SSDSimulator, load_ssd_config
-from experiments.compare_fcfs_cir import TOKEN_CONFIG_FILE, WRR_CONFIG_FILE
 from qos_ssd_simulator import run_joint_simulation
 
 
@@ -182,9 +181,11 @@ def run_small_joint_simulation(execution_mode, policy):
         backend_config_override={
             "execution_mode": execution_mode,
             "exact_batch_max_commands": 32,
+            # 统一YAML为正式扫描默认关闭高频诊断；严格完整结果对比
+            # 显式打开两项，避免把有意省略的日志误判为物理时序差异。
+            "collect_stage_peak_statistics": True,
+            "collect_nand_service_events": True,
         },
-        token_config_file=TOKEN_CONFIG_FILE,
-        scheduler_config_file=WRR_CONFIG_FILE,
     )
 
 

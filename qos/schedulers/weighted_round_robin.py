@@ -1,4 +1,4 @@
-"""Queue使用固定槽位WRR，Group使用可动态设置的平滑WRR。"""
+"""Queue使用可动态设置的槽位WRR，Group使用平滑WRR。"""
 
 from .round_robin import RoundRobinScheduler
 
@@ -17,24 +17,72 @@ def expand_weight_bitmap(item_order, weight_bitmap):
 
 
 class WeightedRoundRobinScheduler:
-    """使用固定权重槽位的Queue级WRR调度器。"""
+    """使用可动态替换权重槽位的Queue级WRR调度器。"""
 
     def __init__(self, item_order, weight_bitmap):
-        """功能：用固定权重位图创建RR扫描表。
+        """功能：用初始权重位图创建RR扫描表。
 
-        目的：需求感知策略只改Group机会，不改变原有Queue WRR行为。
+        目的：保持原有槽位展开与RR游标语义，同时允许控制面在运行时
+        替换Queue权重；没有控制写入时的Baseline扫描顺序完全不变。
         输入：Queue顺序和固定权重位图。
         输出：无；初始化RR游标。
         """
-        slots = expand_weight_bitmap(item_order, weight_bitmap)
+        self.item_order = list(item_order)
+        self.weights = {item_id: 0 for item_id in self.item_order}
+        self.rr_scheduler = RoundRobinScheduler([])
+        self.set_weights(dict(zip(self.item_order, weight_bitmap)))
+
+    def set_weights(self, weights):
+        """功能：在运行时更新本调度器指定Queue的整数权重。
+
+        目的：让DPU可以用0临时门控Queue，并用正整数调整组内服务机会；
+        每次命中本组的写入都重置RR游标，避免旧槽位位置泄漏到新权重周期。
+
+        输入：``queue_id -> 非负整数权重`` 映射；未提供的Queue保持原权重。
+        输出：无；新槽位在下一次仲裁时生效，全0会创建安全的空扫描表。
+        """
+        normalized_weights = dict(self.weights)
+        has_local_update = False
+        for item_id in self.item_order:
+            if item_id not in weights:
+                continue
+            has_local_update = True
+            weight = weights.get(item_id, 0)
+            if not isinstance(weight, int) or isinstance(weight, bool):
+                raise TypeError(
+                    f"weight for {item_id!r} must be a non-negative integer"
+                )
+            if weight < 0:
+                raise ValueError(
+                    f"weight for {item_id!r} must be a non-negative integer"
+                )
+            normalized_weights[item_id] = weight
+
+        # HierarchicalScheduler会把一张全局部分更新交给每个组；没有命中
+        # 本组Queue时保持RR游标，避免无关控制写入改变该组仲裁顺序。
+        if not has_local_update:
+            return
+
+        self.weights = normalized_weights
+        slots = expand_weight_bitmap(
+            self.item_order,
+            [self.weights[item_id] for item_id in self.item_order],
+        )
         self.rr_scheduler = RoundRobinScheduler(slots)
 
+    def has_eligible(self, is_eligible):
+        """返回是否至少有一个正权重Queue当前可以参加仲裁。"""
+        return any(
+            self.weights[item_id] > 0 and is_eligible(item_id)
+            for item_id in self.item_order
+        )
+
     def select_next(self, is_eligible):
-        """功能：从固定加权槽位中选择下一个可用对象。
+        """功能：从当前加权槽位中选择下一个可用对象。
 
         目的：复用原有RR指针语义调度Queue。
         输入：接收item_id并返回是否可调度的函数。
-        输出：选中的item_id；全部不可用时返回None。
+        输出：选中的item_id；全部不可用或全部权重为0时返回None。
         """
         return self.rr_scheduler.select_next(is_eligible)
 

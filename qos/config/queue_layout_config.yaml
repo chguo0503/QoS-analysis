@@ -1,9 +1,0 @@
-# QoS固定提供256个输入队列；工作负载可以只使用其中一部分。
-queue_layout:
-  queue_count: 256          # 输入队列总数，生成q000到q255
-  queue_id_prefix: q        # queue_id前缀
-  queue_id_width: 3         # 数字部分固定为三位，便于排序和查看位图
-  group_count: 8            # 256个队列平均分成8组
-  queues_per_group: 32      # 每组连续包含32个队列
-  group_id_prefix: g        # 组编号为g0到g7
-

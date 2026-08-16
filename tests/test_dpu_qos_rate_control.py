@@ -9,11 +9,11 @@ from DPU import (
     build_queue_binding_strategy,
 )
 from qos import build_qos_simulator
+from simulation_common.config_utils import load_yaml
 
 
 PROJECT_DIR = Path(__file__).resolve().parents[1]
-QOS_CONFIG_DIR = PROJECT_DIR / "qos" / "config"
-EXPERIMENT_CONFIG_DIR = PROJECT_DIR / "experiments" / "config"
+SIMULATION_CONFIG_FILE = PROJECT_DIR / "config" / "simulation_config.yaml"
 SSD_CAPACITY_BYTES_PER_SECOND = 40_000_000_000
 
 
@@ -27,13 +27,8 @@ def build_uniform_qos():
 
     输出：未连接SSD的QoS离散事件仿真器。
     """
-    return build_qos_simulator(
-        QOS_CONFIG_DIR / "queue_layout_config.yaml",
-        EXPERIMENT_CONFIG_DIR / "uniform_baseline_token_bucket.yaml",
-        EXPERIMENT_CONFIG_DIR / "uniform_wrr.yaml",
-        QOS_CONFIG_DIR / "qos_runtime_config.yaml",
-        0,
-    )
+    qos_config = load_yaml(SIMULATION_CONFIG_FILE)["simulation"]["qos"]
+    return build_qos_simulator(qos_config=qos_config, start_time_us=0)
 
 
 def make_dpu_request(request_id, gpu_index, requested_cir):

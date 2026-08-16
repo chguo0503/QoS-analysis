@@ -1,0 +1,331 @@
+ssd_count,metric,metric_label_cn,factor,factor_label_cn,shapley_contribution,unit,total_111_minus_000,three_factor_sum,efficiency_residual,positive_change_meaning
+1,mean_gpu_utilization_percent,平均 GPU 利用率,C,跨 SSD Coflow 一致性,0.0,pp,27.01308048290995,27.01308048290995,0.0,改善
+1,mean_gpu_utilization_percent,平均 GPU 利用率,U,Stage-0 Utility Density,5.3689279805781736,pp,27.01308048290995,27.01308048290995,0.0,改善
+1,mean_gpu_utilization_percent,平均 GPU 利用率,E,Prefetch EDF 与 deadline 保护,21.644152502331774,pp,27.01308048290995,27.01308048290995,0.0,改善
+1,min_gpu_utilization_percent,最低 GPU 利用率,C,跨 SSD Coflow 一致性,0.0,pp,-0.06236900360791475,-0.06236900360791475,0.0,改善
+1,min_gpu_utilization_percent,最低 GPU 利用率,U,Stage-0 Utility Density,-0.346317137034221,pp,-0.06236900360791475,-0.06236900360791475,0.0,改善
+1,min_gpu_utilization_percent,最低 GPU 利用率,E,Prefetch EDF 与 deadline 保护,0.28394813342630626,pp,-0.06236900360791475,-0.06236900360791475,0.0,改善
+1,p95_gpu_utilization_percent,P95 GPU 利用率,C,跨 SSD Coflow 一致性,0.0,pp,55.94447402828824,55.94447402828824,0.0,改善
+1,p95_gpu_utilization_percent,P95 GPU 利用率,U,Stage-0 Utility Density,6.945449091930733,pp,55.94447402828824,55.94447402828824,0.0,改善
+1,p95_gpu_utilization_percent,P95 GPU 利用率,E,Prefetch EDF 与 deadline 保护,48.99902493635751,pp,55.94447402828824,55.94447402828824,0.0,改善
+1,max_gpu_utilization_percent,最高 GPU 利用率,C,跨 SSD Coflow 一致性,0.0,pp,51.12918491643009,51.12918491643009,0.0,改善
+1,max_gpu_utilization_percent,最高 GPU 利用率,U,Stage-0 Utility Density,0.9178712723756668,pp,51.12918491643009,51.12918491643009,0.0,改善
+1,max_gpu_utilization_percent,最高 GPU 利用率,E,Prefetch EDF 与 deadline 保护,50.21131364405443,pp,51.12918491643009,51.12918491643009,0.0,改善
+1,mean_ttft_us,平均 TTFT,C,跨 SSD Coflow 一致性,0.0,us,-624981.8329397432,-624981.8329397433,1.1641532182693481e-10,退化（时间变长）
+1,mean_ttft_us,平均 TTFT,U,Stage-0 Utility Density,-72587.55804921914,us,-624981.8329397432,-624981.8329397433,1.1641532182693481e-10,退化（时间变长）
+1,mean_ttft_us,平均 TTFT,E,Prefetch EDF 与 deadline 保护,-552394.2748905241,us,-624981.8329397432,-624981.8329397433,1.1641532182693481e-10,退化（时间变长）
+1,p95_ttft_us,P95 TTFT,C,跨 SSD Coflow 一致性,0.0,us,-171165.14679487166,-171165.14679487166,0.0,退化（时间变长）
+1,p95_ttft_us,P95 TTFT,U,Stage-0 Utility Density,-197819.985325641,us,-171165.14679487166,-171165.14679487166,0.0,退化（时间变长）
+1,p95_ttft_us,P95 TTFT,E,Prefetch EDF 与 deadline 保护,26654.83853076934,us,-171165.14679487166,-171165.14679487166,0.0,退化（时间变长）
+1,max_ttft_us,Max TTFT,C,跨 SSD Coflow 一致性,0.0,us,-136481.86178461532,-136481.86178461532,0.0,退化（时间变长）
+1,max_ttft_us,Max TTFT,U,Stage-0 Utility Density,-284776.74469230755,us,-136481.86178461532,-136481.86178461532,0.0,退化（时间变长）
+1,max_ttft_us,Max TTFT,E,Prefetch EDF 与 deadline 保护,148294.88290769223,us,-136481.86178461532,-136481.86178461532,0.0,退化（时间变长）
+1,late_gpu_layer_count,逾期 GPU layer 数,C,跨 SSD Coflow 一致性,0.0,count,-305.0,-305.0,0.0,退化（数量增加）
+1,late_gpu_layer_count,逾期 GPU layer 数,U,Stage-0 Utility Density,-22.0,count,-305.0,-305.0,0.0,退化（数量增加）
+1,late_gpu_layer_count,逾期 GPU layer 数,E,Prefetch EDF 与 deadline 保护,-283.0,count,-305.0,-305.0,0.0,退化（数量增加）
+1,p95_delta_us,P95 预取超期量,C,跨 SSD Coflow 一致性,0.0,us,810380.3298410256,810380.3298410256,0.0,退化（超期增加）
+1,p95_delta_us,P95 预取超期量,U,Stage-0 Utility Density,-19097.395200000057,us,810380.3298410256,810380.3298410256,0.0,退化（超期增加）
+1,p95_delta_us,P95 预取超期量,E,Prefetch EDF 与 deadline 保护,829477.7250410257,us,810380.3298410256,810380.3298410256,0.0,退化（超期增加）
+1,worst_delta_us,最坏预取超期量,C,跨 SSD Coflow 一致性,0.0,us,1231784.7552,1231784.7552,0.0,退化（超期增加）
+1,worst_delta_us,最坏预取超期量,U,Stage-0 Utility Density,71001.90720000002,us,1231784.7552,1231784.7552,0.0,退化（超期增加）
+1,worst_delta_us,最坏预取超期量,E,Prefetch EDF 与 deadline 保护,1160782.848,us,1231784.7552,1231784.7552,0.0,退化（超期增加）
+1,mean_actual_read_us,平均实际读取时间,C,跨 SSD Coflow 一致性,0.0,us,-158673.16901176106,-158673.16901176103,-2.9103830456733704e-11,退化（时间变长）
+1,mean_actual_read_us,平均实际读取时间,U,Stage-0 Utility Density,-16938.531125781286,us,-158673.16901176106,-158673.16901176103,-2.9103830456733704e-11,退化（时间变长）
+1,mean_actual_read_us,平均实际读取时间,E,Prefetch EDF 与 deadline 保护,-141734.63788597976,us,-158673.16901176106,-158673.16901176103,-2.9103830456733704e-11,退化（时间变长）
+2,mean_gpu_utilization_percent,平均 GPU 利用率,C,跨 SSD Coflow 一致性,-0.13656472212368342,pp,24.036787860808026,24.036787860808026,0.0,改善
+2,mean_gpu_utilization_percent,平均 GPU 利用率,U,Stage-0 Utility Density,4.916927575017702,pp,24.036787860808026,24.036787860808026,0.0,改善
+2,mean_gpu_utilization_percent,平均 GPU 利用率,E,Prefetch EDF 与 deadline 保护,19.256425007914007,pp,24.036787860808026,24.036787860808026,0.0,改善
+2,min_gpu_utilization_percent,最低 GPU 利用率,C,跨 SSD Coflow 一致性,-0.031895787757679726,pp,-0.14409237833187882,-0.14409237833187882,0.0,改善
+2,min_gpu_utilization_percent,最低 GPU 利用率,U,Stage-0 Utility Density,-0.7563575105724322,pp,-0.14409237833187882,-0.14409237833187882,0.0,改善
+2,min_gpu_utilization_percent,最低 GPU 利用率,E,Prefetch EDF 与 deadline 保护,0.6441609199982331,pp,-0.14409237833187882,-0.14409237833187882,0.0,改善
+2,p95_gpu_utilization_percent,P95 GPU 利用率,C,跨 SSD Coflow 一致性,-0.34026950274053763,pp,23.960067879902113,23.960067879902113,0.0,改善
+2,p95_gpu_utilization_percent,P95 GPU 利用率,U,Stage-0 Utility Density,4.511701229700011,pp,23.960067879902113,23.960067879902113,0.0,改善
+2,p95_gpu_utilization_percent,P95 GPU 利用率,E,Prefetch EDF 与 deadline 保护,19.78863615294264,pp,23.960067879902113,23.960067879902113,0.0,改善
+2,max_gpu_utilization_percent,最高 GPU 利用率,C,跨 SSD Coflow 一致性,-0.3280405659990204,pp,13.41952412330204,13.41952412330204,0.0,改善
+2,max_gpu_utilization_percent,最高 GPU 利用率,U,Stage-0 Utility Density,0.6236773343147609,pp,13.41952412330204,13.41952412330204,0.0,改善
+2,max_gpu_utilization_percent,最高 GPU 利用率,E,Prefetch EDF 与 deadline 保护,13.1238873549863,pp,13.41952412330204,13.41952412330204,0.0,改善
+2,mean_ttft_us,平均 TTFT,C,跨 SSD Coflow 一致性,6082.2412130477605,us,-243431.78811398195,-243431.78811398195,0.0,退化（时间变长）
+2,mean_ttft_us,平均 TTFT,U,Stage-0 Utility Density,-38229.34258709254,us,-243431.78811398195,-243431.78811398195,0.0,退化（时间变长）
+2,mean_ttft_us,平均 TTFT,E,Prefetch EDF 与 deadline 保护,-211284.68673993717,us,-243431.78811398195,-243431.78811398195,0.0,退化（时间变长）
+2,p95_ttft_us,P95 TTFT,C,跨 SSD Coflow 一致性,10089.74163589743,us,-118573.94596410263,-118573.94596410263,0.0,退化（时间变长）
+2,p95_ttft_us,P95 TTFT,U,Stage-0 Utility Density,-203553.26511794864,us,-118573.94596410263,-118573.94596410263,0.0,退化（时间变长）
+2,p95_ttft_us,P95 TTFT,E,Prefetch EDF 与 deadline 保护,74889.57751794858,us,-118573.94596410263,-118573.94596410263,0.0,退化（时间变长）
+2,max_ttft_us,Max TTFT,C,跨 SSD Coflow 一致性,10323.36561709398,us,-135158.94561538473,-135158.94561538473,0.0,退化（时间变长）
+2,max_ttft_us,Max TTFT,U,Stage-0 Utility Density,-321291.5395649572,us,-135158.94561538473,-135158.94561538473,0.0,退化（时间变长）
+2,max_ttft_us,Max TTFT,E,Prefetch EDF 与 deadline 保护,175809.2283324785,us,-135158.94561538473,-135158.94561538473,0.0,退化（时间变长）
+2,late_gpu_layer_count,逾期 GPU layer 数,C,跨 SSD Coflow 一致性,-36.166666666666664,count,-292.0,-292.0,0.0,退化（数量增加）
+2,late_gpu_layer_count,逾期 GPU layer 数,U,Stage-0 Utility Density,-7.666666666666667,count,-292.0,-292.0,0.0,退化（数量增加）
+2,late_gpu_layer_count,逾期 GPU layer 数,E,Prefetch EDF 与 deadline 保护,-248.16666666666666,count,-292.0,-292.0,0.0,退化（数量增加）
+2,p95_delta_us,P95 预取超期量,C,跨 SSD Coflow 一致性,9559.496331623968,us,366507.1383641026,366507.1383641026,0.0,退化（超期增加）
+2,p95_delta_us,P95 预取超期量,U,Stage-0 Utility Density,-19299.20470427351,us,366507.1383641026,366507.1383641026,0.0,退化（超期增加）
+2,p95_delta_us,P95 预取超期量,E,Prefetch EDF 与 deadline 保护,376246.84673675214,us,366507.1383641026,366507.1383641026,0.0,退化（超期增加）
+2,worst_delta_us,最坏预取超期量,C,跨 SSD Coflow 一致性,10114.005333333314,us,634659.4816,634659.4816,0.0,退化（超期增加）
+2,worst_delta_us,最坏预取超期量,U,Stage-0 Utility Density,57418.97813333333,us,634659.4816,634659.4816,0.0,退化（超期增加）
+2,worst_delta_us,最坏预取超期量,E,Prefetch EDF 与 deadline 保护,567126.4981333334,us,634659.4816,634659.4816,0.0,退化（超期增加）
+2,mean_actual_read_us,平均实际读取时间,C,跨 SSD Coflow 一致性,1448.146147622967,us,-62694.56710823301,-62694.56710823301,0.0,退化（时间变长）
+2,mean_actual_read_us,平均实际读取时间,U,Stage-0 Utility Density,-6050.385850769628,us,-62694.56710823301,-62694.56710823301,0.0,退化（时间变长）
+2,mean_actual_read_us,平均实际读取时间,E,Prefetch EDF 与 deadline 保护,-58092.32740508635,us,-62694.56710823301,-62694.56710823301,0.0,退化（时间变长）
+3,mean_gpu_utilization_percent,平均 GPU 利用率,C,跨 SSD Coflow 一致性,-0.24460707384535021,pp,17.802101513044683,17.802101513044683,0.0,改善
+3,mean_gpu_utilization_percent,平均 GPU 利用率,U,Stage-0 Utility Density,4.385369894930926,pp,17.802101513044683,17.802101513044683,0.0,改善
+3,mean_gpu_utilization_percent,平均 GPU 利用率,E,Prefetch EDF 与 deadline 保护,13.661338691959108,pp,17.802101513044683,17.802101513044683,0.0,改善
+3,min_gpu_utilization_percent,最低 GPU 利用率,C,跨 SSD Coflow 一致性,-0.12252498638593634,pp,-0.22177641177038998,-0.22177641177038998,0.0,改善
+3,min_gpu_utilization_percent,最低 GPU 利用率,U,Stage-0 Utility Density,-1.3179999290922502,pp,-0.22177641177038998,-0.22177641177038998,0.0,改善
+3,min_gpu_utilization_percent,最低 GPU 利用率,E,Prefetch EDF 与 deadline 保护,1.2187485037077965,pp,-0.22177641177038998,-0.22177641177038998,0.0,改善
+3,p95_gpu_utilization_percent,P95 GPU 利用率,C,跨 SSD Coflow 一致性,-0.32140172595445904,pp,4.94444160712618,4.94444160712618,0.0,改善
+3,p95_gpu_utilization_percent,P95 GPU 利用率,U,Stage-0 Utility Density,2.280314450291648,pp,4.94444160712618,4.94444160712618,0.0,改善
+3,p95_gpu_utilization_percent,P95 GPU 利用率,E,Prefetch EDF 与 deadline 保护,2.9855288827889908,pp,4.94444160712618,4.94444160712618,0.0,改善
+3,max_gpu_utilization_percent,最高 GPU 利用率,C,跨 SSD Coflow 一致性,0.2371531429636562,pp,0.18336255931357925,0.18336255931357925,0.0,改善
+3,max_gpu_utilization_percent,最高 GPU 利用率,U,Stage-0 Utility Density,-0.829783033018316,pp,0.18336255931357925,0.18336255931357925,0.0,改善
+3,max_gpu_utilization_percent,最高 GPU 利用率,E,Prefetch EDF 与 deadline 保护,0.7759924493682391,pp,0.18336255931357925,0.18336255931357925,0.0,改善
+3,mean_ttft_us,平均 TTFT,C,跨 SSD Coflow 一致性,5633.628325681096,us,-119927.04607447924,-119927.04607447924,0.0,退化（时间变长）
+3,mean_ttft_us,平均 TTFT,U,Stage-0 Utility Density,-26972.37243595756,us,-119927.04607447924,-119927.04607447924,0.0,退化（时间变长）
+3,mean_ttft_us,平均 TTFT,E,Prefetch EDF 与 deadline 保护,-98588.30196420278,us,-119927.04607447924,-119927.04607447924,0.0,退化（时间变长）
+3,p95_ttft_us,P95 TTFT,C,跨 SSD Coflow 一致性,-1259.1052683760452,us,2186.7298820513533,2186.7298820513533,0.0,退化（时间变长）
+3,p95_ttft_us,P95 TTFT,U,Stage-0 Utility Density,-102073.02517350424,us,2186.7298820513533,2186.7298820513533,0.0,退化（时间变长）
+3,p95_ttft_us,P95 TTFT,E,Prefetch EDF 与 deadline 保护,105518.86032393164,us,2186.7298820513533,2186.7298820513533,0.0,退化（时间变长）
+3,max_ttft_us,Max TTFT,C,跨 SSD Coflow 一致性,-3249.5912102564275,us,-34956.0420923077,-34956.0420923077,0.0,退化（时间变长）
+3,max_ttft_us,Max TTFT,U,Stage-0 Utility Density,-180747.86728717937,us,-34956.0420923077,-34956.0420923077,0.0,退化（时间变长）
+3,max_ttft_us,Max TTFT,E,Prefetch EDF 与 deadline 保护,149041.41640512808,us,-34956.0420923077,-34956.0420923077,0.0,退化（时间变长）
+3,late_gpu_layer_count,逾期 GPU layer 数,C,跨 SSD Coflow 一致性,-29.166666666666668,count,-241.0,-241.0,0.0,退化（数量增加）
+3,late_gpu_layer_count,逾期 GPU layer 数,U,Stage-0 Utility Density,-2.1666666666666665,count,-241.0,-241.0,0.0,退化（数量增加）
+3,late_gpu_layer_count,逾期 GPU layer 数,E,Prefetch EDF 与 deadline 保护,-209.66666666666666,count,-241.0,-241.0,0.0,退化（数量增加）
+3,p95_delta_us,P95 预取超期量,C,跨 SSD Coflow 一致性,2951.7482341880145,us,199131.776,199131.776,0.0,退化（超期增加）
+3,p95_delta_us,P95 预取超期量,U,Stage-0 Utility Density,-10938.838801709391,us,199131.776,199131.776,0.0,退化（超期增加）
+3,p95_delta_us,P95 预取超期量,E,Prefetch EDF 与 deadline 保护,207118.86656752139,us,199131.776,199131.776,0.0,退化（超期增加）
+3,worst_delta_us,最坏预取超期量,C,跨 SSD Coflow 一致性,13365.50400000003,us,420008.19200000004,420008.19200000004,0.0,退化（超期增加）
+3,worst_delta_us,最坏预取超期量,U,Stage-0 Utility Density,47055.2704,us,420008.19200000004,420008.19200000004,0.0,退化（超期增加）
+3,worst_delta_us,最坏预取超期量,E,Prefetch EDF 与 deadline 保护,359587.4176,us,420008.19200000004,420008.19200000004,0.0,退化（超期增加）
+3,mean_actual_read_us,平均实际读取时间,C,跨 SSD Coflow 一致性,1464.9457266375564,us,-28898.390398337622,-28898.390398337622,0.0,退化（时间变长）
+3,mean_actual_read_us,平均实际读取时间,U,Stage-0 Utility Density,-1587.4741883114596,us,-28898.390398337622,-28898.390398337622,0.0,退化（时间变长）
+3,mean_actual_read_us,平均实际读取时间,E,Prefetch EDF 与 deadline 保护,-28775.861936663718,us,-28898.390398337622,-28898.390398337622,0.0,退化（时间变长）
+4,mean_gpu_utilization_percent,平均 GPU 利用率,C,跨 SSD Coflow 一致性,-0.23409264577634303,pp,11.775239351296626,11.775239351296626,0.0,改善
+4,mean_gpu_utilization_percent,平均 GPU 利用率,U,Stage-0 Utility Density,3.4730787490678665,pp,11.775239351296626,11.775239351296626,0.0,改善
+4,mean_gpu_utilization_percent,平均 GPU 利用率,E,Prefetch EDF 与 deadline 保护,8.536253248005103,pp,11.775239351296626,11.775239351296626,0.0,改善
+4,min_gpu_utilization_percent,最低 GPU 利用率,C,跨 SSD Coflow 一致性,-0.22702565267340757,pp,-0.32134489697579127,-0.32134489697579127,0.0,改善
+4,min_gpu_utilization_percent,最低 GPU 利用率,U,Stage-0 Utility Density,-2.1325383498260986,pp,-0.32134489697579127,-0.32134489697579127,0.0,改善
+4,min_gpu_utilization_percent,最低 GPU 利用率,E,Prefetch EDF 与 deadline 保护,2.038219105523715,pp,-0.32134489697579127,-0.32134489697579127,0.0,改善
+4,p95_gpu_utilization_percent,P95 GPU 利用率,C,跨 SSD Coflow 一致性,0.5385006849057538,pp,1.9972937787075153,1.9972937787075153,0.0,改善
+4,p95_gpu_utilization_percent,P95 GPU 利用率,U,Stage-0 Utility Density,0.9841234669939402,pp,1.9972937787075153,1.9972937787075153,0.0,改善
+4,p95_gpu_utilization_percent,P95 GPU 利用率,E,Prefetch EDF 与 deadline 保护,0.4746696268078215,pp,1.9972937787075153,1.9972937787075153,0.0,改善
+4,max_gpu_utilization_percent,最高 GPU 利用率,C,跨 SSD Coflow 一致性,0.12582064086788117,pp,-0.059772516953344734,-0.059772516953344734,0.0,改善
+4,max_gpu_utilization_percent,最高 GPU 利用率,U,Stage-0 Utility Density,-0.1188663957924992,pp,-0.059772516953344734,-0.059772516953344734,0.0,改善
+4,max_gpu_utilization_percent,最高 GPU 利用率,E,Prefetch EDF 与 deadline 保护,-0.0667267620287267,pp,-0.059772516953344734,-0.059772516953344734,0.0,改善
+4,mean_ttft_us,平均 TTFT,C,跨 SSD Coflow 一致性,5539.801763341423,us,-62754.63806101761,-62754.63806101761,0.0,退化（时间变长）
+4,mean_ttft_us,平均 TTFT,U,Stage-0 Utility Density,-20179.40236937114,us,-62754.63806101761,-62754.63806101761,0.0,退化（时间变长）
+4,mean_ttft_us,平均 TTFT,E,Prefetch EDF 与 deadline 保护,-48115.0374549879,us,-62754.63806101761,-62754.63806101761,0.0,退化（时间变长）
+4,p95_ttft_us,P95 TTFT,C,跨 SSD Coflow 一致性,-1127.9450393162358,us,15586.933333333232,15586.933333333232,0.0,退化（时间变长）
+4,p95_ttft_us,P95 TTFT,U,Stage-0 Utility Density,-48203.42400341886,us,15586.933333333232,15586.933333333232,0.0,退化（时间变长）
+4,p95_ttft_us,P95 TTFT,E,Prefetch EDF 与 deadline 保护,64918.30237606833,us,15586.933333333232,15586.933333333232,0.0,退化（时间变长）
+4,max_ttft_us,Max TTFT,C,跨 SSD Coflow 一致性,-78.203861538476,us,-13374.867358974414,-13374.867358974414,0.0,退化（时间变长）
+4,max_ttft_us,Max TTFT,U,Stage-0 Utility Density,-113881.52719487179,us,-13374.867358974414,-13374.867358974414,0.0,退化（时间变长）
+4,max_ttft_us,Max TTFT,E,Prefetch EDF 与 deadline 保护,100584.86369743585,us,-13374.867358974414,-13374.867358974414,0.0,退化（时间变长）
+4,late_gpu_layer_count,逾期 GPU layer 数,C,跨 SSD Coflow 一致性,-43.833333333333336,count,-121.0,-121.0,0.0,退化（数量增加）
+4,late_gpu_layer_count,逾期 GPU layer 数,U,Stage-0 Utility Density,34.166666666666664,count,-121.0,-121.0,0.0,退化（数量增加）
+4,late_gpu_layer_count,逾期 GPU layer 数,E,Prefetch EDF 与 deadline 保护,-111.33333333333333,count,-121.0,-121.0,0.0,退化（数量增加）
+4,p95_delta_us,P95 预取超期量,C,跨 SSD Coflow 一致性,44163.275117094025,us,116287.51552307693,116287.51552307693,0.0,退化（超期增加）
+4,p95_delta_us,P95 预取超期量,U,Stage-0 Utility Density,-29986.139857264952,us,116287.51552307693,116287.51552307693,0.0,退化（超期增加）
+4,p95_delta_us,P95 预取超期量,E,Prefetch EDF 与 deadline 保护,102110.38026324786,us,116287.51552307693,116287.51552307693,0.0,退化（超期增加）
+4,worst_delta_us,最坏预取超期量,C,跨 SSD Coflow 一致性,11947.537066666671,us,305377.8944,305377.8944,0.0,退化（超期增加）
+4,worst_delta_us,最坏预取超期量,U,Stage-0 Utility Density,40417.52746666668,us,305377.8944,305377.8944,0.0,退化（超期增加）
+4,worst_delta_us,最坏预取超期量,E,Prefetch EDF 与 deadline 保护,253012.82986666667,us,305377.8944,305377.8944,0.0,退化（超期增加）
+4,mean_actual_read_us,平均实际读取时间,C,跨 SSD Coflow 一致性,2052.4411124850594,us,-10596.360448707623,-10596.360448707623,0.0,退化（时间变长）
+4,mean_actual_read_us,平均实际读取时间,U,Stage-0 Utility Density,945.4479371845955,us,-10596.360448707623,-10596.360448707623,0.0,退化（时间变长）
+4,mean_actual_read_us,平均实际读取时间,E,Prefetch EDF 与 deadline 保护,-13594.249498377278,us,-10596.360448707623,-10596.360448707623,0.0,退化（时间变长）
+5,mean_gpu_utilization_percent,平均 GPU 利用率,C,跨 SSD Coflow 一致性,-0.19633774384552302,pp,8.31118257197187,8.31118257197187,0.0,改善
+5,mean_gpu_utilization_percent,平均 GPU 利用率,U,Stage-0 Utility Density,2.758607745152491,pp,8.31118257197187,8.31118257197187,0.0,改善
+5,mean_gpu_utilization_percent,平均 GPU 利用率,E,Prefetch EDF 与 deadline 保护,5.748912570664902,pp,8.31118257197187,8.31118257197187,0.0,改善
+5,min_gpu_utilization_percent,最低 GPU 利用率,C,跨 SSD Coflow 一致性,-0.2986300290855232,pp,-0.40848085407352297,-0.40848085407352297,0.0,改善
+5,min_gpu_utilization_percent,最低 GPU 利用率,U,Stage-0 Utility Density,-3.314889239087367,pp,-0.40848085407352297,-0.40848085407352297,0.0,改善
+5,min_gpu_utilization_percent,最低 GPU 利用率,E,Prefetch EDF 与 deadline 保护,3.2050384140993673,pp,-0.40848085407352297,-0.40848085407352297,0.0,改善
+5,p95_gpu_utilization_percent,P95 GPU 利用率,C,跨 SSD Coflow 一致性,0.4839579354702768,pp,1.205366220793337,1.205366220793337,0.0,改善
+5,p95_gpu_utilization_percent,P95 GPU 利用率,U,Stage-0 Utility Density,0.7622023552041503,pp,1.205366220793337,1.205366220793337,0.0,改善
+5,p95_gpu_utilization_percent,P95 GPU 利用率,E,Prefetch EDF 与 deadline 保护,-0.040794069881089946,pp,1.205366220793337,1.205366220793337,0.0,改善
+5,max_gpu_utilization_percent,最高 GPU 利用率,C,跨 SSD Coflow 一致性,0.20531944374746539,pp,0.1440267766353287,0.1440267766353287,0.0,改善
+5,max_gpu_utilization_percent,最高 GPU 利用率,U,Stage-0 Utility Density,0.013343391834704713,pp,0.1440267766353287,0.1440267766353287,0.0,改善
+5,max_gpu_utilization_percent,最高 GPU 利用率,E,Prefetch EDF 与 deadline 保护,-0.0746360589468414,pp,0.1440267766353287,0.1440267766353287,0.0,改善
+5,mean_ttft_us,平均 TTFT,C,跨 SSD Coflow 一致性,3344.270664329573,us,-38775.30723737989,-38775.30723737989,0.0,退化（时间变长）
+5,mean_ttft_us,平均 TTFT,U,Stage-0 Utility Density,-15673.860578699483,us,-38775.30723737989,-38775.30723737989,0.0,退化（时间变长）
+5,mean_ttft_us,平均 TTFT,E,Prefetch EDF 与 deadline 保护,-26445.717323009983,us,-38775.30723737989,-38775.30723737989,0.0,退化（时间变长）
+5,p95_ttft_us,P95 TTFT,C,跨 SSD Coflow 一致性,350.56640000004944,us,9332.09600000002,9332.09600000002,0.0,退化（时间变长）
+5,p95_ttft_us,P95 TTFT,U,Stage-0 Utility Density,-25133.993169230776,us,9332.09600000002,9332.09600000002,0.0,退化（时间变长）
+5,p95_ttft_us,P95 TTFT,E,Prefetch EDF 与 deadline 保护,34115.522769230745,us,9332.09600000002,9332.09600000002,0.0,退化（时间变长）
+5,max_ttft_us,Max TTFT,C,跨 SSD Coflow 一致性,-2654.7925333333355,us,-7079.238558974466,-7079.238558974466,0.0,退化（时间变长）
+5,max_ttft_us,Max TTFT,U,Stage-0 Utility Density,-60319.85685897436,us,-7079.238558974466,-7079.238558974466,0.0,退化（时间变长）
+5,max_ttft_us,Max TTFT,E,Prefetch EDF 与 deadline 保护,55895.410833333226,us,-7079.238558974466,-7079.238558974466,0.0,退化（时间变长）
+5,late_gpu_layer_count,逾期 GPU layer 数,C,跨 SSD Coflow 一致性,-32.5,count,-75.0,-75.0,0.0,退化（数量增加）
+5,late_gpu_layer_count,逾期 GPU layer 数,U,Stage-0 Utility Density,12.0,count,-75.0,-75.0,0.0,退化（数量增加）
+5,late_gpu_layer_count,逾期 GPU layer 数,E,Prefetch EDF 与 deadline 保护,-54.5,count,-75.0,-75.0,0.0,退化（数量增加）
+5,p95_delta_us,P95 预取超期量,C,跨 SSD Coflow 一致性,2564.933826495721,us,-7017.830400000006,-7017.830400000006,0.0,退化（超期增加）
+5,p95_delta_us,P95 预取超期量,U,Stage-0 Utility Density,-47774.893373504274,us,-7017.830400000006,-7017.830400000006,0.0,退化（超期增加）
+5,p95_delta_us,P95 预取超期量,E,Prefetch EDF 与 deadline 保护,38192.12914700855,us,-7017.830400000006,-7017.830400000006,0.0,退化（超期增加）
+5,worst_delta_us,最坏预取超期量,C,跨 SSD Coflow 一致性,15268.189866666651,us,225263.5904,225263.5904,0.0,退化（超期增加）
+5,worst_delta_us,最坏预取超期量,U,Stage-0 Utility Density,33317.26506666667,us,225263.5904,225263.5904,0.0,退化（超期增加）
+5,worst_delta_us,最坏预取超期量,E,Prefetch EDF 与 deadline 保护,176678.13546666666,us,225263.5904,225263.5904,0.0,退化（超期增加）
+5,mean_actual_read_us,平均实际读取时间,C,跨 SSD Coflow 一致性,2400.5614499949734,us,-408.453531991152,-408.453531991152,0.0,退化（时间变长）
+5,mean_actual_read_us,平均实际读取时间,U,Stage-0 Utility Density,1490.6947731019827,us,-408.453531991152,-408.453531991152,0.0,退化（时间变长）
+5,mean_actual_read_us,平均实际读取时间,E,Prefetch EDF 与 deadline 保护,-4299.709755088108,us,-408.453531991152,-408.453531991152,0.0,退化（时间变长）
+6,mean_gpu_utilization_percent,平均 GPU 利用率,C,跨 SSD Coflow 一致性,0.2072495983730107,pp,6.213999693721988,6.213999693721988,0.0,改善
+6,mean_gpu_utilization_percent,平均 GPU 利用率,U,Stage-0 Utility Density,1.6428127687037843,pp,6.213999693721988,6.213999693721988,0.0,改善
+6,mean_gpu_utilization_percent,平均 GPU 利用率,E,Prefetch EDF 与 deadline 保护,4.363937326645193,pp,6.213999693721988,6.213999693721988,0.0,改善
+6,min_gpu_utilization_percent,最低 GPU 利用率,C,跨 SSD Coflow 一致性,-0.6385963911510575,pp,0.170110144610093,0.170110144610093,0.0,改善
+6,min_gpu_utilization_percent,最低 GPU 利用率,U,Stage-0 Utility Density,-4.503162296418464,pp,0.170110144610093,0.170110144610093,0.0,改善
+6,min_gpu_utilization_percent,最低 GPU 利用率,E,Prefetch EDF 与 deadline 保护,5.311868832179614,pp,0.170110144610093,0.170110144610093,0.0,改善
+6,p95_gpu_utilization_percent,P95 GPU 利用率,C,跨 SSD Coflow 一致性,0.65815592819992,pp,0.8704437335520225,0.8704437335520225,0.0,改善
+6,p95_gpu_utilization_percent,P95 GPU 利用率,U,Stage-0 Utility Density,0.46506900628923614,pp,0.8704437335520225,0.8704437335520225,0.0,改善
+6,p95_gpu_utilization_percent,P95 GPU 利用率,E,Prefetch EDF 与 deadline 保护,-0.2527812009371336,pp,0.8704437335520225,0.8704437335520225,0.0,改善
+6,max_gpu_utilization_percent,最高 GPU 利用率,C,跨 SSD Coflow 一致性,0.6518407360693791,pp,-0.14695128417611159,-0.14695128417611159,0.0,改善
+6,max_gpu_utilization_percent,最高 GPU 利用率,U,Stage-0 Utility Density,-0.35152217929605695,pp,-0.14695128417611159,-0.14695128417611159,0.0,改善
+6,max_gpu_utilization_percent,最高 GPU 利用率,E,Prefetch EDF 与 deadline 保护,-0.44726984094943373,pp,-0.14695128417611159,-0.14695128417611159,0.0,改善
+6,mean_ttft_us,平均 TTFT,C,跨 SSD Coflow 一致性,1442.6571586004964,us,-26292.216952163144,-26292.216952163144,0.0,退化（时间变长）
+6,mean_ttft_us,平均 TTFT,U,Stage-0 Utility Density,-11123.032726715921,us,-26292.216952163144,-26292.216952163144,0.0,退化（时间变长）
+6,mean_ttft_us,平均 TTFT,E,Prefetch EDF 与 deadline 保护,-16611.84138404772,us,-26292.216952163144,-26292.216952163144,0.0,退化（时间变长）
+6,p95_ttft_us,P95 TTFT,C,跨 SSD Coflow 一致性,1418.3064888888814,us,13555.756348718074,13555.756348718076,-1.8189894035458565e-12,退化（时间变长）
+6,p95_ttft_us,P95 TTFT,U,Stage-0 Utility Density,-6288.762639316187,us,13555.756348718074,13555.756348718076,-1.8189894035458565e-12,退化（时间变长）
+6,p95_ttft_us,P95 TTFT,E,Prefetch EDF 与 deadline 保护,18426.212499145382,us,13555.756348718074,13555.756348718076,-1.8189894035458565e-12,退化（时间变长）
+6,max_ttft_us,Max TTFT,C,跨 SSD Coflow 一致性,527.069866666648,us,3297.3630410255864,3297.3630410255864,0.0,退化（时间变长）
+6,max_ttft_us,Max TTFT,U,Stage-0 Utility Density,-31678.000858974392,us,3297.3630410255864,3297.3630410255864,0.0,退化（时间变长）
+6,max_ttft_us,Max TTFT,E,Prefetch EDF 与 deadline 保护,34448.29403333333,us,3297.3630410255864,3297.3630410255864,0.0,退化（时间变长）
+6,late_gpu_layer_count,逾期 GPU layer 数,C,跨 SSD Coflow 一致性,-6.333333333333333,count,38.0,38.0,0.0,退化（数量增加）
+6,late_gpu_layer_count,逾期 GPU layer 数,U,Stage-0 Utility Density,38.666666666666664,count,38.0,38.0,0.0,退化（数量增加）
+6,late_gpu_layer_count,逾期 GPU layer 数,E,Prefetch EDF 与 deadline 保护,5.666666666666674,count,38.0,38.0,0.0,退化（数量增加）
+6,p95_delta_us,P95 预取超期量,C,跨 SSD Coflow 一致性,2342.2315786324784,us,-4571.444348717945,-4571.444348717945,0.0,退化（超期增加）
+6,p95_delta_us,P95 预取超期量,U,Stage-0 Utility Density,-33249.6867059829,us,-4571.444348717945,-4571.444348717945,0.0,退化（超期增加）
+6,p95_delta_us,P95 预取超期量,E,Prefetch EDF 与 deadline 保护,26336.010778632477,us,-4571.444348717945,-4571.444348717945,0.0,退化（超期增加）
+6,worst_delta_us,最坏预取超期量,C,跨 SSD Coflow 一致性,16283.148799999994,us,147772.59519999998,147772.59519999998,0.0,退化（超期增加）
+6,worst_delta_us,最坏预取超期量,U,Stage-0 Utility Density,19998.1824,us,147772.59519999998,147772.59519999998,0.0,退化（超期增加）
+6,worst_delta_us,最坏预取超期量,E,Prefetch EDF 与 deadline 保护,111491.26399999998,us,147772.59519999998,147772.59519999998,0.0,退化（超期增加）
+6,mean_actual_read_us,平均实际读取时间,C,跨 SSD Coflow 一致性,3410.7788563651775,us,6190.963851512395,6190.963851512395,0.0,退化（时间变长）
+6,mean_actual_read_us,平均实际读取时间,U,Stage-0 Utility Density,1943.1224595903514,us,6190.963851512395,6190.963851512395,0.0,退化（时间变长）
+6,mean_actual_read_us,平均实际读取时间,E,Prefetch EDF 与 deadline 保护,837.0625355568664,us,6190.963851512395,6190.963851512395,0.0,退化（时间变长）
+7,mean_gpu_utilization_percent,平均 GPU 利用率,C,跨 SSD Coflow 一致性,0.180319584843474,pp,5.940246608882376,5.940246608882376,0.0,改善
+7,mean_gpu_utilization_percent,平均 GPU 利用率,U,Stage-0 Utility Density,1.4126289230477411,pp,5.940246608882376,5.940246608882376,0.0,改善
+7,mean_gpu_utilization_percent,平均 GPU 利用率,E,Prefetch EDF 与 deadline 保护,4.347298100991161,pp,5.940246608882376,5.940246608882376,0.0,改善
+7,min_gpu_utilization_percent,最低 GPU 利用率,C,跨 SSD Coflow 一致性,-0.5626812153462302,pp,1.1848113942781708,1.1848113942781708,0.0,改善
+7,min_gpu_utilization_percent,最低 GPU 利用率,U,Stage-0 Utility Density,-5.114562759338675,pp,1.1848113942781708,1.1848113942781708,0.0,改善
+7,min_gpu_utilization_percent,最低 GPU 利用率,E,Prefetch EDF 与 deadline 保护,6.862055368963076,pp,1.1848113942781708,1.1848113942781708,0.0,改善
+7,p95_gpu_utilization_percent,P95 GPU 利用率,C,跨 SSD Coflow 一致性,0.4519276223206177,pp,0.7291204655090411,0.7291204655090411,0.0,改善
+7,p95_gpu_utilization_percent,P95 GPU 利用率,U,Stage-0 Utility Density,0.5449555124319687,pp,0.7291204655090411,0.7291204655090411,0.0,改善
+7,p95_gpu_utilization_percent,P95 GPU 利用率,E,Prefetch EDF 与 deadline 保护,-0.2677626692435453,pp,0.7291204655090411,0.7291204655090411,0.0,改善
+7,max_gpu_utilization_percent,最高 GPU 利用率,C,跨 SSD Coflow 一致性,0.33440593502298555,pp,-0.16389350360473998,-0.16389350360473998,0.0,改善
+7,max_gpu_utilization_percent,最高 GPU 利用率,U,Stage-0 Utility Density,-0.22679959599036437,pp,-0.16389350360473998,-0.16389350360473998,0.0,改善
+7,max_gpu_utilization_percent,最高 GPU 利用率,E,Prefetch EDF 与 deadline 保护,-0.27149984263736116,pp,-0.16389350360473998,-0.16389350360473998,0.0,改善
+7,mean_ttft_us,平均 TTFT,C,跨 SSD Coflow 一致性,778.8023954596234,us,-22214.690683132794,-22214.690683132794,0.0,退化（时间变长）
+7,mean_ttft_us,平均 TTFT,U,Stage-0 Utility Density,-9625.09410994924,us,-22214.690683132794,-22214.690683132794,0.0,退化（时间变长）
+7,mean_ttft_us,平均 TTFT,E,Prefetch EDF 与 deadline 保护,-13368.39896864318,us,-22214.690683132794,-22214.690683132794,0.0,退化（时间变长）
+7,p95_ttft_us,P95 TTFT,C,跨 SSD Coflow 一致性,-2252.5482666666503,us,7315.800082051312,7315.800082051312,0.0,退化（时间变长）
+7,p95_ttft_us,P95 TTFT,U,Stage-0 Utility Density,5834.353805128194,us,7315.800082051312,7315.800082051312,0.0,退化（时间变长）
+7,p95_ttft_us,P95 TTFT,E,Prefetch EDF 与 deadline 保护,3733.994543589768,us,7315.800082051312,7315.800082051312,0.0,退化（时间变长）
+7,max_ttft_us,Max TTFT,C,跨 SSD Coflow 一致性,-1109.1541333332618,us,2395.366400000057,2395.366400000057,0.0,退化（时间变长）
+7,max_ttft_us,Max TTFT,U,Stage-0 Utility Density,-13673.44717948717,us,2395.366400000057,2395.366400000057,0.0,退化（时间变长）
+7,max_ttft_us,Max TTFT,E,Prefetch EDF 与 deadline 保护,17177.96771282049,us,2395.366400000057,2395.366400000057,0.0,退化（时间变长）
+7,late_gpu_layer_count,逾期 GPU layer 数,C,跨 SSD Coflow 一致性,-15.666666666666666,count,9.0,9.0,0.0,退化（数量增加）
+7,late_gpu_layer_count,逾期 GPU layer 数,U,Stage-0 Utility Density,18.833333333333332,count,9.0,9.0,0.0,退化（数量增加）
+7,late_gpu_layer_count,逾期 GPU layer 数,E,Prefetch EDF 与 deadline 保护,5.833333333333333,count,9.0,9.0,0.0,退化（数量增加）
+7,p95_delta_us,P95 预取超期量,C,跨 SSD Coflow 一致性,2590.80327179487,us,-4112.842435897444,-4112.842435897444,0.0,退化（超期增加）
+7,p95_delta_us,P95 预取超期量,U,Stage-0 Utility Density,-22519.647500000003,us,-4112.842435897444,-4112.842435897444,0.0,退化（超期增加）
+7,p95_delta_us,P95 预取超期量,E,Prefetch EDF 与 deadline 保护,15816.001792307688,us,-4112.842435897444,-4112.842435897444,0.0,退化（超期增加）
+7,worst_delta_us,最坏预取超期量,C,跨 SSD Coflow 一致性,8431.04853333333,us,102482.9696,102482.9696,0.0,退化（超期增加）
+7,worst_delta_us,最坏预取超期量,U,Stage-0 Utility Density,11224.034133333334,us,102482.9696,102482.9696,0.0,退化（超期增加）
+7,worst_delta_us,最坏预取超期量,E,Prefetch EDF 与 deadline 保护,82827.88693333333,us,102482.9696,102482.9696,0.0,退化（超期增加）
+7,mean_actual_read_us,平均实际读取时间,C,跨 SSD Coflow 一致性,3243.679397601138,us,8022.977682582088,8022.977682582088,0.0,退化（时间变长）
+7,mean_actual_read_us,平均实际读取时间,U,Stage-0 Utility Density,1392.0041130809211,us,8022.977682582088,8022.977682582088,0.0,退化（时间变长）
+7,mean_actual_read_us,平均实际读取时间,E,Prefetch EDF 与 deadline 保护,3387.2941719000287,us,8022.977682582088,8022.977682582088,0.0,退化（时间变长）
+8,mean_gpu_utilization_percent,平均 GPU 利用率,C,跨 SSD Coflow 一致性,-0.05290222055693524,pp,5.0426041325121815,5.0426041325121815,0.0,改善
+8,mean_gpu_utilization_percent,平均 GPU 利用率,U,Stage-0 Utility Density,0.9959568129149853,pp,5.0426041325121815,5.0426041325121815,0.0,改善
+8,mean_gpu_utilization_percent,平均 GPU 利用率,E,Prefetch EDF 与 deadline 保护,4.099549540154132,pp,5.0426041325121815,5.0426041325121815,0.0,改善
+8,min_gpu_utilization_percent,最低 GPU 利用率,C,跨 SSD Coflow 一致性,-4.197431897165217,pp,1.0403195460177965,1.0403195460177965,0.0,改善
+8,min_gpu_utilization_percent,最低 GPU 利用率,U,Stage-0 Utility Density,-4.111961953086774,pp,1.0403195460177965,1.0403195460177965,0.0,改善
+8,min_gpu_utilization_percent,最低 GPU 利用率,E,Prefetch EDF 与 deadline 保护,9.349713396269786,pp,1.0403195460177965,1.0403195460177965,0.0,改善
+8,p95_gpu_utilization_percent,P95 GPU 利用率,C,跨 SSD Coflow 一致性,0.3646892527062917,pp,0.6505158124679014,0.6505158124679014,0.0,改善
+8,p95_gpu_utilization_percent,P95 GPU 利用率,U,Stage-0 Utility Density,0.38283196659548224,pp,0.6505158124679014,0.6505158124679014,0.0,改善
+8,p95_gpu_utilization_percent,P95 GPU 利用率,E,Prefetch EDF 与 deadline 保护,-0.0970054068338726,pp,0.6505158124679014,0.6505158124679014,0.0,改善
+8,max_gpu_utilization_percent,最高 GPU 利用率,C,跨 SSD Coflow 一致性,0.15638250206782564,pp,-0.11672315687305002,-0.11672315687305002,0.0,改善
+8,max_gpu_utilization_percent,最高 GPU 利用率,U,Stage-0 Utility Density,-0.16433288423773953,pp,-0.11672315687305002,-0.11672315687305002,0.0,改善
+8,max_gpu_utilization_percent,最高 GPU 利用率,E,Prefetch EDF 与 deadline 保护,-0.10877277470313612,pp,-0.11672315687305002,-0.11672315687305002,0.0,改善
+8,mean_ttft_us,平均 TTFT,C,跨 SSD Coflow 一致性,1176.4882081130636,us,-17118.444096634572,-17118.444096634572,0.0,退化（时间变长）
+8,mean_ttft_us,平均 TTFT,U,Stage-0 Utility Density,-7679.706027443957,us,-17118.444096634572,-17118.444096634572,0.0,退化（时间变长）
+8,mean_ttft_us,平均 TTFT,E,Prefetch EDF 与 deadline 保护,-10615.226277303678,us,-17118.444096634572,-17118.444096634572,0.0,退化（时间变长）
+8,p95_ttft_us,P95 TTFT,C,跨 SSD Coflow 一致性,-1890.6367999999784,us,8878.654482051381,8878.654482051381,0.0,退化（时间变长）
+8,p95_ttft_us,P95 TTFT,U,Stage-0 Utility Density,10769.29128205136,us,8878.654482051381,8878.654482051381,0.0,退化（时间变长）
+8,p95_ttft_us,P95 TTFT,E,Prefetch EDF 与 deadline 保护,0.0,us,8878.654482051381,8878.654482051381,0.0,退化（时间变长）
+8,max_ttft_us,Max TTFT,C,跨 SSD Coflow 一致性,1023.3813333334014,us,5041.53600000008,5041.53600000008,0.0,退化（时间变长）
+8,max_ttft_us,Max TTFT,U,Stage-0 Utility Density,-1211.9773128204786,us,5041.53600000008,5041.53600000008,0.0,退化（时间变长）
+8,max_ttft_us,Max TTFT,E,Prefetch EDF 与 deadline 保护,5230.131979487157,us,5041.53600000008,5041.53600000008,0.0,退化（时间变长）
+8,late_gpu_layer_count,逾期 GPU layer 数,C,跨 SSD Coflow 一致性,-8.0,count,6.0,6.0,0.0,退化（数量增加）
+8,late_gpu_layer_count,逾期 GPU layer 数,U,Stage-0 Utility Density,16.5,count,6.0,6.0,0.0,退化（数量增加）
+8,late_gpu_layer_count,逾期 GPU layer 数,E,Prefetch EDF 与 deadline 保护,-2.5,count,6.0,6.0,0.0,退化（数量增加）
+8,p95_delta_us,P95 预取超期量,C,跨 SSD Coflow 一致性,1188.494608547011,us,-2794.099102564098,-2794.099102564098,0.0,退化（超期增加）
+8,p95_delta_us,P95 预取超期量,U,Stage-0 Utility Density,-15179.729501709406,us,-2794.099102564098,-2794.099102564098,0.0,退化（超期增加）
+8,p95_delta_us,P95 预取超期量,E,Prefetch EDF 与 deadline 保护,11197.135790598297,us,-2794.099102564098,-2794.099102564098,0.0,退化（超期增加）
+8,worst_delta_us,最坏预取超期量,C,跨 SSD Coflow 一致性,28833.885866666667,us,81202.61120000001,81202.61120000001,0.0,退化（超期增加）
+8,worst_delta_us,最坏预取超期量,U,Stage-0 Utility Density,1668.689066666672,us,81202.61120000001,81202.61120000001,0.0,退化（超期增加）
+8,worst_delta_us,最坏预取超期量,E,Prefetch EDF 与 deadline 保护,50700.03626666667,us,81202.61120000001,81202.61120000001,0.0,退化（超期增加）
+8,mean_actual_read_us,平均实际读取时间,C,跨 SSD Coflow 一致性,3284.7119499248965,us,8407.105343639843,8407.105343639843,0.0,退化（时间变长）
+8,mean_actual_read_us,平均实际读取时间,U,Stage-0 Utility Density,738.5358050931427,us,8407.105343639843,8407.105343639843,0.0,退化（时间变长）
+8,mean_actual_read_us,平均实际读取时间,E,Prefetch EDF 与 deadline 保护,4383.857588621804,us,8407.105343639843,8407.105343639843,0.0,退化（时间变长）
+9,mean_gpu_utilization_percent,平均 GPU 利用率,C,跨 SSD Coflow 一致性,-0.1747185925800565,pp,4.473562927919531,4.473562927919531,0.0,改善
+9,mean_gpu_utilization_percent,平均 GPU 利用率,U,Stage-0 Utility Density,0.779184061874119,pp,4.473562927919531,4.473562927919531,0.0,改善
+9,mean_gpu_utilization_percent,平均 GPU 利用率,E,Prefetch EDF 与 deadline 保护,3.8690974586254683,pp,4.473562927919531,4.473562927919531,0.0,改善
+9,min_gpu_utilization_percent,最低 GPU 利用率,C,跨 SSD Coflow 一致性,-4.324939844092709,pp,1.9933787434944108,1.9933787434944108,0.0,改善
+9,min_gpu_utilization_percent,最低 GPU 利用率,U,Stage-0 Utility Density,-4.572664210801281,pp,1.9933787434944108,1.9933787434944108,0.0,改善
+9,min_gpu_utilization_percent,最低 GPU 利用率,E,Prefetch EDF 与 deadline 保护,10.8909827983884,pp,1.9933787434944108,1.9933787434944108,0.0,改善
+9,p95_gpu_utilization_percent,P95 GPU 利用率,C,跨 SSD Coflow 一致性,0.3999923450020262,pp,0.7270166435595797,0.7270166435595797,0.0,改善
+9,p95_gpu_utilization_percent,P95 GPU 利用率,U,Stage-0 Utility Density,0.30506657826023087,pp,0.7270166435595797,0.7270166435595797,0.0,改善
+9,p95_gpu_utilization_percent,P95 GPU 利用率,E,Prefetch EDF 与 deadline 保护,0.02195772029732268,pp,0.7270166435595797,0.7270166435595797,0.0,改善
+9,max_gpu_utilization_percent,最高 GPU 利用率,C,跨 SSD Coflow 一致性,0.1557450413283803,pp,0.05641233711463656,0.05641233711463656,0.0,改善
+9,max_gpu_utilization_percent,最高 GPU 利用率,U,Stage-0 Utility Density,-0.09298821525062095,pp,0.05641233711463656,0.05641233711463656,0.0,改善
+9,max_gpu_utilization_percent,最高 GPU 利用率,E,Prefetch EDF 与 deadline 保护,-0.006344488963122785,pp,0.05641233711463656,0.05641233711463656,0.0,改善
+9,mean_ttft_us,平均 TTFT,C,跨 SSD Coflow 一致性,766.8664944111564,us,-13937.039088942169,-13937.039088942169,0.0,退化（时间变长）
+9,mean_ttft_us,平均 TTFT,U,Stage-0 Utility Density,-6171.4083397436,us,-13937.039088942169,-13937.039088942169,0.0,退化（时间变长）
+9,mean_ttft_us,平均 TTFT,E,Prefetch EDF 与 deadline 保护,-8532.497243609725,us,-13937.039088942169,-13937.039088942169,0.0,退化（时间变长）
+9,p95_ttft_us,P95 TTFT,C,跨 SSD Coflow 一致性,-2372.825599999982,us,4370.929682051414,4370.929682051414,0.0,退化（时间变长）
+9,p95_ttft_us,P95 TTFT,U,Stage-0 Utility Density,6743.755282051396,us,4370.929682051414,4370.929682051414,0.0,退化（时间变长）
+9,p95_ttft_us,P95 TTFT,E,Prefetch EDF 与 deadline 保护,0.0,us,4370.929682051414,4370.929682051414,0.0,退化（时间变长）
+9,max_ttft_us,Max TTFT,C,跨 SSD Coflow 一致性,-1637.405866666697,us,787.1999999999534,787.1999999999534,0.0,退化（时间变长）
+9,max_ttft_us,Max TTFT,U,Stage-0 Utility Density,2255.6373333333177,us,787.1999999999534,787.1999999999534,0.0,退化（时间变长）
+9,max_ttft_us,Max TTFT,E,Prefetch EDF 与 deadline 保护,168.96853333333274,us,787.1999999999534,787.1999999999534,0.0,退化（时间变长）
+9,late_gpu_layer_count,逾期 GPU layer 数,C,跨 SSD Coflow 一致性,14.833333333333334,count,-19.0,-19.0,0.0,退化（数量增加）
+9,late_gpu_layer_count,逾期 GPU layer 数,U,Stage-0 Utility Density,-10.666666666666666,count,-19.0,-19.0,0.0,退化（数量增加）
+9,late_gpu_layer_count,逾期 GPU layer 数,E,Prefetch EDF 与 deadline 保护,-23.166666666666668,count,-19.0,-19.0,0.0,退化（数量增加）
+9,p95_delta_us,P95 预取超期量,C,跨 SSD Coflow 一致性,640.5263273504291,us,-2308.633600000001,-2308.633600000001,0.0,退化（超期增加）
+9,p95_delta_us,P95 预取超期量,U,Stage-0 Utility Density,-10687.185623931624,us,-2308.633600000001,-2308.633600000001,0.0,退化（超期增加）
+9,p95_delta_us,P95 预取超期量,E,Prefetch EDF 与 deadline 保护,7738.025696581193,us,-2308.633600000001,-2308.633600000001,0.0,退化（超期增加）
+9,worst_delta_us,最坏预取超期量,C,跨 SSD Coflow 一致性,22563.421866666667,us,57767.756799999996,57767.756799999996,0.0,退化（超期增加）
+9,worst_delta_us,最坏预取超期量,U,Stage-0 Utility Density,-1155.7717333333374,us,57767.756799999996,57767.756799999996,0.0,退化（超期增加）
+9,worst_delta_us,最坏预取超期量,E,Prefetch EDF 与 deadline 保护,36360.10666666667,us,57767.756799999996,57767.756799999996,0.0,退化（超期增加）
+9,mean_actual_read_us,平均实际读取时间,C,跨 SSD Coflow 一致性,3092.7504399255527,us,8267.37927937707,8267.37927937707,0.0,退化（时间变长）
+9,mean_actual_read_us,平均实际读取时间,U,Stage-0 Utility Density,453.65030433864985,us,8267.37927937707,8267.37927937707,0.0,退化（时间变长）
+9,mean_actual_read_us,平均实际读取时间,E,Prefetch EDF 与 deadline 保护,4720.978535112868,us,8267.37927937707,8267.37927937707,0.0,退化（时间变长）
+10,mean_gpu_utilization_percent,平均 GPU 利用率,C,跨 SSD Coflow 一致性,-0.3376669361350011,pp,3.6879060158381094,3.6879060158381094,0.0,改善
+10,mean_gpu_utilization_percent,平均 GPU 利用率,U,Stage-0 Utility Density,0.5288255522197574,pp,3.6879060158381094,3.6879060158381094,0.0,改善
+10,mean_gpu_utilization_percent,平均 GPU 利用率,E,Prefetch EDF 与 deadline 保护,3.496747399753353,pp,3.6879060158381094,3.6879060158381094,0.0,改善
+10,min_gpu_utilization_percent,最低 GPU 利用率,C,跨 SSD Coflow 一致性,-2.091785490408265,pp,10.761463353184519,10.761463353184519,0.0,改善
+10,min_gpu_utilization_percent,最低 GPU 利用率,U,Stage-0 Utility Density,-2.6269140422452253,pp,10.761463353184519,10.761463353184519,0.0,改善
+10,min_gpu_utilization_percent,最低 GPU 利用率,E,Prefetch EDF 与 deadline 保护,15.48016288583801,pp,10.761463353184519,10.761463353184519,0.0,改善
+10,p95_gpu_utilization_percent,P95 GPU 利用率,C,跨 SSD Coflow 一致性,0.35167525131048666,pp,0.5867564458987999,0.5867564458987999,0.0,改善
+10,p95_gpu_utilization_percent,P95 GPU 利用率,U,Stage-0 Utility Density,0.23585022910567707,pp,0.5867564458987999,0.5867564458987999,0.0,改善
+10,p95_gpu_utilization_percent,P95 GPU 利用率,E,Prefetch EDF 与 deadline 保护,-0.0007690345173638017,pp,0.5867564458987999,0.5867564458987999,0.0,改善
+10,max_gpu_utilization_percent,最高 GPU 利用率,C,跨 SSD Coflow 一致性,0.1083905381157777,pp,0.07229193279117396,0.07229193279117396,0.0,改善
+10,max_gpu_utilization_percent,最高 GPU 利用率,U,Stage-0 Utility Density,-0.03609860532460374,pp,0.07229193279117396,0.07229193279117396,0.0,改善
+10,max_gpu_utilization_percent,最高 GPU 利用率,E,Prefetch EDF 与 deadline 保护,0.0,pp,0.07229193279117396,0.07229193279117396,0.0,改善
+10,mean_ttft_us,平均 TTFT,C,跨 SSD Coflow 一致性,896.3196212540012,us,-10808.168196995219,-10808.168196995219,0.0,退化（时间变长）
+10,mean_ttft_us,平均 TTFT,U,Stage-0 Utility Density,-5076.17146274039,us,-10808.168196995219,-10808.168196995219,0.0,退化（时间变长）
+10,mean_ttft_us,平均 TTFT,E,Prefetch EDF 与 deadline 保护,-6628.3163555088295,us,-10808.168196995219,-10808.168196995219,0.0,退化（时间变长）
+10,p95_ttft_us,P95 TTFT,C,跨 SSD Coflow 一致性,-1560.511999999988,us,3563.1728820513235,3563.1728820513235,0.0,退化（时间变长）
+10,p95_ttft_us,P95 TTFT,U,Stage-0 Utility Density,5123.684882051311,us,3563.1728820513235,3563.1728820513235,0.0,退化（时间变长）
+10,p95_ttft_us,P95 TTFT,E,Prefetch EDF 与 deadline 保护,0.0,us,3563.1728820513235,3563.1728820513235,0.0,退化（时间变长）
+10,max_ttft_us,Max TTFT,C,跨 SSD Coflow 一致性,-1633.8943999999901,us,4397.695999999996,4397.695999999996,0.0,退化（时间变长）
+10,max_ttft_us,Max TTFT,U,Stage-0 Utility Density,6031.590399999986,us,4397.695999999996,4397.695999999996,0.0,退化（时间变长）
+10,max_ttft_us,Max TTFT,E,Prefetch EDF 与 deadline 保护,0.0,us,4397.695999999996,4397.695999999996,0.0,退化（时间变长）
+10,late_gpu_layer_count,逾期 GPU layer 数,C,跨 SSD Coflow 一致性,31.166666666666668,count,-8.0,-8.0,0.0,退化（数量增加）
+10,late_gpu_layer_count,逾期 GPU layer 数,U,Stage-0 Utility Density,-11.333333333333334,count,-8.0,-8.0,0.0,退化（数量增加）
+10,late_gpu_layer_count,逾期 GPU layer 数,E,Prefetch EDF 与 deadline 保护,-27.833333333333336,count,-8.0,-8.0,0.0,退化（数量增加）
+10,p95_delta_us,P95 预取超期量,C,跨 SSD Coflow 一致性,934.1235282051251,us,-1332.4390153846252,-1332.4390153846252,0.0,退化（超期增加）
+10,p95_delta_us,P95 预取超期量,U,Stage-0 Utility Density,-9367.649271794873,us,-1332.4390153846252,-1332.4390153846252,0.0,退化（超期增加）
+10,p95_delta_us,P95 预取超期量,E,Prefetch EDF 与 deadline 保护,7101.086728205122,us,-1332.4390153846252,-1332.4390153846252,0.0,退化（超期增加）
+10,worst_delta_us,最坏预取超期量,C,跨 SSD Coflow 一致性,5243.980799999998,us,7222.911999999997,7222.911999999996,9.094947017729282e-13,退化（超期增加）
+10,worst_delta_us,最坏预取超期量,U,Stage-0 Utility Density,-11690.291200000001,us,7222.911999999997,7222.911999999996,9.094947017729282e-13,退化（超期增加）
+10,worst_delta_us,最坏预取超期量,E,Prefetch EDF 与 deadline 保护,13669.222399999999,us,7222.911999999997,7222.911999999996,9.094947017729282e-13,退化（超期增加）
+10,mean_actual_read_us,平均实际读取时间,C,跨 SSD Coflow 一致性,3374.531607109679,us,7715.913076642544,7715.913076642544,0.0,退化（时间变长）
+10,mean_actual_read_us,平均实际读取时间,U,Stage-0 Utility Density,-46.27624110745759,us,7715.913076642544,7715.913076642544,0.0,退化（时间变长）
+10,mean_actual_read_us,平均实际读取时间,E,Prefetch EDF 与 deadline 保护,4387.657710640323,us,7715.913076642544,7715.913076642544,0.0,退化（时间变长）

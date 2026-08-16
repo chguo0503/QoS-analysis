@@ -29,18 +29,28 @@ class HierarchicalScheduler:
         """返回组间WRR和组内WRR共同选中的queue_id。"""
 
         def group_is_eligible(group_id):
-            """返回一个组内是否至少有一个队列可以下发。"""
-            # 将队列级判定包装成组级回调，通用WRR无需理解组内结构。
-            return any(
-                is_eligible(queue_id)
-                for queue_id in self.queue_layout.group_queues[group_id]
-            )
+            """返回一个组内是否至少有一个正权重队列可以下发。"""
+            # Queue权重为0表示不参加仲裁，也不能让所在Group消耗固定的
+            # Group WRR机会；否则被完全门控的组会阻塞其他可服务组。
+            return self.queue_schedulers[group_id].has_eligible(is_eligible)
 
         # 先选出“组内确实有请求可发”的组，再只在该组内选最终队列。
         group_id = self.group_scheduler.select_next(group_is_eligible)
         if group_id is None:
             return None
         return self.queue_schedulers[group_id].select_next(is_eligible)
+
+    def set_queue_weights(self, weights):
+        """功能：动态设置全部Queue的组内WRR权重。
+
+        目的：把DPU计算的Queue优先级写入各自所在组的第二级调度器，
+        不修改第一级Group WRR权重。
+
+        输入：``queue_id -> 非负整数权重`` 部分映射；缺失Queue保持原权重。
+        输出：无；每个组内的新权重在下一次仲裁时生效。
+        """
+        for group_id in self.queue_layout.group_order:
+            self.queue_schedulers[group_id].set_weights(weights)
 
     def set_group_weights(self, weights):
         """功能：动态设置八个Group的WRR权重。

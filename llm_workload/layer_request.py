@@ -4,8 +4,8 @@
 本文件只保存LLM能够理解的信息：模型层、KV Block、GPU计算窗口和逐层完成状态。
 它不再生成DPU请求，也不知道Block位于哪个SSD；这些工作交给KV Placement Manager。
 
-模型、GPU、KV Cache和默认工作负载分别放在
-``config/layer_request.yaml`` 的四个分区中。
+模型、GPU、KV Cache和默认工作负载都来自项目唯一的
+``config/simulation_config.yaml``。
 """
 
 from copy import deepcopy
@@ -17,22 +17,31 @@ from simulation_common.config_utils import load_yaml
 
 # ------------------------------ YAML配置加载 ------------------------------
 
-CONFIG_DIR = Path(__file__).resolve().parent / "config"
-LAYER_REQUEST_CONFIG_FILE = CONFIG_DIR / "layer_request.yaml"
+PROJECT_DIR = Path(__file__).resolve().parents[1]
+SIMULATION_CONFIG_FILE = PROJECT_DIR / "config" / "simulation_config.yaml"
 
 
-def load_layer_request_config(config_file=LAYER_REQUEST_CONFIG_FILE):
-    """功能：读取LLM层请求YAML配置。
+def load_layer_request_config(config_file=SIMULATION_CONFIG_FILE):
+    """功能：从项目统一YAML读取LLM层请求配置。
 
     目的：把模型、GPU算力、KV Block布局和默认工作负载与Python逻辑分离。
 
     输入：
-        config_file: ``layer_request.yaml`` 文件路径。
+        config_file: 项目统一仿真YAML路径。
 
     输出：
-        dict: YAML中 ``layer_request`` 节点对应的完整配置。
+        dict: 模型、GPU、KV Cache和默认工作负载四个配置分区。
     """
-    return load_yaml(config_file)["layer_request"]
+    simulation_config = load_yaml(config_file)["simulation"]
+    workload = deepcopy(simulation_config["workload"])
+    # gpu_overrides用于顶层生成多GPU模板，不属于单次LLM推理字段。
+    workload.pop("gpu_overrides", None)
+    return {
+        "model": simulation_config["model"],
+        "gpu": simulation_config["gpu"],
+        "kv_cache": simulation_config["kv_cache"],
+        "workload": workload,
+    }
 
 
 # 模块导入时加载一次，让现有函数默认参数和公开常量保持稳定。
@@ -51,22 +60,39 @@ KV_CACHE_BITS_PER_ELEMENT = _KV_CACHE_CONFIG["bits_per_element"]
 DEFAULT_WORKLOAD = deepcopy(_WORKLOAD_CONFIG)
 
 
-def build_scenario():
+def build_scenario(simulation_config=None):
     """功能：构造模型、KV粒度和GPU算力的独立场景字典。
 
     目的：返回值会被LLM层计划和联合仿真使用。函数每次都创建深拷贝，调用方可以为
     临时实验修改字段，而不会污染已加载的默认配置。
 
     输入：
-        无。
+        simulation_config: 可选的完整 ``simulation`` 配置；None时使用
+            模块加载的统一YAML默认值。
 
     输出：
         dict: 包含 ``model_profiles``、``gpu_estimate`` 和KV精度。
     """
+    if simulation_config is None:
+        return {
+            "kv_cache_bits_per_element": KV_CACHE_BITS_PER_ELEMENT,
+            "model_profiles": {MODEL_NAME: deepcopy(MODEL_PROFILE)},
+            "gpu_estimate": deepcopy(GPU_ESTIMATE),
+        }
+
+    model_config = simulation_config["model"]
+    model_profile = deepcopy(model_config["profile"])
+    model_profile["tokens_per_kv_block"] = simulation_config["kv_cache"][
+        "tokens_per_block"
+    ]
+    gpu_estimate = deepcopy(simulation_config["gpu"])
+    gpu_estimate["gpu_count"] = gpu_estimate.pop("count")
     return {
-        "kv_cache_bits_per_element": KV_CACHE_BITS_PER_ELEMENT,
-        "model_profiles": {MODEL_NAME: deepcopy(MODEL_PROFILE)},
-        "gpu_estimate": deepcopy(GPU_ESTIMATE),
+        "kv_cache_bits_per_element": simulation_config["kv_cache"][
+            "bits_per_element"
+        ],
+        "model_profiles": {model_config["name"]: model_profile},
+        "gpu_estimate": gpu_estimate,
     }
 
 
@@ -157,7 +183,7 @@ def build_layer_plan(
 
 
 class LLMWorkload:
-    """按层生成KV Block，并根据SSD完成时间计算当前P节点的TTFT。"""
+    """计算当前层时预取下一层KV，并据SSD屏障计算TTFT。"""
 
     def __init__(self, workload=None, scenario=None):
         """功能：创建一张GPU/P节点的独立逐层LLM工作负载。
@@ -187,6 +213,8 @@ class LLMWorkload:
         ))
         self.next_layer_position = 0
         self.next_layer_start_time_us = self.workload["arrival_time_us"]
+        self.initial_layer_read_complete = False
+        self.initial_layer_read_result = None
         self.current_layer = None
         self.request_to_layer = {}
         self.layer_results = []
@@ -220,18 +248,21 @@ class LLMWorkload:
         输出：
             bool: 当前无未完成层、仍有后续层且未产生首Token时返回True。
         """
-        has_more_layers = self.next_layer_position < len(self.layer_indexes)
+        has_more_work = (
+            not self.initial_layer_read_complete
+            or self.next_layer_position < len(self.layer_indexes)
+        )
         return (
             self.current_layer is None
-            and has_more_layers
+            and has_more_work
             and not self.is_complete()
         )
 
     def start_next_layer(self):
-        """功能：生成下一层的中立Block读取计划并登记完成关系。
+        """功能：启动当前层计算，并生成下一层的KV预取计划。
 
-        目的：在请求分散到多块SSD前建立 ``request_id -> layer`` 屏障，
-        使任意SSD返回顺序都能正确判断本层最后一个Block。
+        目的：推理启动时先读取第0层；随后第L层计算窗口与第L+1层KV读取
+        重叠，下一层只能在计算窗口和预取都完成后开始。末层不读取窗口外数据。
 
         输入：
             无；使用当前GPU的下一层位置和通用层计划。
@@ -239,44 +270,87 @@ class LLMWorkload:
         输出：
             dict: demand group、P节点、服务窗口和全部中立Block。
         """
-        layer_index = self.layer_indexes[self.next_layer_position]
-        layer_id = f"{self.workload['workload_id']}_layer_{layer_index:02d}"
         layer_start_time_us = self.next_layer_start_time_us
+        if not self.initial_layer_read_complete:
+            layer_index = None
+            layer_id = None
+            prefetch_layer_index = self.layer_indexes[0]
+            prefetch_layer_id = (
+                f"{self.workload['workload_id']}_layer_"
+                f"{prefetch_layer_index:02d}"
+            )
+            phase = "initial_layer_read"
+            compute_done_time_us = layer_start_time_us
+        else:
+            layer_index = self.layer_indexes[self.next_layer_position]
+            layer_id = (
+                f"{self.workload['workload_id']}_layer_{layer_index:02d}"
+            )
+            prefetch_position = self.next_layer_position + 1
+            prefetch_layer_index = (
+                self.layer_indexes[prefetch_position]
+                if prefetch_position < len(self.layer_indexes)
+                else None
+            )
+            prefetch_layer_id = (
+                None
+                if prefetch_layer_index is None
+                else (
+                    f"{self.workload['workload_id']}_layer_"
+                    f"{prefetch_layer_index:02d}"
+                )
+            )
+            phase = "compute_and_prefetch"
+            compute_done_time_us = (
+                layer_start_time_us + self.layer_plan["compute_time_us"]
+            )
+
         layer_state = {
+            "phase": phase,
             "layer_request_id": layer_id,
             "layer_index": layer_index,
+            "prefetch_layer_request_id": prefetch_layer_id,
+            "prefetch_layer_index": prefetch_layer_index,
             "layer_start_time_us": layer_start_time_us,
-            "compute_done_time_us": (
-                layer_start_time_us + self.layer_plan["compute_time_us"]
-            ),
+            "compute_done_time_us": compute_done_time_us,
             "pending_request_ids": set(),
             "io_completion_time_us": None,
-            # 每块SSD分别保存当前GPU层的最晚Block完成时刻；
+            # 每块SSD分别保存本次读取的最晚Block完成时刻；
             # 层级读取完成时间取这些值的最大值，不求和或平均。
             "ssd_completion_times_us": {},
         }
 
         blocks = []
-        for block_index in range(self.layer_plan["block_count"]):
-            request_id = f"{layer_id}_block_{block_index:05d}"
-            layer_state["pending_request_ids"].add(request_id)
-            self.request_to_layer[request_id] = layer_state
-            blocks.append({
-                "request_id": request_id,
-                # 显式层内下标供确定性平衡Placement使用；
-                # 即使调用方改变Block遍历顺序，映射也不变。
-                "block_index": block_index,
-                "size_bytes": self.layer_plan["block_size_bytes"],
-            })
+        if prefetch_layer_id is not None:
+            for block_index in range(self.layer_plan["block_count"]):
+                request_id = (
+                    f"{prefetch_layer_id}_block_{block_index:05d}"
+                )
+                layer_state["pending_request_ids"].add(request_id)
+                self.request_to_layer[request_id] = layer_state
+                blocks.append({
+                    "request_id": request_id,
+                    # 显式层内下标供确定性平衡Placement使用；
+                    # 即使调用方改变Block遍历顺序，映射也不变。
+                    "block_index": block_index,
+                    "size_bytes": self.layer_plan["block_size_bytes"],
+                })
 
         self.current_layer = layer_state
-        self.next_layer_position += 1
+        if phase == "compute_and_prefetch":
+            self.next_layer_position += 1
+        layer_state["block_count"] = len(blocks)
         self.request_count += len(blocks)
         if not blocks:
             self._finish_layer(layer_state)
         return {
-            "demand_group_id": layer_id,
+            "demand_group_id": prefetch_layer_id,
+            "compute_layer_index": layer_index,
+            "prefetch_layer_index": prefetch_layer_index,
             "p_node_id": self.workload["p_node_id"],
+            # 控制器的价值密度使用整次推理已经等待
+            # 的时间，不能把当前层的arrival误当成推理起点。
+            "inference_arrival_time_us": self.workload["arrival_time_us"],
             "service_window_us": self.layer_plan["compute_time_us"],
             "blocks": blocks,
         }
@@ -284,8 +358,8 @@ class LLMWorkload:
     def _finish_layer(self, layer_state):
         """功能：固化一层的GPU计算和SSD IO完成结果。
 
-        目的：将层结束定义为计算与IO两者的较晚时刻，计算SSD stall，
-        并使下一层只从该屏障时刻开始。
+        目的：将层结束定义为当前层计算与下一层预取两者的较晚时刻，
+        计算预取造成的SSD stall，并使下一层只从该屏障时刻开始。
 
         输入：
             layer_state: 当前层的启动时间、计算截止和IO完成状态。
@@ -296,6 +370,27 @@ class LLMWorkload:
         io_completion_time_us = layer_state["io_completion_time_us"]
         if io_completion_time_us is None:
             io_completion_time_us = layer_state["layer_start_time_us"]
+        if layer_state["phase"] == "initial_layer_read":
+            self.initial_layer_read_complete = True
+            self.initial_layer_read_result = {
+                "layer_request_id": layer_state[
+                    "prefetch_layer_request_id"
+                ],
+                "layer_index": layer_state["prefetch_layer_index"],
+                "read_start_time_us": layer_state["layer_start_time_us"],
+                "io_completion_time_us": io_completion_time_us,
+                "ssd_completion_times_us": dict(
+                    layer_state["ssd_completion_times_us"]
+                ),
+                "read_time_us": (
+                    io_completion_time_us - layer_state["layer_start_time_us"]
+                ),
+                "block_count": layer_state["block_count"],
+            }
+            self.next_layer_start_time_us = io_completion_time_us
+            self.current_layer = None
+            return
+
         layer_end_time_us = max(
             layer_state["compute_done_time_us"],
             io_completion_time_us,
@@ -307,6 +402,10 @@ class LLMWorkload:
         self.layer_results.append({
             "layer_request_id": layer_state["layer_request_id"],
             "layer_index": layer_state["layer_index"],
+            "prefetch_layer_request_id": layer_state[
+                "prefetch_layer_request_id"
+            ],
+            "prefetch_layer_index": layer_state["prefetch_layer_index"],
             "layer_start_time_us": layer_state["layer_start_time_us"],
             "compute_done_time_us": layer_state["compute_done_time_us"],
             "io_completion_time_us": io_completion_time_us,
@@ -315,7 +414,7 @@ class LLMWorkload:
             ),
             "layer_end_time_us": layer_end_time_us,
             "ssd_stall_us": ssd_stall_us,
-            "block_count": self.layer_plan["block_count"],
+            "block_count": layer_state["block_count"],
         })
         self.next_layer_start_time_us = layer_end_time_us
         self.current_layer = None
@@ -406,7 +505,8 @@ class LLMWorkload:
             ),
             "ssd_stall_us": sum(
                 layer["ssd_stall_us"] for layer in self.layer_results
-            ),
+            ) + self.initial_layer_read_result["read_time_us"],
+            "initial_layer_read": deepcopy(self.initial_layer_read_result),
             "first_token_time_us": self.first_token_time_us,
             "ttft_us": self.ttft_us,
             "layers": list(self.layer_results),

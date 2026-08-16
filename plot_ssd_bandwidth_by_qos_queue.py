@@ -9,7 +9,6 @@ Queue。所有SSD共用同一个时间原点和窗口边界，因此不同设备
     GB/s = 窗口内NAND启动字节数 / (窗口长度us * 1000)
 """
 
-import argparse
 from pathlib import Path
 
 import matplotlib
@@ -18,67 +17,6 @@ import matplotlib
 matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt  # noqa: E402
-
-from qos_ssd_simulator import run_joint_simulation
-
-
-PROJECT_DIR = Path(__file__).resolve().parent
-DEFAULT_OUTPUT_FILE = PROJECT_DIR / "ssd_bandwidth_by_qos_queue.png"
-DEFAULT_WINDOW_US = 1000.0
-
-
-def parse_arguments():
-    """功能：读取后端SSD带宽图的命令行参数。
-
-    目的：允许用户选择时间窗口、DPU绑定策略、SSD子集和输出文件，
-    而不需要修改任何仿真原始代码。
-
-    输入：
-        无；由argparse读取当前进程命令行。
-
-    输出：
-        argparse.Namespace: 包含窗口、策略、SSD筛选、输出路径和DPI。
-    """
-    parser = argparse.ArgumentParser(
-        description=(
-            "Plot each SSD's physical NAND bandwidth attributed to QoS queues."
-        )
-    )
-    parser.add_argument(
-        "--window-us",
-        type=float,
-        default=DEFAULT_WINDOW_US,
-        help="fixed aggregation window in microseconds (default: 1000)",
-    )
-    parser.add_argument(
-        "--binding-strategy",
-        choices=("balanced_exclusive",),
-        default=None,
-        help="override the DPU queue binding strategy from YAML",
-    )
-    parser.add_argument(
-        "--storage-target",
-        action="append",
-        default=None,
-        help=(
-            "plot only this SSD ID; repeat the option to select multiple SSDs "
-            "(default: all configured SSDs)"
-        ),
-    )
-    parser.add_argument(
-        "--output",
-        type=Path,
-        default=DEFAULT_OUTPUT_FILE,
-        help="output PNG path",
-    )
-    parser.add_argument(
-        "--dpi",
-        type=int,
-        default=160,
-        help="output image resolution (default: 160)",
-    )
-    return parser.parse_args()
-
 
 def _select_ssd_results(simulation_result, requested_storage_targets=None):
     """功能：从联合仿真结果中取出需要绘图的SSD结果。
@@ -505,43 +443,3 @@ def print_summary(
                 f"peak={peak_gb_s:.3f} GB/s "
                 f"({peak_gb_s / validation['capacity_gb_s'] * 100:.2f}%)"
             )
-
-
-def main():
-    """功能：运行联合仿真、聚合分Queue后端带宽并生成PNG。
-
-    目的：提供一个不修改仿真模块的独立绘图入口，直接支持YAML中的
-    任意GPU/SSD数量和两种DPU Queue绑定策略。
-
-    输入：
-        无；使用 ``parse_arguments`` 解析的命令行参数。
-
-    输出：
-        None: 生成PNG并打印统计摘要。
-    """
-    arguments = parse_arguments()
-    simulation_result = run_joint_simulation(
-        binding_strategy=arguments.binding_strategy,
-    )
-    series_by_storage_target, validation_by_storage_target = (
-        build_storage_bandwidth_series(
-            simulation_result=simulation_result,
-            window_us=arguments.window_us,
-            requested_storage_targets=arguments.storage_target,
-        )
-    )
-    output_file = plot_storage_bandwidth(
-        series_by_storage_target=series_by_storage_target,
-        validation_by_storage_target=validation_by_storage_target,
-        output_file=arguments.output,
-        dpi=arguments.dpi,
-    )
-    print_summary(
-        series_by_storage_target,
-        validation_by_storage_target,
-        output_file,
-    )
-
-
-if __name__ == "__main__":
-    main()

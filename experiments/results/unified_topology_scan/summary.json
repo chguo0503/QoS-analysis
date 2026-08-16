@@ -1,0 +1,741 @@
+{
+  "experiment": {
+    "gpu_count": 128,
+    "inference_count_per_gpu": 1,
+    "batch_size": 1,
+    "effective_compute_tflops": 512.0,
+    "first_layer_index": 0,
+    "last_layer_index": 3,
+    "ssd_counts": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "policies": [
+      "baseline",
+      "demand_aware_fcfs_cir"
+    ],
+    "seed": 6103,
+    "input_tokens_range": [
+      100000,
+      200000
+    ],
+    "hit_ratio_range": [
+      0.5,
+      0.99
+    ],
+    "placement_strategy": "random",
+    "queue_binding_strategy": "balanced_exclusive",
+    "backend_execution_mode": "batched_exact",
+    "backend_batch_commands": 32
+  },
+  "topologies": {
+    "1_ssd": {
+      "baseline": {
+        "late_gpu_layer_count": 510,
+        "p95_delta_us": 552922.9357641025,
+        "worst_delta_us": 706325.528,
+        "mean_actual_read_us": 353944.4324,
+        "mean_ttft_us": 1491869.9303798075,
+        "p95_ttft_us": 1719904.9884461537,
+        "max_ttft_us": 1741571.181025641,
+        "mean_gpu_utilization_percent": 21.24281367996627,
+        "min_gpu_utilization_percent": 0.939300430400382,
+        "last_completion_by_ssd_us": {
+          "SSD0": 1681488.92
+        },
+        "overall_last_completion_us": 1681488.92,
+        "request_count": 456116,
+        "byte_count": 67257040896,
+        "cir_dispatch_count": 0,
+        "excess_dispatch_count": 456116,
+        "processed_event_count": 1390514,
+        "wall_time_seconds": 68.46747568901628
+      },
+      "demand_aware_fcfs_cir": {
+        "late_gpu_layer_count": 510,
+        "p95_delta_us": 388708.9904,
+        "worst_delta_us": 516262.1168,
+        "mean_actual_read_us": 375792.5155999995,
+        "mean_ttft_us": 1580008.165312019,
+        "p95_ttft_us": 1839574.8425128206,
+        "max_ttft_us": 1923177.1306153846,
+        "mean_gpu_utilization_percent": 18.36647266823158,
+        "min_gpu_utilization_percent": 1.08358512281129,
+        "last_completion_by_ssd_us": {
+          "SSD0": 1681488.92
+        },
+        "overall_last_completion_us": 1681488.92,
+        "request_count": 456116,
+        "byte_count": 67257040896,
+        "cir_dispatch_count": 438388,
+        "excess_dispatch_count": 17728,
+        "processed_event_count": 1391026,
+        "wall_time_seconds": 61.22679290198721
+      },
+      "comparisons": {
+        "demand_aware_fcfs_cir": {
+          "mean_gpu_utilization_gain_percentage_points": -2.8763410117346915,
+          "target_mean_gpu_utilization_percent": 46.242813679966275,
+          "meets_target": false,
+          "min_gpu_utilization_change_percentage_points": 0.14428469241090802,
+          "mean_ttft_change_us": 88138.23493221146,
+          "mean_ttft_change_percent": 5.907903439663322,
+          "p95_ttft_change_us": 119669.85406666691,
+          "p95_ttft_change_percent": 6.957934006272202,
+          "max_ttft_change_us": 181605.9495897435,
+          "max_ttft_change_percent": 10.427707553290624
+        }
+      },
+      "paired": {
+        "mean_gpu_utilization_gain_percentage_points": -2.8763410117346915
+      }
+    },
+    "2_ssd": {
+      "baseline": {
+        "late_gpu_layer_count": 474,
+        "p95_delta_us": 276805.89466666663,
+        "worst_delta_us": 354230.0912,
+        "mean_actual_read_us": 178104.54722432882,
+        "mean_ttft_us": 792142.4925255607,
+        "p95_ttft_us": 922728.2896307693,
+        "max_ttft_us": 941173.2058666667,
+        "mean_gpu_utilization_percent": 39.009348609972164,
+        "min_gpu_utilization_percent": 1.8754990783999397,
+        "last_completion_by_ssd_us": {
+          "SSD0": 840868.0688,
+          "SSD1": 840683.7488
+        },
+        "overall_last_completion_us": 840868.0688,
+        "request_count": 456116,
+        "byte_count": 67257040896,
+        "cir_dispatch_count": 0,
+        "excess_dispatch_count": 456116,
+        "processed_event_count": 1390894,
+        "wall_time_seconds": 70.2649182229652
+      },
+      "demand_aware_fcfs_cir": {
+        "late_gpu_layer_count": 489,
+        "p95_delta_us": 208584.1136,
+        "worst_delta_us": 331938.4304,
+        "mean_actual_read_us": 185739.5228,
+        "mean_ttft_us": 835359.8376984377,
+        "p95_ttft_us": 1129955.9330256411,
+        "max_ttft_us": 1199985.253569231,
+        "mean_gpu_utilization_percent": 33.59569757679794,
+        "min_gpu_utilization_percent": 2.5050751907599302,
+        "last_completion_by_ssd_us": {
+          "SSD0": 840868.0688,
+          "SSD1": 840683.7488
+        },
+        "overall_last_completion_us": 840868.0688,
+        "request_count": 456116,
+        "byte_count": 67257040896,
+        "cir_dispatch_count": 427603,
+        "excess_dispatch_count": 28513,
+        "processed_event_count": 1391918,
+        "wall_time_seconds": 62.37674809398595
+      },
+      "comparisons": {
+        "demand_aware_fcfs_cir": {
+          "mean_gpu_utilization_gain_percentage_points": -5.413651033174226,
+          "target_mean_gpu_utilization_percent": 64.00934860997216,
+          "meets_target": false,
+          "min_gpu_utilization_change_percentage_points": 0.6295761123599906,
+          "mean_ttft_change_us": 43217.345172877074,
+          "mean_ttft_change_percent": 5.455753930721315,
+          "p95_ttft_change_us": 207227.64339487185,
+          "p95_ttft_change_percent": 22.458143499403732,
+          "max_ttft_change_us": 258812.04770256416,
+          "max_ttft_change_percent": 27.49887545557999
+        }
+      },
+      "paired": {
+        "mean_gpu_utilization_gain_percentage_points": -5.413651033174226
+      }
+    },
+    "3_ssd": {
+      "baseline": {
+        "late_gpu_layer_count": 397,
+        "p95_delta_us": 182443.8512,
+        "worst_delta_us": 236353.7648,
+        "mean_actual_read_us": 117324.51114966943,
+        "mean_ttft_us": 578956.1639881813,
+        "p95_ttft_us": 805220.6533333334,
+        "max_ttft_us": 873111.3215384616,
+        "mean_gpu_utilization_percent": 51.25813315353398,
+        "min_gpu_utilization_percent": 2.795940247160263,
+        "last_completion_by_ssd_us": {
+          "SSD0": 563075.7104,
+          "SSD1": 560738.7616,
+          "SSD2": 560860.4128
+        },
+        "overall_last_completion_us": 563075.7104,
+        "request_count": 456116,
+        "byte_count": 67257040896,
+        "cir_dispatch_count": 0,
+        "excess_dispatch_count": 456116,
+        "processed_event_count": 1391264,
+        "wall_time_seconds": 70.88113372499356
+      },
+      "demand_aware_fcfs_cir": {
+        "late_gpu_layer_count": 439,
+        "p95_delta_us": 163713.2528,
+        "worst_delta_us": 265151.9216,
+        "mean_actual_read_us": 120994.15994393038,
+        "mean_ttft_us": 599849.0258772436,
+        "p95_ttft_us": 927832.6523384615,
+        "max_ttft_us": 1027606.9243538461,
+        "mean_gpu_utilization_percent": 45.895049003382894,
+        "min_gpu_utilization_percent": 4.2764900840432185,
+        "last_completion_by_ssd_us": {
+          "SSD0": 670617.6701333333,
+          "SSD1": 670709.8301333333,
+          "SSD2": 670621.3565333333
+        },
+        "overall_last_completion_us": 670709.8301333333,
+        "request_count": 456116,
+        "byte_count": 67257040896,
+        "cir_dispatch_count": 409615,
+        "excess_dispatch_count": 46501,
+        "processed_event_count": 1392700,
+        "wall_time_seconds": 63.27622799895471
+      },
+      "comparisons": {
+        "demand_aware_fcfs_cir": {
+          "mean_gpu_utilization_gain_percentage_points": -5.363084150151089,
+          "target_mean_gpu_utilization_percent": 76.25813315353398,
+          "meets_target": false,
+          "min_gpu_utilization_change_percentage_points": 1.4805498368829557,
+          "mean_ttft_change_us": 20892.861889062333,
+          "mean_ttft_change_percent": 3.608712228770542,
+          "p95_ttft_change_us": 122611.99900512805,
+          "p95_ttft_change_percent": 15.22713041419852,
+          "max_ttft_change_us": 154495.6028153845,
+          "max_ttft_change_percent": 17.69483443911325
+        }
+      },
+      "paired": {
+        "mean_gpu_utilization_gain_percentage_points": -5.363084150151089
+      }
+    },
+    "4_ssd": {
+      "baseline": {
+        "late_gpu_layer_count": 316,
+        "p95_delta_us": 137333.3744,
+        "worst_delta_us": 171856.5104,
+        "mean_actual_read_us": 84297.07848229173,
+        "mean_ttft_us": 482724.5484573719,
+        "p95_ttft_us": 774874.2085333334,
+        "max_ttft_us": 846244.8383384616,
+        "mean_gpu_utilization_percent": 59.63532746116665,
+        "min_gpu_utilization_percent": 3.7792162118343366,
+        "last_completion_by_ssd_us": {
+          "SSD0": 471829.3224,
+          "SSD1": 471656.0616,
+          "SSD2": 471692.9256,
+          "SSD3": 471641.316
+        },
+        "overall_last_completion_us": 471829.3224,
+        "request_count": 456116,
+        "byte_count": 67257040896,
+        "cir_dispatch_count": 0,
+        "excess_dispatch_count": 456116,
+        "processed_event_count": 1391574,
+        "wall_time_seconds": 70.88775015197461
+      },
+      "demand_aware_fcfs_cir": {
+        "late_gpu_layer_count": 382,
+        "p95_delta_us": 139065.9824,
+        "worst_delta_us": 234035.0192,
+        "mean_actual_read_us": 86506.1644992488,
+        "mean_ttft_us": 492569.72066939087,
+        "p95_ttft_us": 859280.3579384616,
+        "max_ttft_us": 940475.1739538462,
+        "mean_gpu_utilization_percent": 55.48619807924294,
+        "min_gpu_utilization_percent": 6.402341692007759,
+        "last_completion_by_ssd_us": {
+          "SSD0": 577058.9082,
+          "SSD1": 577007.2986,
+          "SSD2": 577162.1274,
+          "SSD3": 577132.6362
+        },
+        "overall_last_completion_us": 577162.1274,
+        "request_count": 456116,
+        "byte_count": 67257040896,
+        "cir_dispatch_count": 381303,
+        "excess_dispatch_count": 74813,
+        "processed_event_count": 1393334,
+        "wall_time_seconds": 64.72636330599198
+      },
+      "comparisons": {
+        "demand_aware_fcfs_cir": {
+          "mean_gpu_utilization_gain_percentage_points": -4.149129381923714,
+          "target_mean_gpu_utilization_percent": 84.63532746116665,
+          "meets_target": false,
+          "min_gpu_utilization_change_percentage_points": 2.6231254801734227,
+          "mean_ttft_change_us": 9845.17221201898,
+          "mean_ttft_change_percent": 2.0395010453644624,
+          "p95_ttft_change_us": 84406.1494051282,
+          "p95_ttft_change_percent": 10.892884093392462,
+          "max_ttft_change_us": 94230.33561538463,
+          "max_ttft_change_percent": 11.135114962756978
+        }
+      },
+      "paired": {
+        "mean_gpu_utilization_gain_percentage_points": -4.149129381923714
+      }
+    },
+    "5_ssd": {
+      "baseline": {
+        "late_gpu_layer_count": 270,
+        "p95_delta_us": 107724.2096,
+        "worst_delta_us": 139121.2784,
+        "mean_actual_read_us": 62270.67944784661,
+        "mean_ttft_us": 432461.17335629015,
+        "p95_ttft_us": 750484.9861333334,
+        "max_ttft_us": 824745.7535384615,
+        "mean_gpu_utilization_percent": 65.10560888788942,
+        "min_gpu_utilization_percent": 5.0311259117036595,
+        "last_completion_by_ssd_us": {
+          "SSD0": 450031.6392,
+          "SSD1": 450090.6216,
+          "SSD2": 450020.58,
+          "SSD3": 450068.5032,
+          "SSD4": 450120.1128
+        },
+        "overall_last_completion_us": 450120.1128,
+        "request_count": 456116,
+        "byte_count": 67257040896,
+        "cir_dispatch_count": 0,
+        "excess_dispatch_count": 456116,
+        "processed_event_count": 1391757,
+        "wall_time_seconds": 71.67161192599451
+      },
+      "demand_aware_fcfs_cir": {
+        "late_gpu_layer_count": 330,
+        "p95_delta_us": 123468.824,
+        "worst_delta_us": 211522.1744,
+        "mean_actual_read_us": 64698.81568527646,
+        "mean_ttft_us": 440590.21019018436,
+        "p95_ttft_us": 841694.574851282,
+        "max_ttft_us": 935746.9439384616,
+        "mean_gpu_utilization_percent": 62.23806527610718,
+        "min_gpu_utilization_percent": 8.785046384953464,
+        "last_completion_by_ssd_us": {
+          "SSD0": 561032.8296,
+          "SSD1": 561091.812,
+          "SSD2": 561021.7704,
+          "SSD3": 561069.6936,
+          "SSD4": 561121.3032
+        },
+        "overall_last_completion_us": 561121.3032,
+        "request_count": 456116,
+        "byte_count": 67257040896,
+        "cir_dispatch_count": 344505,
+        "excess_dispatch_count": 111611,
+        "processed_event_count": 1393719,
+        "wall_time_seconds": 66.02845609700307
+      },
+      "comparisons": {
+        "demand_aware_fcfs_cir": {
+          "mean_gpu_utilization_gain_percentage_points": -2.8675436117822386,
+          "target_mean_gpu_utilization_percent": 90.10560888788942,
+          "meets_target": false,
+          "min_gpu_utilization_change_percentage_points": 3.7539204732498046,
+          "mean_ttft_change_us": 8129.036833894206,
+          "mean_ttft_change_percent": 1.8797148356245539,
+          "p95_ttft_change_us": 91209.58871794865,
+          "p95_ttft_change_percent": 12.153419509147126,
+          "max_ttft_change_us": 111001.19040000008,
+          "max_ttft_change_percent": 13.458837456727032
+        }
+      },
+      "paired": {
+        "mean_gpu_utilization_gain_percentage_points": -2.8675436117822386
+      }
+    },
+    "6_ssd": {
+      "baseline": {
+        "late_gpu_layer_count": 234,
+        "p95_delta_us": 91024.8176,
+        "worst_delta_us": 118506.9296,
+        "mean_actual_read_us": 46114.54621418268,
+        "mean_ttft_us": 402048.5253638622,
+        "p95_ttft_us": 739130.8741333334,
+        "max_ttft_us": 813568.5887384616,
+        "mean_gpu_utilization_percent": 69.08870342505209,
+        "min_gpu_utilization_percent": 6.735228200523327,
+        "last_completion_by_ssd_us": {
+          "SSD0": 438832.356,
+          "SSD1": 438754.9416,
+          "SSD2": 438839.7288,
+          "SSD3": 438795.492,
+          "SSD4": 438828.6696,
+          "SSD5": 438725.4504
+        },
+        "overall_last_completion_us": 438839.7288,
+        "request_count": 456116,
+        "byte_count": 67257040896,
+        "cir_dispatch_count": 0,
+        "excess_dispatch_count": 456116,
+        "processed_event_count": 1391717,
+        "wall_time_seconds": 71.94511021202197
+      },
+      "demand_aware_fcfs_cir": {
+        "late_gpu_layer_count": 288,
+        "p95_delta_us": 119236.8368,
+        "worst_delta_us": 183899.9792,
+        "mean_actual_read_us": 49918.10722581128,
+        "mean_ttft_us": 412675.2673417867,
+        "p95_ttft_us": 836099.3661333334,
+        "max_ttft_us": 929222.0159384615,
+        "mean_gpu_utilization_percent": 67.08573798030254,
+        "min_gpu_utilization_percent": 12.376060223117104,
+        "last_completion_by_ssd_us": {
+          "SSD0": 554485.7832,
+          "SSD1": 554408.3688,
+          "SSD2": 554493.156,
+          "SSD3": 554448.9192,
+          "SSD4": 554482.0968,
+          "SSD5": 554378.8776
+        },
+        "overall_last_completion_us": 554493.156,
+        "request_count": 456116,
+        "byte_count": 67257040896,
+        "cir_dispatch_count": 309694,
+        "excess_dispatch_count": 146422,
+        "processed_event_count": 1393941,
+        "wall_time_seconds": 68.77365205995739
+      },
+      "comparisons": {
+        "demand_aware_fcfs_cir": {
+          "mean_gpu_utilization_gain_percentage_points": -2.002965444749549,
+          "target_mean_gpu_utilization_percent": 94.08870342505209,
+          "meets_target": false,
+          "min_gpu_utilization_change_percentage_points": 5.640832022593777,
+          "mean_ttft_change_us": 10626.741977924481,
+          "mean_ttft_change_percent": 2.643149099553856,
+          "p95_ttft_change_us": 96968.49199999997,
+          "p95_ttft_change_percent": 13.119258766412672,
+          "max_ttft_change_us": 115653.42719999992,
+          "max_ttft_change_percent": 14.215571840025781
+        }
+      },
+      "paired": {
+        "mean_gpu_utilization_gain_percentage_points": -2.002965444749549
+      }
+    },
+    "7_ssd": {
+      "baseline": {
+        "late_gpu_layer_count": 215,
+        "p95_delta_us": 76463.5376,
+        "worst_delta_us": 100487.8064,
+        "mean_actual_read_us": 35325.18659272836,
+        "mean_ttft_us": 382126.4474885417,
+        "p95_ttft_us": 728307.6037333334,
+        "max_ttft_us": 807552.3839384615,
+        "mean_gpu_utilization_percent": 72.24101570402232,
+        "min_gpu_utilization_percent": 8.64403814525402,
+        "last_completion_by_ssd_us": {
+          "SSD0": 432723.9912,
+          "SSD1": 432749.796,
+          "SSD2": 432687.1272,
+          "SSD3": 432683.4408,
+          "SSD4": 432720.3048,
+          "SSD5": 432672.3816,
+          "SSD6": 432757.1688
+        },
+        "overall_last_completion_us": 432757.1688,
+        "request_count": 456116,
+        "byte_count": 67257040896,
+        "cir_dispatch_count": 0,
+        "excess_dispatch_count": 456116,
+        "processed_event_count": 1391319,
+        "wall_time_seconds": 73.8459450249793
+      },
+      "demand_aware_fcfs_cir": {
+        "late_gpu_layer_count": 246,
+        "p95_delta_us": 117065.5472,
+        "worst_delta_us": 158592.8432,
+        "mean_actual_read_us": 39560.92881197917,
+        "mean_ttft_us": 396654.7087949117,
+        "p95_ttft_us": 816652.1797333334,
+        "max_ttft_us": 903019.0847384615,
+        "mean_gpu_utilization_percent": 70.6358075863438,
+        "min_gpu_utilization_percent": 16.17078499037465,
+        "last_completion_by_ssd_us": {
+          "SSD0": 528190.692,
+          "SSD1": 528216.4968,
+          "SSD2": 528153.828,
+          "SSD3": 528150.1416,
+          "SSD4": 528187.0056,
+          "SSD5": 528139.0824,
+          "SSD6": 528223.8696
+        },
+        "overall_last_completion_us": 528223.8696,
+        "request_count": 456116,
+        "byte_count": 67257040896,
+        "cir_dispatch_count": 280304,
+        "excess_dispatch_count": 175812,
+        "processed_event_count": 1394243,
+        "wall_time_seconds": 69.20526064903243
+      },
+      "comparisons": {
+        "demand_aware_fcfs_cir": {
+          "mean_gpu_utilization_gain_percentage_points": -1.6052081176785151,
+          "target_mean_gpu_utilization_percent": 97.24101570402232,
+          "meets_target": false,
+          "min_gpu_utilization_change_percentage_points": 7.526746845120629,
+          "mean_ttft_change_us": 14528.261306369968,
+          "mean_ttft_change_percent": 3.8019512655704384,
+          "p95_ttft_change_us": 88344.576,
+          "p95_ttft_change_percent": 12.130118585490832,
+          "max_ttft_change_us": 95466.70079999999,
+          "max_ttft_change_percent": 11.8217347504326
+        }
+      },
+      "paired": {
+        "mean_gpu_utilization_gain_percentage_points": -1.6052081176785151
+      }
+    },
+    "8_ssd": {
+      "baseline": {
+        "late_gpu_layer_count": 201,
+        "p95_delta_us": 68486.168,
+        "worst_delta_us": 88661.8352,
+        "mean_actual_read_us": 28355.791212690314,
+        "mean_ttft_us": 369066.0488992387,
+        "p95_ttft_us": 721790.0485333335,
+        "max_ttft_us": 801565.6703384615,
+        "mean_gpu_utilization_percent": 74.75573712970174,
+        "min_gpu_utilization_percent": 10.369127851288294,
+        "last_completion_by_ssd_us": {
+          "SSD0": 426707.7864,
+          "SSD1": 426670.9224,
+          "SSD2": 426641.4312,
+          "SSD3": 426678.2952,
+          "SSD4": 426770.4552,
+          "SSD5": 426634.0584,
+          "SSD6": 426700.4136,
+          "SSD7": 426611.94
+        },
+        "overall_last_completion_us": 426770.4552,
+        "request_count": 456116,
+        "byte_count": 67257040896,
+        "cir_dispatch_count": 0,
+        "excess_dispatch_count": 456116,
+        "processed_event_count": 1391200,
+        "wall_time_seconds": 73.31330388598144
+      },
+      "demand_aware_fcfs_cir": {
+        "late_gpu_layer_count": 222,
+        "p95_delta_us": 107296.5872,
+        "worst_delta_us": 136120.5488,
+        "mean_actual_read_us": 32874.74744040463,
+        "mean_ttft_us": 385904.8229548075,
+        "p95_ttft_us": 795149.4085333335,
+        "max_ttft_us": 878032.6655384615,
+        "mean_gpu_utilization_percent": 73.41597998630051,
+        "min_gpu_utilization_percent": 19.06374572545943,
+        "last_completion_by_ssd_us": {
+          "SSD0": 503174.7816,
+          "SSD1": 503137.9176,
+          "SSD2": 503108.4264,
+          "SSD3": 503145.2904,
+          "SSD4": 503237.4504,
+          "SSD5": 503101.0536,
+          "SSD6": 503167.4088,
+          "SSD7": 503078.9352
+        },
+        "overall_last_completion_us": 503237.4504,
+        "request_count": 456116,
+        "byte_count": 67257040896,
+        "cir_dispatch_count": 258175,
+        "excess_dispatch_count": 197941,
+        "processed_event_count": 1394271,
+        "wall_time_seconds": 70.3813444559928
+      },
+      "comparisons": {
+        "demand_aware_fcfs_cir": {
+          "mean_gpu_utilization_gain_percentage_points": -1.3397571434012292,
+          "target_mean_gpu_utilization_percent": 99.5,
+          "meets_target": false,
+          "min_gpu_utilization_change_percentage_points": 8.694617874171136,
+          "mean_ttft_change_us": 16838.774055568792,
+          "mean_ttft_change_percent": 4.562536734492764,
+          "p95_ttft_change_us": 73359.35999999999,
+          "p95_ttft_change_percent": 10.163531645949552,
+          "max_ttft_change_us": 76466.9952,
+          "max_ttft_change_percent": 9.539704359807697
+        }
+      },
+      "paired": {
+        "mean_gpu_utilization_gain_percentage_points": -1.3397571434012292
+      }
+    },
+    "9_ssd": {
+      "baseline": {
+        "late_gpu_layer_count": 188,
+        "p95_delta_us": 60685.7456,
+        "worst_delta_us": 78811.7744,
+        "mean_actual_read_us": 23840.71990260412,
+        "mean_ttft_us": 359795.4957395034,
+        "p95_ttft_us": 715125.0373333334,
+        "max_ttft_us": 792600.3455384616,
+        "mean_gpu_utilization_percent": 76.85841627279252,
+        "min_gpu_utilization_percent": 12.18638977960792,
+        "last_completion_by_ssd_us": {
+          "SSD0": 417694.5384,
+          "SSD1": 417701.9112,
+          "SSD2": 417617.124,
+          "SSD3": 417672.42,
+          "SSD4": 417576.5736,
+          "SSD5": 417720.3432,
+          "SSD6": 417687.1656,
+          "SSD7": 417731.4024,
+          "SSD8": 417653.988
+        },
+        "overall_last_completion_us": 417731.4024,
+        "request_count": 456116,
+        "byte_count": 67257040896,
+        "cir_dispatch_count": 0,
+        "excess_dispatch_count": 456116,
+        "processed_event_count": 1390780,
+        "wall_time_seconds": 75.11656511604087
+      },
+      "demand_aware_fcfs_cir": {
+        "late_gpu_layer_count": 210,
+        "p95_delta_us": 95149.8992,
+        "worst_delta_us": 119767.6784,
+        "mean_actual_read_us": 28521.539862049252,
+        "mean_ttft_us": 377008.777825761,
+        "p95_ttft_us": 776123.8981333334,
+        "max_ttft_us": 862446.5663384616,
+        "mean_gpu_utilization_percent": 75.93694840051901,
+        "min_gpu_utilization_percent": 25.354527593474558,
+        "last_completion_by_ssd_us": {
+          "SSD0": 487540.7592,
+          "SSD1": 487548.132,
+          "SSD2": 487463.3448,
+          "SSD3": 487518.6408,
+          "SSD4": 487422.7944,
+          "SSD5": 487566.564,
+          "SSD6": 487533.3864,
+          "SSD7": 487577.6232,
+          "SSD8": 487500.2088
+        },
+        "overall_last_completion_us": 487577.6232,
+        "request_count": 456116,
+        "byte_count": 67257040896,
+        "cir_dispatch_count": 241745,
+        "excess_dispatch_count": 214371,
+        "processed_event_count": 1394558,
+        "wall_time_seconds": 72.30134516395628
+      },
+      "comparisons": {
+        "demand_aware_fcfs_cir": {
+          "mean_gpu_utilization_gain_percentage_points": -0.9214678722735101,
+          "target_mean_gpu_utilization_percent": 99.5,
+          "meets_target": false,
+          "min_gpu_utilization_change_percentage_points": 13.168137813866638,
+          "mean_ttft_change_us": 17213.28208625759,
+          "mean_ttft_change_percent": 4.784184985662029,
+          "p95_ttft_change_us": 60998.860800000024,
+          "p95_ttft_change_percent": 8.529817530576446,
+          "max_ttft_change_us": 69846.22080000001,
+          "max_ttft_change_percent": 8.812287452707231
+        }
+      },
+      "paired": {
+        "mean_gpu_utilization_gain_percentage_points": -0.9214678722735101
+      }
+    },
+    "10_ssd": {
+      "baseline": {
+        "late_gpu_layer_count": 174,
+        "p95_delta_us": 54157.1312,
+        "worst_delta_us": 75243.3392,
+        "mean_actual_read_us": 20716.561750050063,
+        "mean_ttft_us": 353161.2092625799,
+        "p95_ttft_us": 710170.5157333334,
+        "max_ttft_us": 789946.1375384616,
+        "mean_gpu_utilization_percent": 78.56013152582986,
+        "min_gpu_utilization_percent": 13.506367279512657,
+        "last_completion_by_ssd_us": {
+          "SSD0": 414966.6024,
+          "SSD1": 415010.8392,
+          "SSD2": 414999.78,
+          "SSD3": 414940.7976,
+          "SSD4": 415058.7624,
+          "SSD5": 414973.9752,
+          "SSD6": 414988.7208,
+          "SSD7": 414929.7384,
+          "SSD8": 415036.644,
+          "SSD9": 414970.2888
+        },
+        "overall_last_completion_us": 415058.7624,
+        "request_count": 456116,
+        "byte_count": 67257040896,
+        "cir_dispatch_count": 0,
+        "excess_dispatch_count": 456116,
+        "processed_event_count": 1390562,
+        "wall_time_seconds": 76.02052473602816
+      },
+      "demand_aware_fcfs_cir": {
+        "late_gpu_layer_count": 194,
+        "p95_delta_us": 85727.4608,
+        "worst_delta_us": 101943.9344,
+        "mean_actual_read_us": 25058.727468579724,
+        "mean_ttft_us": 369239.57434146636,
+        "p95_ttft_us": 762753.3253333335,
+        "max_ttft_us": 845655.0143384616,
+        "mean_gpu_utilization_percent": 78.27771877437131,
+        "min_gpu_utilization_percent": 35.339502616878576,
+        "last_completion_by_ssd_us": {
+          "SSD0": 470675.4792,
+          "SSD1": 470719.716,
+          "SSD2": 470708.6568,
+          "SSD3": 470649.6744,
+          "SSD4": 470767.6392,
+          "SSD5": 470682.852,
+          "SSD6": 470697.5976,
+          "SSD7": 470638.6152,
+          "SSD8": 470745.5208,
+          "SSD9": 470679.1656
+        },
+        "overall_last_completion_us": 470767.6392,
+        "request_count": 456116,
+        "byte_count": 67257040896,
+        "cir_dispatch_count": 225586,
+        "excess_dispatch_count": 230530,
+        "processed_event_count": 1395165,
+        "wall_time_seconds": 73.41865045600571
+      },
+      "comparisons": {
+        "demand_aware_fcfs_cir": {
+          "mean_gpu_utilization_gain_percentage_points": -0.28241275145855127,
+          "target_mean_gpu_utilization_percent": 99.5,
+          "meets_target": false,
+          "min_gpu_utilization_change_percentage_points": 21.833135337365917,
+          "mean_ttft_change_us": 16078.365078886447,
+          "mean_ttft_change_percent": 4.552698500624959,
+          "p95_ttft_change_us": 52582.80960000004,
+          "p95_ttft_change_percent": 7.404251293888509,
+          "max_ttft_change_us": 55708.87679999997,
+          "max_ttft_change_percent": 7.05223738084137
+        }
+      },
+      "paired": {
+        "mean_gpu_utilization_gain_percentage_points": -0.28241275145855127
+      }
+    }
+  }
+}

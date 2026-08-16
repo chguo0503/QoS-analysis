@@ -44,8 +44,8 @@ FCP(8 KiB原子) -> BCP(4 KiB) -> NFI(4 KiB) -> NAND(4 KiB)
 - 已完成但下游暂时不能接收的数据继续占用本阶段槽位，从而逐级形成反压。
 - NAND当前是“聚合带宽 + 固定读取延迟 + 命令槽位”的抽象模型，不包含真实Channel/Die/Plane、FTL和GC。
 
-详细参数见 [ASU后端仿真参数.txt](./ASU后端仿真参数.txt)，可运行配置见
-`config/asu_backend_config.yaml`。
+详细参数见 [ASU后端仿真参数.txt](./ASU后端仿真参数.txt)，可运行配置位于项目
+唯一`config/simulation_config.yaml`的`simulation.ssd.backend`分区。
 
 ## 单SSD联合仿真的物理Root
 
@@ -63,14 +63,15 @@ QoS不再创建一个同样40 GB/s的Root令牌桶。QoS的Group/Queue CIR用于
 
 新增SSD类型时，在 `backends/` 下建立新的独立目录，并实现相同的
 `can_accept_at_us()`、`try_input_at_us()`、`process_events_at()` 和 `end()` 接口。
-当前顶层可根据 `storage_path_count` 创建任意多个独立QoS+SSD实例。
+当前顶层会根据`simulation.topology.ssd_counts`中的每个数量，创建对应数量的
+独立QoS+SSD实例。
 
 ## 运行
 
 从项目根目录执行：
 
 ```bash
-python qos_ssd_simulator.py
+python qos_ssd_simulator.py --config config/simulation_config.yaml
 ```
 
 联合模式的实际完成带宽取决于
