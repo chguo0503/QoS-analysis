@@ -959,7 +959,7 @@ completed 吞吐为 0。
 任意首张 GPU 完成第 5 次后立即全局停止的正式结果。数值为
 `mean_observation_window_gpu_utilization_percent`，单位是 `%`：
 
-| SSD 数 | Baseline | FCFS CIR-only | Utility+EDF (`L=750`) |
+| SSD 数 | Baseline | FCFS CIR-only (PIR uncapped) | Utility+EDF (`L=750`) |
 |---:|---:|---:|---:|
 | 1 | 31.1006283 | 26.1915348 | 39.4487903 |
 | 2 | 55.6788030 | 44.6272111 | 61.1034279 |
@@ -980,6 +980,7 @@ CIR-only 策略在该 workload 和早停口径下效果较差，不等于
 
 - [主指标 CSV](../experiments/results/ucm_trace_steady_4layer_ssd_sweep/steady_gpu_utilization_vs_ssd_count.csv)
 - [主曲线 PNG](../experiments/results/ucm_trace_steady_4layer_ssd_sweep/steady_gpu_utilization_vs_ssd_count.png)
+- [主曲线 SVG](../experiments/results/ucm_trace_steady_4layer_ssd_sweep/steady_gpu_utilization_vs_ssd_count.svg)
 - [总 summary](../experiments/results/ucm_trace_steady_4layer_ssd_sweep/summary.json)
 - [completed-only 诊断 CSV](../experiments/results/ucm_trace_steady_4layer_ssd_sweep/steady_completed_only_gpu_utilization_vs_ssd_count.csv)
 
@@ -1229,4 +1230,6 @@ TTFT == 最后一个回放层的 compute done - request arrival
 - Group 没有运行时 PIR bucket。
 - CIR-only 中已分配的 Queue CIR 不超过 SSD 容量总和。
 - Utility+EDF 使用当前闭环 issue time 重算 deadline。
-- 同一拓扑下各策略的输入 Entry 和字节数完全一致。
+- 同一拓扑下各策略复用同一份原始 trace 模板和单次推理输入定义。
+- 由于各策略的全局早停时刻不同，停止快照中实际 submitted Entry
+  和字节数允许不同。
