@@ -121,12 +121,61 @@ class OneGroupPerGpuBindingStrategy(BalancedExclusiveBindingStrategy):
                 ]
 
 
+class OneGroupPerGpuSlotsBindingStrategy(OneGroupPerGpuBindingStrategy):
+    """每张GPU独占一个连续Group，并按固定slot选择其中的Queue。"""
+
+    strategy_name = "one_group_per_gpu_slots"
+
+    def __init__(self):
+        """创建slot绑定表，同时保留父策略的slot-0路径绑定。"""
+        super().__init__()
+        self.slot_bindings = {}
+        self.queues_per_group = None
+
+    def prepare_bindings(self, p_node_ids, queue_ids_by_storage_target):
+        """为每个 ``(GPU, SSD, slot)`` 预绑定同一Group内的Queue。"""
+        super().prepare_bindings(
+            p_node_ids,
+            queue_ids_by_storage_target,
+        )
+        self.queues_per_group = self.queue_count // len(p_node_ids)
+        for storage_target_id, queue_ids in queue_ids_by_storage_target.items():
+            for gpu_index, p_node_id in enumerate(p_node_ids):
+                group_start = gpu_index * self.queues_per_group
+                for queue_slot in range(self.queues_per_group):
+                    self.slot_bindings[
+                        (p_node_id, storage_target_id, queue_slot)
+                    ] = queue_ids[group_start + queue_slot]
+
+    def select_queue(self, request, queue_ids):
+        """按 ``basic.queue_slot`` 选择固定Queue；未提供时使用slot 0。"""
+        basic = request["basic"]
+        queue_slot = basic.get("queue_slot", 0)
+        if not isinstance(queue_slot, int) or isinstance(queue_slot, bool):
+            raise ValueError("queue_slot must be an integer")
+        if not 0 <= queue_slot < self.queues_per_group:
+            raise ValueError(
+                "queue_slot must satisfy 0 <= queue_slot < "
+                f"{self.queues_per_group}"
+            )
+        return self.slot_bindings[
+            (
+                basic["p_node_id"],
+                basic["storage_target_id"],
+                queue_slot,
+            )
+        ]
+
+
 QUEUE_BINDING_STRATEGIES = {
     BalancedExclusiveBindingStrategy.strategy_name: (
         BalancedExclusiveBindingStrategy
     ),
     OneGroupPerGpuBindingStrategy.strategy_name: (
         OneGroupPerGpuBindingStrategy
+    ),
+    OneGroupPerGpuSlotsBindingStrategy.strategy_name: (
+        OneGroupPerGpuSlotsBindingStrategy
     ),
 }
 
