@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compare Baseline and FCFS CIR with one-inference SSD lookahead.
+"""Compare Baseline and demand-aware CIR with one-inference SSD lookahead.
 
 This experiment intentionally lives outside the original one-active-layer
 replay.  Each runtime GPU owns two fixed queues in one QoS group:
@@ -77,6 +77,7 @@ TIME_ROUNDING_TOLERANCE_NS = 1e-3
 MEASUREMENT_START_PRIORITY = 100
 MEASUREMENT_STOP_PRIORITY = -1
 DEFAULT_QUEUE_BINDING = "one_group_per_gpu_slots"
+DEFAULT_CIR_ORDERING = "shortest"
 SUPPORTED_POLICIES = ("baseline", "cir_only")
 PLOT_STEM = "pipelined_gpu_utilization_vs_ssd_count"
 
@@ -150,6 +151,148 @@ class PipelineGpuState:
     completed: bool = False
 
 
+@dataclass
+class ClientPathSubmission:
+    """One logical demand path retained by the upper-client orchestrator."""
+
+    storage_target_id: str
+    requests: tuple
+    chunk_count: int
+    next_offset: int = 0
+    next_chunk_index: int = 0
+    outstanding_request_ids: set = field(default_factory=set)
+
+
+class ClientTrafficOrchestrator:
+    """Submit at most N IOs per SSD path, replenishing after completion ACKs."""
+
+    def __init__(self, gateway, max_io_per_chunk=None):
+        if max_io_per_chunk is not None and (
+            not isinstance(max_io_per_chunk, int)
+            or isinstance(max_io_per_chunk, bool)
+            or max_io_per_chunk <= 0
+        ):
+            raise ValueError("max_io_per_chunk must be a positive integer")
+        self.gateway = gateway
+        self.max_io_per_chunk = max_io_per_chunk
+        self.pending_by_request_id = {}
+        self.demand_path_count = 0
+        self.chunk_count = 0
+        self.intermediate_replenishment_count = 0
+        self.submitted_io_count = 0
+        self.max_submitted_chunk_io_count = 0
+
+    def submit_batch(self, requests, arrival_time_us):
+        """Split one logical layer by SSD and submit the first path chunks."""
+        requests = tuple(requests)
+        if self.max_io_per_chunk is None:
+            self.submitted_io_count += len(requests)
+            return self.gateway.submit_batch(requests, arrival_time_us)
+
+        requests_by_storage_target = {}
+        for request in requests:
+            storage_target_id = request["basic"]["storage_target_id"]
+            requests_by_storage_target.setdefault(
+                storage_target_id,
+                [],
+            ).append(request)
+
+        submitted = []
+        for storage_target_id, path_requests in (
+            requests_by_storage_target.items()
+        ):
+            chunk_count = math.ceil(
+                len(path_requests) / self.max_io_per_chunk
+            )
+            state = ClientPathSubmission(
+                storage_target_id=storage_target_id,
+                requests=tuple(path_requests),
+                chunk_count=chunk_count,
+            )
+            self.demand_path_count += 1
+            submitted.extend(self._submit_next_chunk(
+                state,
+                arrival_time_us,
+            ))
+        return submitted
+
+    def _submit_next_chunk(self, state, arrival_time_us):
+        start = state.next_offset
+        stop = min(
+            start + self.max_io_per_chunk,
+            len(state.requests),
+        )
+        chunk = state.requests[start:stop]
+        chunk_index = state.next_chunk_index
+        submission_complete = chunk_index + 1 == state.chunk_count
+        for request in chunk:
+            demand = request.setdefault("demand_bw", {})
+            demand["submission_chunk_index"] = chunk_index
+            demand["submission_chunk_count"] = state.chunk_count
+            demand["submission_complete"] = submission_complete
+
+        qos_requests = self.gateway.submit_batch(chunk, arrival_time_us)
+        queue_ids = {request["queue_id"] for request in qos_requests}
+        if len(queue_ids) != 1:
+            raise RuntimeError(
+                "one client demand path must bind to exactly one Queue"
+            )
+        queue_id = next(iter(queue_ids))
+        state.next_offset = stop
+        state.next_chunk_index += 1
+        self.chunk_count += 1
+        self.submitted_io_count += len(chunk)
+        self.max_submitted_chunk_io_count = max(
+            self.max_submitted_chunk_io_count,
+            len(chunk),
+        )
+        if not submission_complete:
+            state.outstanding_request_ids = {
+                request["request_id"] for request in qos_requests
+            }
+            if len(state.outstanding_request_ids) != len(qos_requests):
+                raise RuntimeError("client chunk request IDs must be unique")
+            for request_id in state.outstanding_request_ids:
+                if request_id in self.pending_by_request_id:
+                    raise RuntimeError(
+                        "one IO completion cannot replenish two client paths"
+                    )
+                self.pending_by_request_id[request_id] = state
+        return qos_requests
+
+    def on_io_complete(self, request_id, completion_time_us):
+        """Replenish one path only after every IO in its prior chunk completes."""
+        state = self.pending_by_request_id.pop(request_id, None)
+        if state is None:
+            return
+        state.outstanding_request_ids.remove(request_id)
+        if not state.outstanding_request_ids:
+            self.intermediate_replenishment_count += 1
+            self._submit_next_chunk(state, completion_time_us)
+
+    def statistics(self):
+        return {
+            "enabled": self.max_io_per_chunk is not None,
+            "max_io_per_chunk_per_ssd": self.max_io_per_chunk,
+            "demand_path_count": self.demand_path_count,
+            "submitted_chunk_count": self.chunk_count,
+            "intermediate_replenishment_count": (
+                self.intermediate_replenishment_count
+            ),
+            "submitted_io_count": self.submitted_io_count,
+            "max_submitted_chunk_io_count": (
+                self.max_submitted_chunk_io_count
+            ),
+            "pending_path_count": len({
+                id(state)
+                for state in self.pending_by_request_id.values()
+            }),
+            "pending_io_completion_count": len(
+                self.pending_by_request_id
+            ),
+        }
+
+
 class PipelinedUcmSimulation:
     """Replay a bounded two-context pipeline on the existing data path."""
 
@@ -165,6 +308,8 @@ class PipelinedUcmSimulation:
         expected_layer_count=4,
         initial_arrival_jitter_max_us=None,
         queue_binding_strategy=DEFAULT_QUEUE_BINDING,
+        client_io_chunk_size=None,
+        cir_ordering=DEFAULT_CIR_ORDERING,
     ):
         if policy not in SUPPORTED_POLICIES:
             raise ValueError(
@@ -187,6 +332,8 @@ class PipelinedUcmSimulation:
         ):
             raise ValueError("initial_arrival_jitter_max_us must be non-negative")
         self.queue_binding_strategy = queue_binding_strategy
+        self.client_io_chunk_size = client_io_chunk_size
+        self.cir_ordering = cir_ordering
         if self.inference_count < 2:
             raise ValueError("pipelined replay requires at least two inferences")
         if not self.measured_indices:
@@ -414,7 +561,10 @@ class PipelinedUcmSimulation:
     def _build_rate_controller(self, capacity_by_storage_target):
         if self.policy == "baseline":
             return None
-        return DemandAwareFCFSCIRController(capacity_by_storage_target)
+        return DemandAwareFCFSCIRController(
+            capacity_by_storage_target,
+            ordering=self.cir_ordering,
+        )
 
     def _build_data_path(self):
         qos_config = self.config["qos"]
@@ -480,6 +630,10 @@ class PipelinedUcmSimulation:
             rate_controller=self._build_rate_controller(
                 capacity_by_storage_target
             ),
+        )
+        self.client = ClientTrafficOrchestrator(
+            self.dpu,
+            max_io_per_chunk=self.client_io_chunk_size,
         )
         for path in self.storage_paths.values():
             path.start()
@@ -587,7 +741,7 @@ class PipelinedUcmSimulation:
         self.submitted_sqe_count += len(records)
         self.submitted_entry_count += len(submission.requests)
         self.submitted_bytes += submission.batch_total_bytes
-        self.dpu.submit_batch(
+        self.client.submit_batch(
             requests=submission.requests,
             arrival_time_us=issue_time_us,
         )
@@ -606,6 +760,10 @@ class PipelinedUcmSimulation:
         context = state.contexts[inference_index]
         layer = context.layers[layer_id]
         completion_time = self.event_loop.current_time
+        self.client.on_io_complete(
+            request_id,
+            completion["completion_time_us"],
+        )
         layer.pending_entry_count -= 1
         if layer.pending_entry_count < 0:
             raise RuntimeError("pipeline layer completion underflow")
@@ -1021,6 +1179,10 @@ class PipelinedUcmSimulation:
             "ssd_entries": ssd_entries,
             "ssd_bytes": ssd_bytes,
         }
+        client_statistics = self.client.statistics()
+        actual_values["client_submitted_entries"] = client_statistics[
+            "submitted_io_count"
+        ]
         if self.submitted_layer_count != expected_layer_count:
             raise RuntimeError("pipeline layer count is incomplete")
         if self.submitted_sqe_count != expected_sqe_count:
@@ -1035,6 +1197,13 @@ class PipelinedUcmSimulation:
             raise RuntimeError("pipeline byte count is incomplete")
         if self.request_owner:
             raise RuntimeError("pipeline ended with active request ownership")
+        if client_statistics["pending_path_count"] != 0:
+            raise RuntimeError("pipeline ended with staged client requests")
+        if (
+            client_statistics["submitted_io_count"]
+            != self.submitted_entry_count
+        ):
+            raise RuntimeError("client submission conservation failed")
 
         dpu_statistics = self.dpu.statistics()
         if any(
@@ -1101,6 +1270,7 @@ class PipelinedUcmSimulation:
         if rate_control is not None:
             compact_rate_control = {
                 "strategy": rate_control["strategy"],
+                "ordering": rate_control["ordering"],
                 "active_demand_count": rate_control[
                     "active_demand_count"
                 ],
@@ -1115,6 +1285,12 @@ class PipelinedUcmSimulation:
                 "rate_control_write_count": dpu_statistics[
                     "rate_control_write_count"
                 ],
+                "registered_chunk_count": rate_control.get(
+                    "registered_chunk_count"
+                ),
+                "intermediate_empty_count": rate_control.get(
+                    "intermediate_empty_count"
+                ),
             }
         return {
             "schema_version": "pipelined-ucm-comparison/v1",
@@ -1153,6 +1329,11 @@ class PipelinedUcmSimulation:
                 "queue_binding_strategy": self.queue_binding_strategy,
                 "queue_slot_rule": "inference_index_mod_2",
                 "same_group_queue_slots": [0, 1],
+                "client_submission": (
+                    "per_ssd_completion_ack_replenishment"
+                    if self.client_io_chunk_size is not None
+                    else "whole_layer"
+                ),
             },
             "mean_gpu_utilization_percent": _mean(utilization_values),
             "aggregate_gpu_utilization_percent": (
@@ -1208,6 +1389,7 @@ class PipelinedUcmSimulation:
             "global_completion_order": self.global_completion_order,
             "storage_paths": storage_results,
             "request_conservation": conservation,
+            "client_traffic_orchestration": self.client.statistics(),
             "rate_control": compact_rate_control,
             "event_loop": {
                 "completion_time_us": time_to_us(
@@ -1255,6 +1437,8 @@ class ContinuousPipelinedUcmSimulation(PipelinedUcmSimulation):
         expected_layer_count=4,
         initial_arrival_jitter_max_us=None,
         queue_binding_strategy=DEFAULT_QUEUE_BINDING,
+        client_io_chunk_size=None,
+        cir_ordering=DEFAULT_CIR_ORDERING,
     ):
         steady_window_us = int(steady_window_us)
         settling_guard_us = int(settling_guard_us)
@@ -1289,6 +1473,8 @@ class ContinuousPipelinedUcmSimulation(PipelinedUcmSimulation):
             expected_layer_count=expected_layer_count,
             initial_arrival_jitter_max_us=initial_arrival_jitter_max_us,
             queue_binding_strategy=queue_binding_strategy,
+            client_io_chunk_size=client_io_chunk_size,
+            cir_ordering=cir_ordering,
         )
 
     def _template_for(self, runtime_position, inference_index):
@@ -1650,6 +1836,7 @@ class ContinuousPipelinedUcmSimulation(PipelinedUcmSimulation):
         if rate_control is not None:
             compact_rate_control = {
                 "strategy": rate_control["strategy"],
+                "ordering": rate_control["ordering"],
                 "active_demand_count": rate_control["active_demand_count"],
                 "completed_demand_count_by_storage_target": rate_control[
                     "completed_demand_count_by_storage_target"
@@ -1660,6 +1847,12 @@ class ContinuousPipelinedUcmSimulation(PipelinedUcmSimulation):
                 "rate_control_write_count": dpu_statistics[
                     "rate_control_write_count"
                 ],
+                "registered_chunk_count": rate_control.get(
+                    "registered_chunk_count"
+                ),
+                "intermediate_empty_count": rate_control.get(
+                    "intermediate_empty_count"
+                ),
             }
 
         mean_utilization = _mean(utilization_values)
@@ -1771,6 +1964,7 @@ class ContinuousPipelinedUcmSimulation(PipelinedUcmSimulation):
             "storage_paths": storage_results,
             "measurement_storage_paths": storage_window,
             "request_conservation": conservation,
+            "client_traffic_orchestration": self.client.statistics(),
             "rate_control": compact_rate_control,
             "pipeline_semantics": {
                 "gpu_compute_order": "strict_inference_then_layer_order",
@@ -1781,6 +1975,11 @@ class ContinuousPipelinedUcmSimulation(PipelinedUcmSimulation):
                 "compute_measurement_interval": "one_common_half_open_[t0,t1)_window",
                 "ttft_inclusion": "activation>=t0_and_completion<t1",
                 "termination": "stop_new_lookahead_at_t1_then_drain_admitted",
+                "client_submission": (
+                    "per_ssd_completion_ack_replenishment"
+                    if self.client_io_chunk_size is not None
+                    else "whole_layer"
+                ),
             },
             "event_loop": {
                 "completion_time_us": time_to_us(self.event_loop.current_time),
@@ -1822,12 +2021,17 @@ def run_pipeline_policy(
     rotation_stride=DEFAULT_ROTATION_STRIDE,
     expected_layer_count=4,
     initial_arrival_jitter_max_us=None,
+    cir_client_io_chunk_size=None,
+    cir_ordering=DEFAULT_CIR_ORDERING,
     steady_window_us=None,
     settling_guard_us=0,
     max_events=None,
 ):
     policy_dir = Path(output_dir) / policy
     policy_dir.mkdir(parents=True, exist_ok=True)
+    client_io_chunk_size = (
+        cir_client_io_chunk_size if policy == "cir_only" else None
+    )
     if steady_window_us is None:
         simulation = PipelinedUcmSimulation(
             bundle_dir=bundle_dir,
@@ -1838,6 +2042,8 @@ def run_pipeline_policy(
             rotation_stride=rotation_stride,
             expected_layer_count=expected_layer_count,
             initial_arrival_jitter_max_us=initial_arrival_jitter_max_us,
+            client_io_chunk_size=client_io_chunk_size,
+            cir_ordering=cir_ordering,
         )
     else:
         simulation = ContinuousPipelinedUcmSimulation(
@@ -1849,6 +2055,8 @@ def run_pipeline_policy(
             rotation_stride=rotation_stride,
             expected_layer_count=expected_layer_count,
             initial_arrival_jitter_max_us=initial_arrival_jitter_max_us,
+            client_io_chunk_size=client_io_chunk_size,
+            cir_ordering=cir_ordering,
         )
     summary = simulation.run(max_events=max_events)
     summary_path = policy_dir / "summary.json"
@@ -1879,6 +2087,9 @@ def _compact_summary(summary, summary_path):
         "request_conservation_passed": summary[
             "request_conservation"
         ]["passed"],
+        "client_traffic_orchestration": summary[
+            "client_traffic_orchestration"
+        ],
         "paired_post_warmup_inference": summary.get(
             "paired_post_warmup_inference"
         ),
@@ -1896,6 +2107,8 @@ def _run_sweep_point(
     rotation_stride,
     expected_layer_count,
     initial_arrival_jitter_max_us,
+    cir_client_io_chunk_size,
+    cir_ordering,
     steady_window_us,
     settling_guard_us,
     max_events,
@@ -1910,6 +2123,8 @@ def _run_sweep_point(
         rotation_stride=rotation_stride,
         expected_layer_count=expected_layer_count,
         initial_arrival_jitter_max_us=initial_arrival_jitter_max_us,
+        cir_client_io_chunk_size=cir_client_io_chunk_size,
+        cir_ordering=cir_ordering,
         steady_window_us=steady_window_us,
         settling_guard_us=settling_guard_us,
         max_events=max_events,
@@ -1950,7 +2165,10 @@ def _write_sweep_plot(experiment, output_dir):
 
     labels = {
         "baseline": "Baseline",
-        "cir_only": "CIR-only (FCFS, PIR uncapped)",
+        "cir_only": (
+            "CIR-only "
+            f"({experiment.get('cir_ordering', 'fcfs')}, PIR uncapped)"
+        ),
     }
     figure, axis = plt.subplots(figsize=(8, 5))
     for policy in experiment["policies"]:
@@ -2004,6 +2222,8 @@ def run_pipeline_sweep(
     rotation_stride=DEFAULT_ROTATION_STRIDE,
     expected_layer_count=4,
     initial_arrival_jitter_max_us=None,
+    cir_client_io_chunk_size=None,
+    cir_ordering=DEFAULT_CIR_ORDERING,
     steady_window_us=None,
     settling_guard_us=0,
     parallel_workers=1,
@@ -2038,6 +2258,8 @@ def run_pipeline_sweep(
         "rotation_stride": int(rotation_stride),
         "expected_layer_count": int(expected_layer_count),
         "initial_arrival_jitter_max_us": initial_arrival_jitter_max_us,
+        "cir_client_io_chunk_size": cir_client_io_chunk_size,
+        "cir_ordering": cir_ordering,
         "measurement_mode": (
             "finite_middle_inferences"
             if steady_window_us is None
@@ -2069,6 +2291,8 @@ def run_pipeline_sweep(
                 rotation_stride,
                 expected_layer_count,
                 initial_arrival_jitter_max_us,
+                cir_client_io_chunk_size,
+                cir_ordering,
                 steady_window_us,
                 settling_guard_us,
                 max_events,
@@ -2163,6 +2387,20 @@ def build_argument_parser():
         default=0,
         help="extra continuous-load settling time after every GPU warms up",
     )
+    parser.add_argument(
+        "--cir-client-io-chunk-size",
+        type=int,
+        help=(
+            "enable CIR-only upper-client traffic orchestration and submit "
+            "at most this many IOs per SSD path before completion-ACK refill"
+        ),
+    )
+    parser.add_argument(
+        "--cir-ordering",
+        choices=("fcfs", "shortest"),
+        default=DEFAULT_CIR_ORDERING,
+        help="CIR demand ordering; shortest uses complete coflow bytes",
+    )
     parser.add_argument("--parallel-workers", type=int, default=1)
     parser.add_argument("--max-events", type=int)
     parser.add_argument("--skip-plot", action="store_true")
@@ -2175,6 +2413,11 @@ def main(argv=None):
         raise ValueError("--steady-window-us must be positive")
     if args.settling_guard_us < 0:
         raise ValueError("--settling-guard-us must be non-negative")
+    if (
+        args.cir_client_io_chunk_size is not None
+        and args.cir_client_io_chunk_size <= 0
+    ):
+        raise ValueError("--cir-client-io-chunk-size must be positive")
     if (
         args.initial_arrival_jitter_max_us is not None
         and args.initial_arrival_jitter_max_us < 0
@@ -2202,6 +2445,8 @@ def main(argv=None):
                 initial_arrival_jitter_max_us=(
                     args.initial_arrival_jitter_max_us
                 ),
+                cir_client_io_chunk_size=args.cir_client_io_chunk_size,
+                cir_ordering=args.cir_ordering,
                 steady_window_us=args.steady_window_us,
                 settling_guard_us=args.settling_guard_us,
                 max_events=args.max_events,
@@ -2217,6 +2462,8 @@ def main(argv=None):
             "initial_arrival_jitter_max_us": (
                 args.initial_arrival_jitter_max_us
             ),
+            "cir_client_io_chunk_size": args.cir_client_io_chunk_size,
+            "cir_ordering": args.cir_ordering,
             "results": results,
         })
         return 0
@@ -2235,6 +2482,8 @@ def main(argv=None):
         rotation_stride=args.rotation_stride,
         expected_layer_count=args.expected_layer_count,
         initial_arrival_jitter_max_us=args.initial_arrival_jitter_max_us,
+        cir_client_io_chunk_size=args.cir_client_io_chunk_size,
+        cir_ordering=args.cir_ordering,
         steady_window_us=args.steady_window_us,
         settling_guard_us=args.settling_guard_us,
         parallel_workers=args.parallel_workers,

@@ -12,6 +12,7 @@ from analysis_tools.run_pipelined_ucm_comparison import (
     PipelinedUcmSimulation,
     _clamp_duration_delta_ns,
 )
+from DPU.rate_controller import DemandAwareFCFSCIRController
 from qos import build_queue_layout
 from simulation_common.config_utils import load_yaml
 
@@ -19,24 +20,28 @@ from simulation_common.config_utils import load_yaml
 PROJECT_DIR = Path(__file__).resolve().parents[1]
 
 
-def _batch_retrieve(cid):
-    """Build one legal BatchRetrieve SQE containing one 147456-byte entry."""
+def _batch_retrieve(cid, entry_count=1):
+    """Build one legal BatchRetrieve SQE with fixed 147456-byte entries."""
 
-    raw = bytearray(64 + 36)
+    raw = bytearray(64 + entry_count * 36)
     header = [0] * 16
     header[0] = (cid << 16) | (3 << 14) | 0x46
     header[1] = 100
-    header[8] = 36
+    header[8] = entry_count * 36
     header[9] = 1 << 24
-    header[10] = 1
+    header[10] = entry_count
     struct.pack_into("<16I", raw, 0, *header)
 
-    entry = [0] * 9
-    entry[5] = 0x1000 * cid
-    entry[7] = (0x12 << 24) | 147_456
-    entry[8] = (0x40 << 24) | 0x3456
-    struct.pack_into("<9I", raw, 64, *entry)
-    raw[68:76] = f"key{cid:05d}".encode("ascii")
+    for entry_index in range(entry_count):
+        base = 64 + entry_index * 36
+        entry = [0] * 9
+        entry[5] = 0x1000 * (cid + entry_index)
+        entry[7] = (0x12 << 24) | 147_456
+        entry[8] = (0x40 << 24) | 0x3456
+        struct.pack_into("<9I", raw, base, *entry)
+        raw[base + 4:base + 12] = (
+            f"{cid:05d}{entry_index:03d}".encode("ascii")
+        )
     return bytes(raw)
 
 
@@ -47,6 +52,7 @@ def _write_trace_bundle(
     arrival_times_ns,
     compute_times_ns,
     layer_count,
+    entries_per_sqe=1,
 ):
     """Write the minimal multi-GPU, single-ASU bundle used by these tests."""
 
@@ -57,7 +63,9 @@ def _write_trace_bundle(
         "config": {"model": {"hidden_layers": 78}},
         "output_counts": {
             "retrieve_sqe_count": gpu_count * layer_count,
-            "retrieve_entry_count": gpu_count * layer_count,
+            "retrieve_entry_count": (
+                gpu_count * layer_count * entries_per_sqe
+            ),
         },
     }
     workload = {
@@ -65,9 +73,11 @@ def _write_trace_bundle(
         "gpu_count": gpu_count,
         "asu_count": 1,
         "trace_layer_count": layer_count,
-        "estimated_retrieve_entry_count": gpu_count * layer_count,
+        "estimated_retrieve_entry_count": (
+            gpu_count * layer_count * entries_per_sqe
+        ),
         "estimated_retrieve_payload_bytes": (
-            gpu_count * layer_count * 147_456
+            gpu_count * layer_count * entries_per_sqe * 147_456
         ),
         "requests": [
             {
@@ -116,7 +126,7 @@ def _write_trace_bundle(
     ]
     for layer_id, original_time_ns in enumerate(original_times_ns):
         for gpu_id in range(gpu_count):
-            raw = _batch_retrieve(record_index)
+            raw = _batch_retrieve(record_index, entries_per_sqe)
             records.append({
                 "sqe_uid": (
                     f"retrieve-gpu-{gpu_id:04d}-layer-{layer_id:02d}"
@@ -128,9 +138,9 @@ def _write_trace_bundle(
                 "source_request_id": f"gpu-{gpu_id:04d}-prefix-0000",
                 "layer_id": layer_id,
                 "target_asu_id": 0,
-                "batch_number": 1,
+                "batch_number": entries_per_sqe,
                 "descriptor_bytes": len(raw),
-                "payload_bytes": 147_456,
+                "payload_bytes": entries_per_sqe * 147_456,
                 "record_index": record_index,
                 "raw_offset": raw_offset,
                 "raw_length": len(raw),
@@ -159,6 +169,143 @@ class PipelinedUcmSimulationTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             _clamp_duration_delta_ns(-1.0, duration_ns)
 
+    def test_chunked_cir_demand_releases_only_after_final_chunk_drains(self):
+        controller = DemandAwareFCFSCIRController({"SSD0": 40_000_000_000})
+        common = {
+            "storage_target_id": "SSD0",
+            "queue_id": "q000",
+            "requested_cir_bytes_per_second": 40_000_000_000,
+            "p_node_id": "P0",
+            "demand_group_id": "inference-0:layer-0",
+            "submission_chunk_count": 3,
+        }
+
+        controller.register_demand(
+            **common,
+            arrival_time_us=0,
+            submission_chunk_index=0,
+            submission_complete=False,
+        )
+        first_updates = controller.recalculate("SSD0")
+        self.assertEqual(
+            first_updates["queue_rates"]["q000"],
+            40_000_000_000,
+        )
+        controller.release_empty_demands("SSD0", {"q000": 0})
+        self.assertEqual(controller.statistics()["active_demand_count"], 1)
+
+        controller.register_demand(
+            **common,
+            arrival_time_us=10,
+            submission_chunk_index=1,
+            submission_complete=False,
+        )
+        controller.release_empty_demands("SSD0", {"q000": 0})
+        self.assertEqual(controller.statistics()["active_demand_count"], 1)
+
+        controller.register_demand(
+            **common,
+            arrival_time_us=20,
+            submission_chunk_index=2,
+            submission_complete=True,
+        )
+        final_updates = controller.release_empty_demands(
+            "SSD0",
+            {"q000": 0},
+        )
+        statistics = controller.statistics()
+        self.assertEqual(statistics["ordering"], "fcfs")
+        self.assertEqual(final_updates["queue_rates"]["q000"], 0)
+        self.assertEqual(statistics["active_demand_count"], 0)
+        self.assertEqual(
+            statistics["completed_demand_count_by_storage_target"]["SSD0"],
+            1,
+        )
+        self.assertEqual(statistics["registered_chunk_count"], 3)
+        self.assertEqual(statistics["intermediate_empty_count"], 2)
+
+    def test_shortest_cir_uses_full_coflow_bytes_before_fcfs_tiebreak(self):
+        controller = DemandAwareFCFSCIRController(
+            {"SSD0": 40_000_000_000},
+            ordering="shortest",
+        )
+        controller.register_demand(
+            storage_target_id="SSD0",
+            queue_id="q000",
+            requested_cir_bytes_per_second=40_000_000_000,
+            arrival_time_us=0,
+            demand_group_id="large",
+            batch_total_bytes=200,
+        )
+        controller.register_demand(
+            storage_target_id="SSD0",
+            queue_id="q001",
+            requested_cir_bytes_per_second=40_000_000_000,
+            arrival_time_us=1,
+            demand_group_id="small",
+            batch_total_bytes=100,
+        )
+
+        updates = controller.recalculate("SSD0")
+        self.assertEqual(updates["queue_rates"]["q000"], 0)
+        self.assertEqual(
+            updates["queue_rates"]["q001"],
+            40_000_000_000,
+        )
+        statistics = controller.statistics()
+        self.assertEqual(statistics["ordering"], "shortest")
+
+    def test_cir_client_chunks_replenish_and_preserve_conservation(self):
+        with tempfile.TemporaryDirectory() as directory:
+            self._write_distinct_template_bundle(
+                directory,
+                gpu_count=8,
+                layer_count=2,
+                entries_per_sqe=17,
+            )
+            base_config = load_yaml(
+                PROJECT_DIR / "config" / "simulation_config.yaml"
+            )["simulation"]
+            simulation = PipelinedUcmSimulation(
+                bundle_dir=directory,
+                policy="cir_only",
+                simulation_config=deepcopy(base_config),
+                inference_count=3,
+                measured_indices=(1,),
+                rotation_stride=3,
+                expected_layer_count=2,
+                client_io_chunk_size=8,
+            )
+            summary = simulation.run(max_events=2_000_000)
+
+        client = summary["client_traffic_orchestration"]
+        self.assertTrue(client["enabled"])
+        self.assertEqual(client["max_io_per_chunk_per_ssd"], 8)
+        self.assertEqual(client["max_submitted_chunk_io_count"], 8)
+        self.assertEqual(client["demand_path_count"], 8 * 3 * 2)
+        self.assertEqual(client["submitted_chunk_count"], 8 * 3 * 2 * 3)
+        self.assertEqual(
+            client["intermediate_replenishment_count"],
+            8 * 3 * 2 * 2,
+        )
+        self.assertEqual(client["pending_path_count"], 0)
+        self.assertTrue(summary["request_conservation"]["passed"])
+        self.assertEqual(
+            summary["request_conservation"]["actual"][
+                "client_submitted_entries"
+            ],
+            8 * 3 * 2 * 17,
+        )
+        self.assertEqual(summary["rate_control"]["active_demand_count"], 0)
+        self.assertEqual(
+            summary["rate_control"]["registered_chunk_count"],
+            client["submitted_chunk_count"],
+        )
+        self.assertEqual(
+            summary["rate_control"]["intermediate_empty_count"],
+            client["intermediate_replenishment_count"],
+        )
+
     def _write_eight_template_bundle(self, directory):
         self._write_distinct_template_bundle(
             directory,
@@ -172,6 +319,7 @@ class PipelinedUcmSimulationTests(unittest.TestCase):
         *,
         gpu_count,
         layer_count,
+        entries_per_sqe=1,
     ):
         _write_trace_bundle(
             directory,
@@ -181,6 +329,7 @@ class PipelinedUcmSimulationTests(unittest.TestCase):
                 20_000 + gpu_id * 1_000 for gpu_id in range(gpu_count)
             ],
             layer_count=layer_count,
+            entries_per_sqe=entries_per_sqe,
         )
         workload_path = Path(directory) / "workload_summary.json"
         workload = json.loads(workload_path.read_text(encoding="utf-8"))
@@ -392,6 +541,10 @@ class PipelinedUcmSimulationTests(unittest.TestCase):
                         self.assertEqual(
                             summary["rate_control"]["active_demand_count"],
                             0,
+                        )
+                        self.assertEqual(
+                            summary["rate_control"]["ordering"],
+                            "shortest",
                         )
 
     def test_template_validation_requires_each_field_to_change(self):

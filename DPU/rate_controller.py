@@ -6,11 +6,16 @@ import re
 
 
 class DemandAwareFCFSCIRController:
-    """按每块SSD的Demand到达顺序分配有限CIR容量。"""
+    """按FCFS或完整coflow大小为每块SSD分配有限CIR容量。"""
 
     strategy_name = "demand_aware_fcfs_cir"
+    supports_chunked_demands = True
 
-    def __init__(self, capacity_bytes_per_second_by_storage_target):
+    def __init__(
+        self,
+        capacity_bytes_per_second_by_storage_target,
+        ordering="fcfs",
+    ):
         """功能：为每块SSD创建独立的FCFS CIR状态。
 
         目的：DPU只使用整数Byte/s做减法、比较和取最小值，
@@ -24,12 +29,18 @@ class DemandAwareFCFSCIRController:
         输出：
             None: 初始化空Demand表和速率镜像。
         """
+        if ordering not in ("fcfs", "shortest"):
+            raise ValueError("CIR ordering must be 'fcfs' or 'shortest'")
         self.capacity = dict(capacity_bytes_per_second_by_storage_target)
+        self.ordering = ordering
+        self.strategy_name = f"demand_aware_{ordering}_cir"
         self.demands = {target: {} for target in self.capacity}
         self.queue_rates = {target: {} for target in self.capacity}
         self.arrival_sequence = {target: 0 for target in self.capacity}
         self.completed_demand_count = {target: 0 for target in self.capacity}
         self.peak_assigned_cir = {target: 0 for target in self.capacity}
+        self.registered_chunk_count = 0
+        self.intermediate_empty_count = 0
 
     def register_demand(
         self,
@@ -48,6 +59,9 @@ class DemandAwareFCFSCIRController:
         compute_layer_index=None,
         prefetch_layer_index=None,
         inference_arrival_time_us=None,
+        submission_chunk_index=0,
+        submission_chunk_count=1,
+        submission_complete=True,
     ):
         """功能：登记一条已经完整批量入队的Queue Demand。
 
@@ -65,16 +79,95 @@ class DemandAwareFCFSCIRController:
         输出：
             None: 在DPU内部保存新Demand，尚不写QoS。
         """
+        if (
+            not isinstance(submission_chunk_index, int)
+            or isinstance(submission_chunk_index, bool)
+            or submission_chunk_index < 0
+        ):
+            raise ValueError("submission_chunk_index must be non-negative")
+        if (
+            not isinstance(submission_chunk_count, int)
+            or isinstance(submission_chunk_count, bool)
+            or submission_chunk_count <= 0
+        ):
+            raise ValueError("submission_chunk_count must be positive")
+        if submission_chunk_index >= submission_chunk_count:
+            raise ValueError(
+                "submission_chunk_index must be less than chunk count"
+            )
+        if not isinstance(submission_complete, bool):
+            raise TypeError("submission_complete must be bool")
+        if submission_complete != (
+            submission_chunk_index + 1 == submission_chunk_count
+        ):
+            raise ValueError(
+                "submission_complete must identify the final chunk"
+            )
+        normalized_batch_total_bytes = (
+            path_bytes if batch_total_bytes is None else batch_total_bytes
+        )
+        if normalized_batch_total_bytes is None:
+            normalized_batch_total_bytes = 0
+        if (
+            not isinstance(normalized_batch_total_bytes, int)
+            or isinstance(normalized_batch_total_bytes, bool)
+            or normalized_batch_total_bytes < 0
+        ):
+            raise ValueError("batch_total_bytes must be non-negative")
+
+        demands = self.demands[storage_target_id]
+        existing = demands.get(queue_id)
+        if existing is not None:
+            if existing["submission_chunk_count"] == 1:
+                raise ValueError(
+                    f"queue {queue_id!r} on {storage_target_id!r} "
+                    "already has an active non-chunked demand"
+                )
+            if existing["demand_group_id"] != demand_group_id:
+                raise ValueError(
+                    "one Queue cannot interleave two chunked demands"
+                )
+            if existing["submission_chunk_count"] != submission_chunk_count:
+                raise ValueError("chunk count changed within one demand")
+            if submission_chunk_index != existing["last_chunk_index"] + 1:
+                raise ValueError("demand chunks must arrive in order")
+            if existing["submission_complete"]:
+                raise ValueError("a completed submission cannot accept chunks")
+            if (
+                existing["requested_cir"]
+                != requested_cir_bytes_per_second
+            ):
+                raise ValueError("requested CIR changed within one demand")
+            if (
+                existing["batch_total_bytes"]
+                != normalized_batch_total_bytes
+            ):
+                raise ValueError("batch size changed within one demand")
+            existing["last_chunk_index"] = submission_chunk_index
+            existing["submission_complete"] = submission_complete
+            existing["awaiting_next_chunk"] = False
+            self.registered_chunk_count += 1
+            return
+
+        if submission_chunk_index != 0:
+            raise ValueError("a chunked demand must start at chunk zero")
         self.arrival_sequence[storage_target_id] += 1
-        self.demands[storage_target_id][queue_id] = {
+        demands[queue_id] = {
             "requested_cir": requested_cir_bytes_per_second,
             "assigned_cir": 0,
             "arrival_time_us": arrival_time_us,
             "arrival_order": self.arrival_sequence[storage_target_id],
+            "demand_group_id": demand_group_id,
+            "batch_total_bytes": normalized_batch_total_bytes,
+            "submission_chunk_count": submission_chunk_count,
+            "last_chunk_index": submission_chunk_index,
+            "submission_complete": submission_complete,
+            "awaiting_next_chunk": False,
         }
+        self.registered_chunk_count += 1
 
     def recalculate(self, storage_target_id, event_time_us=None):
-        """功能：按Demand到达顺序重新分配一块SSD的CIR。
+        """功能：按配置的FCFS或shortest顺序重新分配一块SSD的CIR。
 
         目的：对每个活跃Demand执行
         ``assigned=min(requested, remaining_capacity)``。后到Demand
@@ -89,12 +182,23 @@ class DemandAwareFCFSCIRController:
         """
         remaining_capacity = self.capacity[storage_target_id]
         new_queue_rates = {}
+
+        def priority(item):
+            demand = item[1]
+            if self.ordering == "shortest":
+                return (
+                    demand["batch_total_bytes"],
+                    demand["arrival_time_us"],
+                    demand["arrival_order"],
+                )
+            return (
+                demand["arrival_time_us"],
+                demand["arrival_order"],
+            )
+
         ordered_demands = sorted(
             self.demands[storage_target_id].items(),
-            key=lambda item: (
-                item[1]["arrival_time_us"],
-                item[1]["arrival_order"],
-            ),
+            key=priority,
         )
 
         for queue_id, demand in ordered_demands:
@@ -152,9 +256,20 @@ class DemandAwareFCFSCIRController:
         demands = self.demands[storage_target_id]
         empty_queue_ids = [
             queue_id
-            for queue_id in demands
-            if queue_depths[queue_id] == 0
+            for queue_id, demand in demands.items()
+            if (
+                queue_depths[queue_id] == 0
+                and demand["submission_complete"]
+            )
         ]
+        for queue_id, demand in demands.items():
+            if (
+                queue_depths[queue_id] == 0
+                and not demand["submission_complete"]
+                and not demand["awaiting_next_chunk"]
+            ):
+                demand["awaiting_next_chunk"] = True
+                self.intermediate_empty_count += 1
         for queue_id in empty_queue_ids:
             del demands[queue_id]
             self.completed_demand_count[storage_target_id] += 1
@@ -174,6 +289,7 @@ class DemandAwareFCFSCIRController:
         """
         return {
             "strategy": self.strategy_name,
+            "ordering": self.ordering,
             "active_demand_count": sum(
                 len(demands) for demands in self.demands.values()
             ),
@@ -183,6 +299,8 @@ class DemandAwareFCFSCIRController:
             "peak_assigned_cir_bytes_per_second": dict(
                 self.peak_assigned_cir
             ),
+            "registered_chunk_count": self.registered_chunk_count,
+            "intermediate_empty_count": self.intermediate_empty_count,
         }
 
 
