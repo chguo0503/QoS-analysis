@@ -437,6 +437,18 @@ class DPURequestGateway:
                     "inference_arrival_time_us": demand_bw.get(
                         "inference_arrival_time_us"
                     ),
+                    "submission_chunk_index": demand_bw.get(
+                        "submission_chunk_index",
+                        0,
+                    ),
+                    "submission_chunk_count": demand_bw.get(
+                        "submission_chunk_count",
+                        1,
+                    ),
+                    "submission_complete": demand_bw.get(
+                        "submission_complete",
+                        True,
+                    ),
                 })
                 if (
                     path["p_node_id"] != p_node_id
@@ -450,8 +462,19 @@ class DPURequestGateway:
                         "compute_layer_index",
                         "prefetch_layer_index",
                         "inference_arrival_time_us",
+                        "submission_chunk_index",
+                        "submission_chunk_count",
+                        "submission_complete",
                     ):
-                        if path[field] != demand_bw.get(field):
+                        default_value = {
+                            "submission_chunk_index": 0,
+                            "submission_chunk_count": 1,
+                            "submission_complete": True,
+                        }.get(field)
+                        if path[field] != demand_bw.get(
+                            field,
+                            default_value,
+                        ):
                             raise ValueError(
                                 f"inconsistent {field} within one path"
                             )
@@ -558,26 +581,56 @@ class DPURequestGateway:
                     else:
                         requested_cir = 0
 
-                self.rate_controller.register_demand(
-                    storage_target_id=target,
-                    queue_id=queue_id,
-                    requested_cir_bytes_per_second=requested_cir,
-                    arrival_time_us=arrival_time_us,
-                    p_node_id=path["p_node_id"],
-                    demand_group_id=path["demand_group_id"],
-                    batch_total_bytes=batch_total_bytes,
-                    path_bytes=path_bytes,
-                    path_request_count=path[
+                register_kwargs = {
+                    "storage_target_id": target,
+                    "queue_id": queue_id,
+                    "requested_cir_bytes_per_second": requested_cir,
+                    "arrival_time_us": arrival_time_us,
+                    "p_node_id": path["p_node_id"],
+                    "demand_group_id": path["demand_group_id"],
+                    "batch_total_bytes": batch_total_bytes,
+                    "path_bytes": path_bytes,
+                    "path_request_count": path[
                         "derived_path_request_count"
                     ],
-                    block_size_bytes=path[
+                    "block_size_bytes": path[
                         "uniform_block_size_bytes"
                     ],
-                    service_window_us=service_window_us,
-                    deadline_us=deadline_us,
-                    compute_layer_index=path["compute_layer_index"],
-                    prefetch_layer_index=path["prefetch_layer_index"],
-                    inference_arrival_time_us=inference_arrival_time_us,
+                    "service_window_us": service_window_us,
+                    "deadline_us": deadline_us,
+                    "compute_layer_index": path["compute_layer_index"],
+                    "prefetch_layer_index": path["prefetch_layer_index"],
+                    "inference_arrival_time_us": inference_arrival_time_us,
+                }
+                chunked_submission = (
+                    path["submission_chunk_index"] != 0
+                    or path["submission_chunk_count"] != 1
+                    or path["submission_complete"] is not True
+                )
+                supports_chunked_demands = getattr(
+                    self.rate_controller,
+                    "supports_chunked_demands",
+                    False,
+                )
+                if chunked_submission and not supports_chunked_demands:
+                    raise ValueError(
+                        "the selected rate controller does not support "
+                        "chunked client submissions"
+                    )
+                if supports_chunked_demands:
+                    register_kwargs.update({
+                        "submission_chunk_index": path[
+                            "submission_chunk_index"
+                        ],
+                        "submission_chunk_count": path[
+                            "submission_chunk_count"
+                        ],
+                        "submission_complete": path[
+                            "submission_complete"
+                        ],
+                    })
+                self.rate_controller.register_demand(
+                    **register_kwargs,
                 )
                 affected_targets.add(target)
 
